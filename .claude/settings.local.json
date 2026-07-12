@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(PYTHONIOENCODING=utf-8 /c/Users/fanny/AppData/Local/Python/bin/python3 generate_dashboard.py)",
+      "Bash(start *)",
+      "Bash(PYTHONIOENCODING=utf-8 /c/Users/fanny/AppData/Local/Python/bin/python3 *)",
+      "Bash(node -e ' *)",
+      "Bash(node --check _test.js)",
+      "Bash(PYTHONIOENCODING=utf-8 python generate_dashboard.py)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\fanny\\\\Desktop\\\\数据日日\\\\.claude\\\\versions\\\\2026-07-12_v1\")",
+      "Bash(cp \"C:\\\\Users\\\\fanny\\\\Desktop\\\\数据日日\\\\generate_dashboard.py\" \".claude/versions/2026-07-12_v1/\")",
+      "Bash(cp \"C:\\\\Users\\\\fanny\\\\Desktop\\\\数据日日\\\\南区7月目标看板.html\" \".claude/versions/2026-07-12_v1/\")"
+    ]
+  }
+}
