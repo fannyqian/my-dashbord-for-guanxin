@@ -9,7 +9,13 @@
       "Bash(PYTHONIOENCODING=utf-8 python generate_dashboard.py)",
       "Bash(mkdir -p \"C:\\\\Users\\\\fanny\\\\Desktop\\\\数据日日\\\\.claude\\\\versions\\\\2026-07-12_v1\")",
       "Bash(cp \"C:\\\\Users\\\\fanny\\\\Desktop\\\\数据日日\\\\generate_dashboard.py\" \".claude/versions/2026-07-12_v1/\")",
-      "Bash(cp \"C:\\\\Users\\\\fanny\\\\Desktop\\\\数据日日\\\\南区7月目标看板.html\" \".claude/versions/2026-07-12_v1/\")"
+      "Bash(cp \"C:\\\\Users\\\\fanny\\\\Desktop\\\\数据日日\\\\南区7月目标看板.html\" \".claude/versions/2026-07-12_v1/\")",
+      "Bash(python -c ' *)",
+      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)",
+      "Bash(mkdir -p \".claude/versions/2026-07-13_v2\")",
+      "Bash(cp \"南区7月目标看板.html\" \"generate_dashboard.py\" \"分享_南区看板.html\" \".claude/versions/2026-07-13_v2/\")",
+      "Bash(git add *)",
+      "Bash(git commit -m 'v2: 0713版 — 新底表适配\\(beisen组织解析\\)、普陀业绩独立更新、班主任全量、菌群TOP10双排名、分享版自动刷新、快照高清截图 *)"
     ]
   }
 }

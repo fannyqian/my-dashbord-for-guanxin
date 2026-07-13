@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>南区7月目标进展看板</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f1f5f9; }
+.header { background: #1e293b; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 16px; font-weight: 600; }
+.header .info { font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 8px; }
+.header .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+iframe { width: 100%; height: calc(100vh - 48px); border: none; display: block; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>📊 南区7月目标进展看板</h1>
+  <div class="info"><span class="dot"></span> 实时看板 · 每30秒自动同步最新数据 · <span id="timer">--</span></div>
+</div>
+<iframe id="db" src="南区7月目标看板.html"></iframe>
+<script>
+var n=30,t=document.getElementById('timer');
+function u(){t.textContent=n+'s后刷新'}
+setInterval(function(){n--;u();if(n<=0){document.getElementById('db').src='南区7月目标看板.html?t='+Date.now();n=30;u()}},1000);u();
+</script>
+</body>
+</html>
