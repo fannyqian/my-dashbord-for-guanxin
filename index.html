@@ -372,150 +372,174 @@ function exportBaseTable() {
 }
 
 // ====== 普陀模板导出 ======
-function exportPutuoTemplate() {
-  var M = window._M;
-  // Gather 普陀 data from CM table
-  var cmTab = document.getElementById('tab-cm_person');
-  var rows = cmTab.querySelectorAll('tbody tr:not(.subtotal)');
-  var templateRows = [['门店业绩','门店退款','个案经理','完成业绩']];
-  var totalRef = 0;
-  rows.forEach(function(row) {
-    var tds = row.querySelectorAll('td');
-    if(tds.length < 4 || tds[0].textContent.trim() !== '普陀') return;
-    var name = tds[1].textContent.replace('⚠锁定','').trim();
-    var done = parseNum(tds[3]);
-    var ref = parseNum(tds[6]);
-    totalRef += ref;
-    templateRows.push(['', '', name, done]);
-  });
-  // Add summary rows
-  var grpRows = document.querySelectorAll('#tab-group tbody tr:not(.subtotal):not(.section-header)');
-  var putuoTotal = 0, putuoRefTotal = 0;
-  grpRows.forEach(function(row) {
-    var tds = row.querySelectorAll('td');
-    if(tds.length < 12) return;
-    if(tds[0].textContent.replace('⚠锁定','').trim() !== '普陀') return;
-    putuoTotal = parseNum(tds[3]);
-    putuoRefTotal = parseNum(tds[6]);
-  });
-  templateRows.push(['', '', '', '']);
-  templateRows.push([putuoTotal, putuoRefTotal, '合计', putuoTotal]);
-  var ws = XLSX.utils.aoa_to_sheet(templateRows);
-  // Set column widths
-  ws['!cols'] = [{wch:14},{wch:14},{wch:12},{wch:14}];
-  var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, '普陀');
-  XLSX.writeFile(wb, '普陀门店数据模板.xlsx');
-}
+// ====== 康博嘉云数据导入 ======
+var KBJ_STORE_MAP = {
+  '观心正德诊所': '广州', '武汉观心精神专科门诊部': '武汉',
+  '深圳观心正德综合门诊部': '深圳', '南京建邺观心综合门诊部': '南京',
+  '杭州观心正念诊所有限公司': '杭州'
+};
 
-// ====== 普陀专属导入 ======
-function importPutuo(input) {
+function importKangbojia(input) {
   var file = input.files[0]; if(!file) return;
   var reader = new FileReader();
   reader.onload = function(e) {
     var wb = XLSX.read(e.target.result, {type:'array', cellDates: true});
-    var sheet = wb.Sheets[wb.SheetNames[0]];
-    // Try both object mode and array mode
-    var data = XLSX.utils.sheet_to_json(sheet);
-    console.log('普陀导入: 原始数据行数=' + data.length, data.slice(0,3));
-    // Detect columns from first row
+    // 自动选列数最多的 sheet（兼容带标题页的格式）
+    var bestSheet = wb.SheetNames[0], bestCols = 0;
+    wb.SheetNames.forEach(function(sn) {
+      var s = wb.Sheets[sn];
+      if(!s['!ref']) return;
+      var range = XLSX.utils.decode_range(s['!ref']);
+      if(range.e.c > bestCols) { bestCols = range.e.c; bestSheet = sn; }
+    });
+    var data = XLSX.utils.sheet_to_json(wb.Sheets[bestSheet]);
     var cols = data.length > 0 ? Object.keys(data[0]) : [];
-    console.log('普陀导入: 列名=' + cols.join(', '));
-    // Map columns flexibly
-    var nameCol = cols.find(function(c){ return c.indexOf('个案')>=0 || c.indexOf('经理')>=0 || c.indexOf('姓名')>=0 || c === 'name'; }) || cols[2] || '';
-    var doneCol = cols.find(function(c){ return c.indexOf('完成')>=0 || c.indexOf('业绩')>=0 || c === 'done'; }) || cols[3] || '';
-    var revCol = cols.find(function(c){ return c.indexOf('门店业绩')>=0 || c.indexOf('业绩')>=0; }) || cols[0] || '';
-    var refCol = cols.find(function(c){ return c.indexOf('退款')>=0 || c.indexOf('退费')>=0; }) || cols[1] || '';
-    console.log('普陀导入: nameCol='+nameCol+' doneCol='+doneCol+' revCol='+revCol+' refCol='+refCol);
+    console.log('康博嘉导入: sheet='+bestSheet+' 行数='+data.length+' 列='+cols.join(','));
 
-    var putuoDone = {};  // name -> done
-    var totalPutuo = 0, storeRefund = null;
+    // 查找列：所在诊所(位置47附近)、客户经理(位置11附近)、实际收入(位置33附近)
+    var storeCol = cols[47] || cols.find(function(c){ return c.indexOf('诊所')>=0 || c.indexOf('机构')>=0 || c.indexOf('所在')>=0; }) || '';
+    var cmCol = cols[11] || cols.find(function(c){ return c.indexOf('客户经理')>=0 || c.indexOf('经理')>=0; }) || '';
+    var amtCol = cols[33] || cols.find(function(c){ return c.indexOf('实际收入')>=0 || c.indexOf('收入')>=0 || c.indexOf('金额')>=0; }) || '';
+    if(!storeCol || !cmCol || !amtCol) {
+      alert('未识别到康博嘉数据列。请确认文件包含：所在诊所、客户经理、实际收入'); return;
+    }
+    console.log('康博嘉导入: storeCol='+storeCol+' cmCol='+cmCol+' amtCol='+amtCol);
+
+    // 按门店+客户经理汇总（仅南区5家）
+    var storeTotal = {}, cmTotal = {};
+    var matched = 0;
     data.forEach(function(row) {
-      var name = (row[nameCol] || '').toString().trim();
-      var done = parseFloat(row[doneCol]) || 0;
-      var storeRev = parseFloat(row[revCol]) || 0;
-      var storeRef = parseFloat(row[refCol]) || 0;
-      if(storeRev > 0 && !name) totalPutuo = storeRev;
-      if(storeRef > 0 && !name) storeRefund = storeRef;
-      if(name && name !== '合计' && done > 0) {
-        putuoDone[name] = done;
-        console.log('普陀导入: 个案 '+name+' = '+done);
-      }
+      var rawStore = (row[storeCol] || '').toString().trim();
+      var mapped = KBJ_STORE_MAP[rawStore];
+      if(!mapped) return;
+      var cm = (row[cmCol] || '').toString().trim();
+      var amt = parseFloat(row[amtCol]) || 0;
+      if(!cm || cm === 'nan' || cm === '测试医生') return;
+      storeTotal[mapped] = (storeTotal[mapped] || 0) + amt;
+      cmTotal[cm] = (cmTotal[cm] || 0) + amt;
+      matched++;
     });
-    // Merge summary row values
-    if(totalPutuo === 0) {
-      Object.values(putuoDone).forEach(function(v) { totalPutuo += v; });
-    }
-    console.log('普陀导入: totalPutuo='+totalPutuo+' 个案数='+Object.keys(putuoDone).length);
-    if(totalPutuo === 0 && Object.keys(putuoDone).length === 0) {
-      alert('未识别到普陀数据。列名: '+cols.join(',')+' -- 请确保表格包含个案经理和完成业绩列'); return;
-    }
+    console.log('康博嘉导入: 匹配'+matched+'条, 门店:', storeTotal, 'CM:', cmTotal);
+    if(matched === 0) { alert('未匹配到南区5家门店数据。请确认所在诊所列包含: '+Object.keys(KBJ_STORE_MAP).join(', ')); return; }
 
-    // Update CM person table - 普陀 rows
+    // 存储到 _M
+    window._M.kbj_store = storeTotal;
+    window._M.kbj_cm = cmTotal;
+
+    // 先回退上次导入的康博嘉增量（防止重复叠加）
+    if(window._M._kbj_prev_store) {
+      document.querySelectorAll('#tab-group tbody tr:not(.subtotal):not(.section-header)').forEach(function(row) {
+        var tds = row.querySelectorAll('td');
+        if(tds.length < 12) return;
+        var storeName = tds[0].textContent.replace('⚠锁定','').trim();
+        var prev = window._M._kbj_prev_store[storeName] || 0;
+        if(prev > 0) writeNum(tds[3], parseNum(tds[3]) - prev);
+      });
+      var cmTab2 = document.getElementById('tab-cm_person');
+      if(cmTab2) {
+        cmTab2.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
+          var tds = row.querySelectorAll('td');
+          if(tds.length < 4) return;
+          var name = tds[1].textContent.replace(/<[^>]+>/g,'').replace('🔗KBJ','').replace('⚠锁定','').trim();
+          var prev = window._M._kbj_prev_cm[name] || 0;
+          if(prev > 0) writeNum(tds[3], parseNum(tds[3]) - prev);
+        });
+      }
+    }
+    window._M._kbj_prev_store = storeTotal;
+    window._M._kbj_prev_cm = cmTotal;
+
+    // 更新 CM 表（叠加康博嘉业绩到对应CM）
     var cmTab = document.getElementById('tab-cm_person');
-    if(!cmTab) { console.log('普陀导入: CM tab not found!'); return; }
-    var cmRows = cmTab.querySelectorAll('tbody tr:not(.subtotal)');
-    console.log('普陀导入: CM表行数=' + cmRows.length);
-    var cmGroupSub = {tgt:0, done:0, ref:0, net:0};
-    var updatedCount = 0;
-    cmRows.forEach(function(row) {
-      var tds = row.querySelectorAll('td');
-      if(tds.length < 4) return;
-      var store = tds[0].textContent.trim();
-      if(store !== '普陀') return;
-      var name = tds[1].textContent.replace('⚠锁定','').trim();
-      var newDone = putuoDone[name];
-      if(newDone !== undefined) {
-        console.log('普陀导入: 更新CM '+name+' 从 '+parseNum(tds[3])+' → '+newDone);
-        writeNum(tds[3], newDone);
-        tds[1].innerHTML = name + ' <span style="font-size:10px;color:#f59e0b">⚠锁定</span>';
-        var tgt = parseNum(tds[2]);
-        rebuildBar(tds[4], newDone/tgt);
-        var ref = parseNum(tds[6]);
-        writeNum(tds[10], newDone - ref);
-        rebuildRefund(tds[7], ref, newDone, 'cm');
-        updatedCount++;
-      }
-      cmGroupSub.tgt += parseNum(tds[2]);
-      cmGroupSub.done += parseNum(tds[3]);
-      cmGroupSub.ref += parseNum(tds[6]);
-      cmGroupSub.net += parseNum(tds[10]);
-    });
-    console.log('普陀导入: 更新了'+updatedCount+'条CM记录');
+    if(cmTab) {
+      cmTab.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
+        var tds = row.querySelectorAll('td');
+        if(tds.length < 4) return;
+        var name = tds[1].textContent.replace(/<[^>]+>/g,'').replace('🔗KBJ','').replace('⚠锁定','').trim();
+        var extra = cmTotal[name] || 0;
+        if(extra > 0) {
+          writeNum(tds[3], parseNum(tds[3]) + extra);
+          tds[1].innerHTML = name + ' <span style="font-size:10px;color:#059669">🔗KBJ</span>';
+        }
+      });
+    }
 
-    // Update CM subtotal for 普陀
-    cmTab.querySelectorAll('tbody tr.subtotal').forEach(function(st) {
-      var tds = st.querySelectorAll('td');
-      if(tds[0].textContent.trim() !== '普陀') return;
-      writeNum(tds[2], cmGroupSub.tgt);
-      writeNum(tds[3], cmGroupSub.done);
-      rebuildBar(tds[4], cmGroupSub.done/cmGroupSub.tgt);
-      writeNum(tds[6], cmGroupSub.ref);
-      rebuildRefund(tds[7], cmGroupSub.ref, cmGroupSub.done, 'cm');
-      writeNum(tds[9], cmGroupSub.net);
-    });
-
-    // Update group table - 普陀 row
-    var grpRows = document.querySelectorAll('#tab-group tbody tr:not(.subtotal):not(.section-header)');
-    grpRows.forEach(function(row) {
+    // 更新门店行（叠加康博嘉到对应门店）
+    document.querySelectorAll('#tab-group tbody tr:not(.subtotal):not(.section-header)').forEach(function(row) {
       var tds = row.querySelectorAll('td');
       if(tds.length < 12) return;
-      if(tds[0].textContent.replace('⚠锁定','').trim() !== '普陀') return;
-      writeNum(tds[3], totalPutuo);
-      var tgt = parseNum(tds[2]);
-      rebuildBar(tds[4], totalPutuo/tgt);
-      if(storeRefund !== null) { writeNum(tds[6], storeRefund); }
-      var ref = parseNum(tds[6]);
-      writeNum(tds[9], totalPutuo - ref);
-      rebuildRefund(tds[7], ref, totalPutuo, 'group');
+      var storeName = tds[0].textContent.replace('⚠锁定','').trim();
+      var extra = storeTotal[storeName] || 0;
+      if(extra > 0) writeNum(tds[3], parseNum(tds[3]) + extra);
     });
 
-    // Update window._M.putuo_locked for底表导入 consistency
-    window._M.putuo_locked = totalPutuo;
-
-    // Full refresh cascades to role table, KPIs, etc
+    // 全量刷新
     refreshAll();
-    alert('✅ 普陀数据已更新！总业绩: '+fmtNum(totalPutuo)+'，个案数: '+Object.keys(putuoDone).length);
+    alert('✅ 康博嘉数据已导入！匹配'+matched+'条，'+Object.keys(storeTotal).length+'家门店，'+Object.keys(cmTotal).length+'位CM');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ====== 普陀明细导入（康博嘉同格式） ======
+function importPutuoDetail(input) {
+  var file = input.files[0]; if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var wb = XLSX.read(e.target.result, {type:'array', cellDates: true});
+    // 自动选列数最多的 sheet
+    var bestSheet = wb.SheetNames[0], bestCols = 0;
+    wb.SheetNames.forEach(function(sn) {
+      var s = wb.Sheets[sn];
+      if(!s['!ref']) return;
+      var range = XLSX.utils.decode_range(s['!ref']);
+      if(range.e.c > bestCols) { bestCols = range.e.c; bestSheet = sn; }
+    });
+    var data = XLSX.utils.sheet_to_json(wb.Sheets[bestSheet]);
+    var cols = data.length > 0 ? Object.keys(data[0]) : [];
+    console.log('普陀明细导入: sheet='+bestSheet+' 行数='+data.length);
+
+    // 查找列：CM姓名(或客户经理)、收款金额(或实际收入)
+    var cmCol = cols.find(function(c){ return c.indexOf('CM')>=0 || c.indexOf('客户经理')>=0 || c.indexOf('经理')>=0; }) || '';
+    var amtCol = cols.find(function(c){ return c.indexOf('收款金额')>=0 || c.indexOf('实际收入')>=0 || c.indexOf('金额')>=0; }) || '';
+    if(!cmCol || !amtCol) {
+      alert('未识别到普陀明细列。请确认文件包含：CM姓名/客户经理、收款金额/实际收入'); return;
+    }
+    console.log('普陀明细导入: cmCol='+cmCol+' amtCol='+amtCol);
+
+    // 按CM汇总
+    var cmDone = {}, total = 0;
+    data.forEach(function(row) {
+      var cm = (row[cmCol] || '').toString().trim();
+      var amt = parseFloat(row[amtCol]) || 0;
+      if(!cm || cm === 'nan') { total += amt; return; }  // 空CM归入门店总业绩
+      cmDone[cm] = (cmDone[cm] || 0) + amt;
+      total += amt;
+    });
+    console.log('普陀明细导入: 总='+total+' CM数='+Object.keys(cmDone).length, cmDone);
+
+    // 存储到 _M
+    window._M.putuo_extra = cmDone;
+    window._M.putuo_locked = total;
+
+    // 更新 CM 表中普陀行
+    var cmTab = document.getElementById('tab-cm_person');
+    if(cmTab) {
+      cmTab.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
+        var tds = row.querySelectorAll('td');
+        if(tds.length < 4) return;
+        if(tds[0].textContent.trim() !== '普陀') return;
+        var name = tds[1].textContent.replace('⚠锁定','').trim();
+        var newDone = cmDone[name];
+        if(newDone !== undefined) {
+          writeNum(tds[3], newDone);
+          tds[1].innerHTML = name + ' <span style="font-size:10px;color:#f59e0b">⚠锁定</span>';
+        }
+      });
+    }
+
+    // 全量刷新
+    refreshAll();
+    alert('✅ 普陀明细已导入！总业绩: '+fmtNum(total)+'，CM数: '+Object.keys(cmDone).length);
   };
   reader.readAsArrayBuffer(file);
 }
@@ -821,9 +845,11 @@ function loadChannelData(force) {
 <label style="padding:8px 18px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
   📤 导入底表 <input type="file" onchange="importBaseTable(this)" accept=".xlsx,.xls" style="display:none">
 </label>
-<button onclick="exportPutuoTemplate()" style="padding:8px 18px;background:#fff;color:#b45309;border:1px solid #f59e0b;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📥 普陀模板</button>
+<label style="padding:8px 18px;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
+  📤 导入康博嘉 <input type="file" onchange="importKangbojia(this)" accept=".xlsx,.xls" style="display:none">
+</label>
 <label style="padding:8px 18px;background:#fef3c7;color:#b45309;border:1px solid #f59e0b;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
-  ⚠ 导入普陀 <input type="file" onchange="importPutuo(this)" accept=".xlsx,.xls" style="display:none">
+  📤 导入普陀明细 <input type="file" onchange="importPutuoDetail(this)" accept=".xlsx,.xls" style="display:none">
 </label>
 </div>
 </div>
