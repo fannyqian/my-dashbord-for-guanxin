@@ -6,7 +6,41 @@ import pandas as pd
 import numpy as np
 
 # ==================== 加载数据 ====================
-orders = pd.read_excel(r'C:\Users\fanny\Desktop\数据日日\每日日\南区截至0712.xlsx')
+import os, glob
+
+# 自动找每日日文件夹里最新的数据文件（支持 xlsx/csv，排除模板和临时文件）
+data_dir = r'C:\Users\fanny\Desktop\数据日日\每日日'
+exclude_patterns = ['普陀', '康博嘉', '模板']
+candidates = []
+for pat in ['*.xlsx', '*.csv']:
+    for f in glob.glob(os.path.join(data_dir, pat)):
+        bn = os.path.basename(f)
+        if bn.startswith('~$'):
+            continue
+        if any(p in bn for p in exclude_patterns):
+            continue
+        candidates.append(f)
+
+# 筛选包含订单底表特征列 (order_id) 的文件
+data_files = []
+for f in candidates:
+    try:
+        if f.endswith('.csv'):
+            sample = pd.read_csv(f, nrows=0, encoding='utf-8')
+        else:
+            sample = pd.read_excel(f, nrows=0)
+        if 'order_id' in sample.columns:
+            data_files.append(f)
+    except Exception:
+        pass
+if not data_files:
+    raise FileNotFoundError(f'{data_dir} 中没有找到订单底表文件')
+latest_file = max(data_files, key=os.path.getmtime)
+print(f'📂 数据源: {os.path.basename(latest_file)}')
+if latest_file.endswith('.csv'):
+    orders = pd.read_csv(latest_file, encoding='utf-8')
+else:
+    orders = pd.read_excel(latest_file)
 target_xls = pd.ExcelFile(r'C:\Users\fanny\Desktop\数据日日\南区-目标.xlsx')
 target_summary = pd.read_excel(target_xls, sheet_name='Sheet1')
 target_online_person = pd.read_excel(target_xls, sheet_name='线上个人')
@@ -33,7 +67,7 @@ def extract_org(beisen_path):
     parts = str(beisen_path).split('_')
     last = parts[-1]
     # 课程销售组/班主任组：末段即为组织名
-    if last in ('课程销售1组','课程销售2组','课程销售3组','课程销售4组','课程销售5组',
+    if last in ('课程销售1组','课程销售2组','课程销售3组','课程销售4组','课程销售5组','课程销售6组',
                 '班主任1组','班主任2组','班主任3组','班主任组','线上课程销售组','销售管理部'):
         return last
     # 门店：在路径中匹配已知门店名
@@ -57,7 +91,7 @@ orders = orders.dropna(subset=['组织'])
 
 # ==================== 映射表 ====================
 # 参考7.9 sheet角色定义: 销售/班主任(含观心学院)/门店
-SALES_ORGS = ['课程销售1组','课程销售2组','课程销售3组','课程销售4组','课程销售5组']
+SALES_ORGS = ['课程销售1组','课程销售2组','课程销售3组','课程销售4组','课程销售5组','课程销售6组']
 ADVISOR_ORGS = ['班主任1组','班主任2组','班主任3组','班主任组']  # 全部班主任计入
 STORE_MAP = {
     '上海普陀店': '普陀','上海徐汇店': '徐汇','云南分公司': '昆明',
@@ -65,12 +99,18 @@ STORE_MAP = {
     '杭州分公司': '杭州','武汉观心诊所': '武汉','深圳分公司': '深圳',
     '珠海分公司': '珠海','福州观心诊所': '福州',
 }
+# 线下个案三组划分
+STORE_TO_TRIO = {
+    '普陀': '一组','徐汇': '一组','南京': '一组','广州': '一组',
+    '深圳': '二组','杭州': '二组','武汉': '二组',
+    '昆明': '三组','珠海': '三组','成都': '三组','福州': '三组',
+}
 # 组织→分组名 (匹配目标表)
 ORG_TO_GROUP = {
     '课程销售1组':'课程1组','课程销售2组':'课程2组','课程销售3组':'课程3组',
-    '课程销售4组':'销售4组','课程销售5组':'销售5组',
-    '班主任1组':'班主任1组','班主任2组':'班主任2组','班主任3组':'班主任3组',
-    '班主任组':'班主任组',
+    '课程销售4组':'课程4组','课程销售5组':'课程5组','课程销售6组':'课程6组',
+    '班主任1组':'班主任','班主任2组':'班主任','班主任3组':'班主任',
+    '班主任组':'班主任',
 }
 ORG_TO_GROUP.update(STORE_MAP)
 
@@ -92,7 +132,7 @@ section_tgts = {'线上':0,'线下门店':0}
 for _, row in target_summary.iterrows():
     label = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ''
     g = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else ''
-    t = row.iloc[3]
+    t = row.iloc[2]  # 7月目标/w
     if g in ('分组','nan','') or g == '合计':
         if label in ('线上','线下门店'): current_section = label
         continue
@@ -103,10 +143,38 @@ for _, row in target_summary.iterrows():
         if current_section: section_tgts[current_section] += val
     except: continue
 
-# 线上个人目标
+# 对齐分组名：Sheet1 用 销售N组，改为 课程N组
+for i in range(1, 7):
+    old_k = f'销售{i}组'
+    new_k = f'课程{i}组'
+    if old_k in target_map:
+        target_map[new_k] = target_map.pop(old_k)
+# 线上班主任 → 班主任
+if '线上班主任' in target_map:
+    target_map['班主任'] = target_map.pop('线上班主任')
+
+# === 用户指定目标（覆盖 Sheet1） ===
+# 重算分节汇总
+section_tgts = {'线上': 0, '线下门店': 0}
+ONLINE_TGT_GROUPS = ['课程1组','课程2组','课程3组','课程4组','课程5组','课程6组','班主任']
+OFFLINE_TGT_GROUPS = ['普陀','昆明','成都','广州','深圳','珠海','福州','杭州','南京','武汉','徐汇']
+for g in ONLINE_TGT_GROUPS:
+    section_tgts['线上'] += target_map.get(g, 0)
+for g in OFFLINE_TGT_GROUPS:
+    section_tgts['线下门店'] += target_map.get(g, 0)
+# KPI卡片展示用：线上固定，线下凑整到1510万
+section_tgts_display = {
+    '线上': section_tgts['线上'],
+    '线下门店': 1510_0000 - section_tgts['线上']
+}
+
+# 线上个人目标（合并班主任 → 班主任）
 online_person_target = {}
 for _, row in target_online_person.iterrows():
-    online_person_target[(row['分组'], row['销售'])] = float(row['目标'])
+    grp = str(row['分组']).strip()
+    if grp in ('班主任2组', '班主任3组'):
+        grp = '班主任'
+    online_person_target[(grp, row['销售'])] = float(row['目标'])
 
 # 线下CM目标
 cm_list = []
@@ -124,31 +192,125 @@ for _, row in target_cm.iterrows():
 cm_df = pd.DataFrame(cm_list)
 putuo_locked_done = cm_df[cm_df['store']=='普陀']['done_locked'].sum()
 
-# ==================== 普陀业绩单独更新 ====================
-putuo_update = pd.read_excel(r'C:\Users\fanny\Desktop\数据日日\每日日\普陀门店数据模板 0713.xlsx')
-putuo_cm_done = {}  # name -> done
-putuo_store_perf = 0  # 门店业绩
-putuo_store_refund = 0  # 门店退款
-for _, row in putuo_update.iterrows():
-    name = str(row['个案经理']).strip() if pd.notna(row['个案经理']) else ''
-    if name == '合计':
-        putuo_store_perf = float(row['门店业绩']) if pd.notna(row['门店业绩']) else 0
-        putuo_store_refund = float(row['门店退款']) if pd.notna(row['门店退款']) else 0
-    elif name and name != 'nan':
-        putuo_cm_done[name] = float(row['完成业绩']) if pd.notna(row['完成业绩']) else 0
+# ==================== 普陀业绩单独更新（从每日明细自动汇总） ====================
+putuo_files = [f for f in
+    glob.glob(os.path.join(data_dir, '*普陀*明细*.xlsx')) +
+    glob.glob(os.path.join(data_dir, '*普陀*明细*.xls')) +
+    glob.glob(os.path.join(data_dir, 'HG0019*.xlsx')) +
+    glob.glob(os.path.join(data_dir, 'HG0019*.xls'))
+    if not os.path.basename(f).startswith('~$')]
+if not putuo_files:
+    # 回退：旧版普陀模板文件
+    putuo_files = [f for f in glob.glob(os.path.join(data_dir, '*普陀*.xlsx'))
+                   if not os.path.basename(f).startswith('~$')]
+putuo_file = max(putuo_files, key=os.path.getmtime) if putuo_files else None
 
-# Override 普陀 CM 数据
+putuo_cm_done = {}  # name -> done
+putuo_store_perf = 0
+putuo_store_refund = 0
+
+if putuo_file:
+    putuo_df = pd.read_excel(putuo_file)
+    # 自动识别格式：明细格式有 CM姓名/收款金额 列，模板格式有 个案经理/门店业绩 列
+    if 'CM姓名' in putuo_df.columns and '收款金额' in putuo_df.columns:
+        # 新格式：原始交易明细 → 按CM汇总
+        print(f'📂 普陀明细: {os.path.basename(putuo_file)}')
+        for _, row in putuo_df.iterrows():
+            cm_name = str(row['CM姓名']).strip() if pd.notna(row['CM姓名']) else ''
+            amt = float(row['收款金额']) if pd.notna(row['收款金额']) else 0
+            if cm_name and cm_name != 'nan':
+                putuo_cm_done[cm_name] = putuo_cm_done.get(cm_name, 0) + amt
+        putuo_store_perf = putuo_df['收款金额'].sum()  # 全量（含空CM的医生业绩）
+        # 退费从底表单独统计（退款金额列如有则用）
+        if '退款金额' in putuo_df.columns:
+            putuo_store_refund = putuo_df['退款金额'].sum()
+    else:
+        # 旧格式：预汇总模板（个案经理/门店业绩/门店退款）
+        print(f'📂 普陀模板: {os.path.basename(putuo_file)}')
+        for _, row in putuo_df.iterrows():
+            name = str(row['个案经理']).strip() if pd.notna(row['个案经理']) else ''
+            if name == '合计':
+                putuo_store_perf = float(row['门店业绩']) if pd.notna(row['门店业绩']) else 0
+                putuo_store_refund = float(row['门店退款']) if pd.notna(row['门店退款']) else 0
+            elif name and name != 'nan':
+                putuo_cm_done[name] = float(row['完成业绩']) if pd.notna(row['完成业绩']) else 0
+
+# Override 普陀 CM 数据（明细汇总覆盖 done_locked，后面会 + 底表）
 for cm in cm_list:
     if cm['store'] == '普陀' and cm['name'] in putuo_cm_done:
         cm['done_locked'] = putuo_cm_done[cm['name']]
-putuo_locked_done = putuo_store_perf
-putuo_store_refund_total = putuo_store_refund
+putuo_extra = putuo_store_perf  # 明细业绩，稍后叠加到底表
 # 重建 cm_df 以应用普陀覆写
 cm_df = pd.DataFrame(cm_list)
 
+# ==================== 康博嘉业绩导入 ====================
+kangbojia_store_extra = {}  # store_name -> extra_amount
+kangbojia_cm_extra = {}     # cm_name -> extra_amount
+kbj_store_map = {
+    '观心正德诊所': '广州',
+    '武汉观心精神专科门诊部': '武汉',
+    '深圳观心正德综合门诊部': '深圳',
+    '南京建邺观心综合门诊部': '南京',
+    '杭州观心正念诊所有限公司': '杭州',
+}
+kbj_files = [f for f in
+    glob.glob(os.path.join(data_dir, '*康博嘉*.xlsx')) +
+    glob.glob(os.path.join(data_dir, '*康博嘉*.xls'))
+    if not os.path.basename(f).startswith('~$')]
+if kbj_files:
+    kbj_file = max(kbj_files, key=os.path.getmtime)
+    # 自动选数据最多的 sheet（兼容带标题页的新格式）
+    kbj_xls = pd.ExcelFile(kbj_file)
+    if len(kbj_xls.sheet_names) > 1:
+        best_sheet = max(kbj_xls.sheet_names, key=lambda s: pd.read_excel(kbj_xls, sheet_name=s, nrows=0).shape[1])
+    else:
+        best_sheet = kbj_xls.sheet_names[0]
+    kbj_df = pd.read_excel(kbj_file, sheet_name=best_sheet)
+    print(f'📂 康博嘉源: {os.path.basename(kbj_file)} [{best_sheet}]')
+    # 检测是否为原始交易数据（列数>10 = 原始明细，<=10 = 预汇总）
+    if len(kbj_df.columns) > 10:
+        # 原始交易数据：按所在诊所 + 客户经理分别汇总实际收入
+        kbj_store_col = kbj_df.columns[47]  # 所在诊所
+        kbj_cm_col = kbj_df.columns[11]     # 客户经理
+        kbj_amt_col = kbj_df.columns[33]    # 实际收入
+        for _, row in kbj_df.iterrows():
+            raw_store = str(row[kbj_store_col]).strip()
+            # 只保留南区5家门店（广州/武汉/深圳/南京/杭州）
+            if raw_store not in kbj_store_map:
+                continue
+            cm = str(row[kbj_cm_col]).strip()
+            amt = float(row[kbj_amt_col]) if pd.notna(row[kbj_amt_col]) else 0
+            store = kbj_store_map[raw_store]
+            kangbojia_store_extra[store] = kangbojia_store_extra.get(store, 0) + amt
+            if cm and cm != 'nan' and cm != '测试医生':
+                kangbojia_cm_extra[cm] = kangbojia_cm_extra.get(cm, 0) + amt
+    else:
+        # 兼容旧版预汇总数据：col[0]=门店, col[1]=实际收入
+        store_col = kbj_df.columns[0]
+        amt_col = kbj_df.columns[1]
+        for _, row in kbj_df.iterrows():
+            store = str(row[store_col]).strip()
+            amt = float(row[amt_col]) if pd.notna(row[amt_col]) else 0
+            if store and store != 'nan':
+                kangbojia_store_extra[store] = amt
+    print(f'📂 康博嘉数据(门店): {kangbojia_store_extra}')
+    print(f'📂 康博嘉数据(CM): {kangbojia_cm_extra}')
+kangbojia_total = sum(kangbojia_store_extra.values())
+
 # ==================== 同期筛选 ====================
-JULY_START = '2026-07-01'; JULY_END = '2026-07-13'
-JUNE_START = '2026-06-01'; JUNE_END = '2026-06-13'
+# 数据截止日（显示用）
+JULY_CUTOFF = '2026-07-15'; JUNE_CUTOFF = '2026-06-15'
+# period_income/period_refund 用 < end，所以 end 要设为截止日+1
+JULY_START = '2026-07-01'; JULY_END = '2026-07-16'
+JUNE_START = '2026-06-01'; JUNE_END = '2026-06-16'
+# 显示用日期
+from datetime import datetime as _dt
+_july_cutoff_dt = _dt.strptime(JULY_CUTOFF, '%Y-%m-%d')
+_DATE_CN = f'{_july_cutoff_dt.month}月{_july_cutoff_dt.day}日'
+_DATE_DOT = f'{_july_cutoff_dt.year%100:02d}.{_july_cutoff_dt.month:02d}.{_july_cutoff_dt.day:02d}'
+_DATE_DAY = str(_july_cutoff_dt.day)
+_june_cutoff_dt = _dt.strptime(JUNE_CUTOFF, '%Y-%m-%d')
+_DATE_JUNE_CN = f'{_june_cutoff_dt.month}月{_june_cutoff_dt.day}日'
 
 # 收入: 按 pay_at
 def period_income(df, start, end):
@@ -191,7 +353,8 @@ def calc_metrics(grp_df, tgt, is_putuo=False):
 # ==================== Level 1: 按角色 ====================
 role_metrics = {}
 putuo_order_done = period_income(orders[orders['target_group']=='普陀'], JULY_START, JULY_END)
-putuo_delta = putuo_locked_done - putuo_order_done  # 普陀锁定增量
+putuo_locked_done = putuo_order_done + putuo_extra  # 普陀总业绩 = 底表 + 明细
+putuo_delta = putuo_extra  # 明细作为额外增量叠加
 
 for role in ['销售','班主任','门店']:
     grp = orders[orders['role']==role]
@@ -200,6 +363,8 @@ for role in ['销售','班主任','门店']:
     if role == '门店':
         # 普陀部分用锁定值替换
         m['done'] = m['done'] + putuo_delta
+        # 康博嘉额外业绩
+        m['done'] = m['done'] + kangbojia_total
         m['rate'] = safe_div(m['done'], tgt)
         m['net'] = m['done'] - m['refund']
         m['net_chg'] = safe_div(m['net'] - m['prev_net'], m['prev_net'])
@@ -207,18 +372,22 @@ for role in ['销售','班主任','门店']:
 
 # 南区合计
 total_tgt = sum(r['target'] for r in role_metrics.values())
+total_tgt = 1510_0000  # 总目标锁定 1510 万
 total_grp = orders[orders['role'].isin(['销售','班主任','门店'])]
 total_metrics = calc_metrics(total_grp, total_tgt)
 # 合并普陀锁定
 total_metrics['done'] = total_metrics['done'] + putuo_delta
-total_metrics['rate'] = safe_div(total_metrics['done'], total_tgt)
+# 合并康博嘉
+total_metrics['done'] = total_metrics['done'] + kangbojia_total
+total_metrics['target'] = 1510_0000
+total_metrics['rate'] = safe_div(total_metrics['done'], 1510_0000)
 total_metrics['net'] = total_metrics['done'] - total_metrics['refund']
 total_metrics['net_chg'] = safe_div(total_metrics['net'] - total_metrics['prev_net'], total_metrics['prev_net'])
 
 # ==================== Level 2: 按分组 ====================
 # 所有分组 (按完成率升序 = 最差的排前面)
-ALL_GROUPS = ['课程1组','课程2组','课程3组','销售4组','销售5组',
-              '班主任2组','班主任3组',
+ALL_GROUPS = ['课程1组','课程2组','课程3组','课程4组','课程5组','课程6组',
+              '班主任',
               '普陀','昆明','成都','广州','深圳','珠海','福州','杭州','南京','武汉','徐汇']
 
 group_metrics = {}
@@ -229,8 +398,17 @@ for g in ALL_GROUPS:
     is_putuo = (g == '普陀')
     group_metrics[g] = calc_metrics(grp, tgt, is_putuo)
 
+# 注入康博嘉额外业绩到对应门店
+for store, extra in kangbojia_store_extra.items():
+    if store in group_metrics:
+        gm = group_metrics[store]
+        gm['done'] = gm['done'] + extra
+        gm['rate'] = safe_div(gm['done'], gm['target'])
+        gm['net'] = gm['done'] - gm['refund']
+        gm['net_chg'] = safe_div(gm['net'] - gm['prev_net'], gm['prev_net'])
+
 # 拆分线上组 / 线下门店
-ONLINE_GROUPS = ['课程1组','课程2组','课程3组','销售4组','销售5组','班主任2组','班主任3组']
+ONLINE_GROUPS = ['课程1组','课程2组','课程3组','课程4组','课程5组','课程6组','班主任']
 OFFLINE_GROUPS = ['普陀','昆明','成都','广州','深圳','珠海','福州','杭州','南京','武汉','徐汇']
 
 # 各自按完成率升序排列（差的在前）
@@ -253,9 +431,9 @@ for _, cm in cm_df.iterrows():
     store = cm['store']; name = cm['name']; tgt = cm['target']
     is_putuo = (store == '普陀')
     if is_putuo:
-        done = cm['done_locked']
-        # 普陀退费也要从底表查 (by seller_name)
+        # 普陀个案业绩 = 明细汇总 + 底表订单
         p_orders = orders[(orders['seller_name']==name)]
+        done = cm['done_locked'] + period_income(p_orders, JULY_START, JULY_END)
         ref_raw = period_refund(p_orders, JULY_START, JULY_END)
         prev_raw = cm['prev_month']
         prev_ref_raw = cm['refund_locked']
@@ -282,6 +460,16 @@ for _, cm in cm_df.iterrows():
     })
 person_cm_df = pd.DataFrame(person_cm_list)
 
+# 注入康博嘉额外业绩到对应CM个人
+for cm_name, extra in kangbojia_cm_extra.items():
+    mask = person_cm_df['name'] == cm_name
+    if mask.any():
+        idx = person_cm_df[mask].index[0]
+        person_cm_df.at[idx, 'done'] = person_cm_df.at[idx, 'done'] + extra
+        person_cm_df.at[idx, 'rate'] = safe_div(person_cm_df.at[idx, 'done'], person_cm_df.at[idx, 'target'])
+        person_cm_df.at[idx, 'net'] = person_cm_df.at[idx, 'done'] - person_cm_df.at[idx, 'refund']
+        person_cm_df.at[idx, 'net_chg'] = safe_div(person_cm_df.at[idx, 'net'] - person_cm_df.at[idx, 'prev_net'], person_cm_df.at[idx, 'prev_net'])
+
 # ==================== HTML 渲染 ====================
 def fmt(n):
     if abs(n) >= 1e8: return f'{n/1e8:.1f}亿'
@@ -294,6 +482,13 @@ def chg_html(val):
     if val is None or val == float('inf') or val == -float('inf'): return '<span style="color:#94a3b8">—</span>'
     c = '#22c55e' if val >= 0 else '#ef4444'
     arrow = '↑' if val >= 0 else '↓'
+    return f'<span style="color:{c};font-weight:600">{arrow}{abs(val)*100:.1f}%</span>'
+
+def refund_chg_html(val):
+    """退费环比：下降=绿，上升=红"""
+    if val is None or val == float('inf') or val == -float('inf'): return '<span style="color:#94a3b8">—</span>'
+    c = '#ef4444' if val > 0 else '#22c55e' if val < 0 else '#94a3b8'
+    arrow = '↑' if val > 0 else '↓' if val < 0 else '→'
     return f'<span style="color:{c};font-weight:600">{arrow}{abs(val)*100:.1f}%</span>'
 
 def rate_bar(val):
@@ -316,7 +511,9 @@ def role_badge(role):
     bg, fg = colors.get(role,('#f3f4f6','#6b7280'))
     return f'<span style="background:{bg};color:{fg};padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">{role}</span>'
 
-TIME_PROGRESS = 12/31  # 月度时间进度 (~38.7%)
+from datetime import date
+_today = date.today()
+TIME_PROGRESS = min(_today.day, 31) / 31  # 月度时间进度，动态当天日期
 
 def trend_label(val):
     """趋势判定"""
@@ -396,7 +593,7 @@ def group_row(g, m, role):
   <td class="num">{chg_html(m['done_chg'])}</td>
   <td class="num">{fmt(m['refund'])}</td>
   {refund_td(m['refund'], m['done'])}
-  <td class="num">{chg_html(m['refund_chg'])}</td>
+  <td class="num">{refund_chg_html(m['refund_chg'])}</td>
   <td class="num"><b>{fmt(m['net'])}</b></td>
   <td class="num">{fmt(m['prev_net'])}</td>
   <td class="num">{chg_html(m['net_chg'])}</td>
@@ -414,7 +611,7 @@ def person_row(name, group_label, tgt, m, person_type='sales_advisor'):
   <td class="num">{chg_html(m['done_chg'])}</td>
   <td class="num">{fmt(m['refund'])}</td>
   {refund_td(m['refund'], m['done'], person_type)}
-  <td class="num">{chg_html(m['refund_chg'])}</td>
+  <td class="num">{refund_chg_html(m['refund_chg'])}</td>
   <td class="num"><b>{fmt(m['net'])}</b></td>
   <td class="num">{fmt(m['prev_net'])}</td>
   <td class="num">{chg_html(m['net_chg'])}</td>
@@ -462,7 +659,7 @@ tr.section-header:hover td{{background:inherit!important}}
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
 <div><h1>📊 南区7月目标进展看板</h1>
-<p class="subtitle">数据截止：2026年7月12日 | 环比基期：6月1-12日同口径 | 普陀业绩锁定目标表</p></div>
+<p class="subtitle">数据截止：2026年{_DATE_CN} | 环比基期：6月1-{_DATE_DAY}日同口径 | 普陀业绩从明细自动汇总</p></div>
 <div class="top-btns" style="display:flex;gap:8px;align-items:center;margin-top:4px">
 <button onclick="exportBaseTable()" style="padding:8px 18px;background:#fff;color:#1e293b;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📥 导出底表</button>
 <button onclick="snapshot()" style="padding:8px 18px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📸 快照</button>
@@ -476,18 +673,42 @@ tr.section-header:hover td{{background:inherit!important}}
 </div>
 </div>
 
+<!-- Timeline Progress Bar -->
+<div style="margin-bottom:16px;padding:14px 20px;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <span style="font-size:13px;font-weight:700;color:#1e293b">📅 7月进度</span>
+    <span style="font-size:13px;color:#64748b">已过 <b style="color:#1e293b">{int(TIME_PROGRESS*31)}</b>/31 天 · <b style="color:#6366f1">{pct2(TIME_PROGRESS)}</b></span>
+  </div>
+  <div style="position:relative;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden">
+    <div style="width:{TIME_PROGRESS*100:.1f}%;height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:4px;transition:width 0.6s ease"></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:#94a3b8">
+    <span>7/1</span><span>7/10</span><span>7/20</span><span>7/31</span>
+  </div>
+</div>
+
 <!-- KPI Cards -->
 <div class="kpi-grid">
 <div class="kpi-card">
   <div class="label">📌 月总目标</div>
   <div class="value">{fmt(total_metrics['target'])}</div>
-  <div class="sub">线上 {fmt(section_tgts['线上'])} + 线下 {fmt(section_tgts['线下门店'])}</div>
+  <div class="sub">线上 {fmt(section_tgts_display['线上'])} + 线下 {fmt(section_tgts_display['线下门店'])}</div>
 </div>
 <div class="kpi-card">
   <div class="label">✅ 累计完成</div>
   <div class="value">{fmt(total_metrics['done'])}</div>
   {rate_bar_with_trend(total_metrics['rate'])}
   <div class="sub">上月同期 {fmt(total_metrics['prev_done'])} | 环比 {pct1(total_metrics['done_chg'])}</div>
+</div>
+<div class="kpi-card">
+  <div class="label">📅 剩余天数</div>
+  <div class="value">{31 - int(TIME_PROGRESS*31)} 天</div>
+  <div class="sub">7月{int(TIME_PROGRESS*31)+1}日 - 7月31日</div>
+</div>
+<div class="kpi-card">
+  <div class="label">🎯 日均冲刺</div>
+  <div class="value">{fmt(safe_div(total_metrics['target'] - total_metrics['done'], 31 - int(TIME_PROGRESS*31)))}</div>
+  <div class="sub">剩余 {fmt(total_metrics['target'] - total_metrics['done'])} ÷ {31 - int(TIME_PROGRESS*31)}天</div>
 </div>
 </div>
 
@@ -522,6 +743,7 @@ tr.section-header:hover td{{background:inherit!important}}
 <button class="tab" data-tab="group" onclick="switchTab('group')">📋 按分组</button>
 <button class="tab" data-tab="online_person" onclick="switchTab('online_person')">👤 线上销售</button>
 <button class="tab" data-tab="cm_person" onclick="switchTab('cm_person')">🏥 线下个案</button>
+<button class="tab" data-tab="channel" onclick="switchTab('channel');loadChannelData()">📢 渠道业绩</button>
 </div>
 
 <!-- Tab 1: 按角色 -->
@@ -590,7 +812,7 @@ for _, r in person_online_sorted.iterrows():
   <td class="num">{fmt(group_sub['target'])}</td><td class="num">{fmt(sub_done)}</td>{rate_td(safe_div(sub_done,group_sub['target']))}
   <td class="num">{chg_html(safe_div(sub_done-group_sub['prev_done'],group_sub['prev_done']))}</td>
   <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
-  <td class="num">{chg_html(safe_div(sub_ref-group_sub['prev_refund'],group_sub['prev_refund']))}</td>
+  <td class="num">{refund_chg_html(safe_div(sub_ref-group_sub['prev_refund'],group_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
   <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td></tr>'''
         last_group = r['group']
@@ -611,7 +833,7 @@ if last_group and group_sub['target'] > 0:
   <td class="num">{fmt(group_sub['target'])}</td><td class="num">{fmt(sub_done)}</td>{rate_td(safe_div(sub_done,group_sub['target']))}</td>
   <td class="num">{chg_html(safe_div(sub_done-group_sub['prev_done'],group_sub['prev_done']))}</td>
   <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
-  <td class="num">{chg_html(safe_div(sub_ref-group_sub['prev_refund'],group_sub['prev_refund']))}</td>
+  <td class="num">{refund_chg_html(safe_div(sub_ref-group_sub['prev_refund'],group_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
   <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td></tr>'''
 
@@ -639,7 +861,7 @@ for _, r in cm_sorted.iterrows():
   <td class="num">{fmt(store_sub['target'])}</td><td class="num">{fmt(sub_done)}</td>{rate_td(safe_div(sub_done,store_sub['target']))}</td>
   <td class="num">{chg_html(safe_div(sub_done-store_sub['prev_done'],store_sub['prev_done']))}</td>
   <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
-  <td class="num">{chg_html(safe_div(sub_ref-store_sub['prev_refund'],store_sub['prev_refund']))}</td>
+  <td class="num">{refund_chg_html(safe_div(sub_ref-store_sub['prev_refund'],store_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
   <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td></tr>'''
         last_store = r['store']
@@ -660,15 +882,19 @@ if last_store and store_sub['target'] > 0:
   <td class="num">{fmt(store_sub['target'])}</td><td class="num">{fmt(sub_done)}</td>{rate_td(safe_div(sub_done,store_sub['target']))}</td>
   <td class="num">{chg_html(safe_div(sub_done-store_sub['prev_done'],store_sub['prev_done']))}</td>
   <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
-  <td class="num">{chg_html(safe_div(sub_ref-store_sub['prev_refund'],store_sub['prev_refund']))}</td>
+  <td class="num">{refund_chg_html(safe_div(sub_ref-store_sub['prev_refund'],store_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
   <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td></tr>'''
 
 html += '''</tbody></table></div>'''
 
+html += '''<div id="tab-channel" class="tab-content">
+<div style="text-align:center;padding:40px;color:#94a3b8">👆 点击「渠道业绩」标签加载本地生活数据</div>
+</div>'''
+
 html += f'''
 <div class="footer">
-  南区7月目标进展看板 | 底表数据截止 2026.07.12 | 环比 = 7月1-12日 vs 6月1-12日同口径 | 普陀业绩锁定目标表
+  南区7月目标进展看板 | 底表数据截止 20{_DATE_DOT} | 环比 = 7月1-{_DATE_DAY}日 vs 6月1-{_DATE_DAY}日同口径 | 普陀业绩从明细自动汇总
 </div>
 </div>
 <script>
@@ -778,9 +1004,24 @@ for _, row in jq_orders.iterrows():
     person_daily_junqun[name]['_total'] = person_daily_junqun[name].get('_total', 0) + amt
     person_daily_junqun[name]['_org'] = row['组织']
 
+# ====== 预加载电商本地生活数据 ======
+print('🔄 拉取本地生活数据...', end=' ')
+eco_data_raw = []
+try:
+    import urllib.request
+    req = urllib.request.Request('http://192.168.110.116:8899/api/sheet/ecommerce')
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        eco_api = json.loads(resp.read().decode('utf-8'))
+    eco_sheet = eco_api.get('sheets', {}).get('7月电商总表', {})
+    eco_data_raw = eco_sheet.get('rows', [])
+    print(f'✅ {len(eco_data_raw)} 条')
+except Exception as e:
+    print(f'⚠️ 失败: {e}')
+
 mapping_json = json.dumps({
     'org_to_group': ORG_TO_GROUP,
     'store_to_group': STORE_MAP,
+    'store_to_trio': STORE_TO_TRIO,
     'sales_orgs': SALES_ORGS,
     'advisor_orgs': ADVISOR_ORGS,
     'target_map': target_map,
@@ -800,6 +1041,7 @@ import_toolbar = '''
 <script>
 window._M = ''' + mapping_json + ''';
 window._TP = window._M.time_progress;
+window._ECO = ''' + json.dumps(eco_data_raw, ensure_ascii=False) + ''';
 </script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -835,6 +1077,7 @@ function recalcAll() {
 }
 
 function fmtNum(n) { return n >= 1e8 ? (n/1e8).toFixed(1)+'亿' : n >= 1e4 ? (n/1e4).toFixed(1)+'万' : n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1}); }
+function fmtInt(n) { return n >= 1e8 ? (n/1e8).toFixed(1)+'亿' : n >= 1e4 ? (n/1e4).toFixed(1)+'万' : Math.round(n).toLocaleString('en-US'); }
 
 // Column sorting - click any header to sort asc/desc
 (function(){
@@ -929,13 +1172,16 @@ function refreshAll(){
   // person tabs
   ["online_person","cm_person"].forEach(function(tabId){var tab=document.getElementById("tab-"+tabId);if(!tab)return;var grps={};tab.querySelectorAll("tbody tr:not(.subtotal)").forEach(function(row){tds=row.querySelectorAll("td");if(tds.length<12)return;var grp=tds[0].textContent.trim(),t=parseNum(tds[2]),d=parseNum(tds[3]),r=parseNum(tds[6]);writeNum(tds[10],d-r);rebuildBar(tds[4],d/t);rebuildRefund(tds[7],r,d,tabId==="tab-cm_person"?"cm":"sales");if(!grps[grp])grps[grp]={tgt:0,done:0,ref:0,net:0};grps[grp].tgt+=t;grps[grp].done+=d;grps[grp].ref+=r;grps[grp].net+=d-r});tab.querySelectorAll("tbody tr.subtotal").forEach(function(st){tds=st.querySelectorAll("td");g=grps[tds[0].textContent.trim()];if(!g||tds.length<10)return;writeNum(tds[2],g.tgt);writeNum(tds[3],g.done);rebuildBar(tds[4],g.done/g.tgt);writeNum(tds[6],g.ref);rebuildRefund(tds[7],g.ref,g.done,tabId==="tab-cm_person"?"cm":"sales");writeNum(tds[9],g.net)})});
   // KPIs
-  var cards=document.querySelectorAll(".kpi-card .value");if(cards[0])cards[0].textContent=fmtNum(rTotals.tgt);if(cards[1]){cards[1].textContent=fmtNum(rTotals.done);rebuildBar(cards[1].nextElementSibling,rTotals.done/rTotals.tgt)}
+  var cards=document.querySelectorAll(".kpi-card .value"),tp=window._TP,rem=31-Math.round(tp*31);
+  if(cards[0])cards[0].textContent=fmtNum(rTotals.tgt);
+  if(cards[1]){cards[1].textContent=fmtNum(rTotals.done);rebuildBar(cards[1].nextElementSibling,rTotals.done/rTotals.tgt)}
+  if(cards[4]){var sprint=rem>0?(rTotals.tgt-rTotals.done)/rem:0;cards[4].textContent=fmtNum(sprint);}
 }
 recalcAll = refreshAll;
 document.addEventListener("blur", function(e){var td=e.target.closest('td.num[contenteditable="true"]');if(!td)return;var raw=td.textContent.trim().replace(/[,，万]/g,"");if(raw.indexOf("亿")>=0)raw=raw.replace("亿","")*1e8;var v=parseFloat(raw);if(!isNaN(v)){td.setAttribute("data-val",v);td.textContent=fmtNum(v)}td.contentEditable="false";setTimeout(refreshAll,100)},true);
 
 // ====== TOP10 弹窗排行榜 (含日期筛选) ======
-function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked) {
+function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup) {
   var personDone = {};
   Object.keys(pd).forEach(function(name) {
     var info = pd[name];
@@ -944,13 +1190,18 @@ function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked) {
     // 始终按角色过滤
     if(isOnline && M.store_to_group[org]) return;
     if(!isOnline && !M.store_to_group[org]) return;
+    // 三组拆分过滤
+    if(trioGroup) {
+      var store = M.store_to_group[org] || '';
+      if(M.store_to_trio[store] !== trioGroup) return;
+    }
     var done = 0;
     for(var d=fromDay; d<=toDay; d++) { done += (info[String(d)] || 0); }
     if(done <= 0) return;
     personDone[name] = {name: name, group: g, done: done, target: 0};
   });
-  // 普陀锁定数据（仅业绩排名，菌群不混入）
-  if(!skipLocked && !isOnline) {
+  // 普陀锁定数据（仅业绩排名，菌群不混入；三组模式下仅一组包含普陀）
+  if(!skipLocked && !isOnline && (!trioGroup || M.store_to_trio['普陀'] === trioGroup)) {
     var cmTab = document.getElementById('tab-cm_person');
     if(cmTab) {
       cmTab.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
@@ -1012,7 +1263,7 @@ function showTop10(tabId, fromDay, toDay) {
 
   var top10 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline);
   var html = '<div id="top10-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)closeTop10()">'+
-    '<div style="background:#fff;border-radius:16px;padding:24px;width:'+(isOnline?'520px':'760px')+';max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'+
+    '<div style="background:#fff;border-radius:16px;padding:24px;width:'+(isOnline?'520px':'min(95vw,1400px)')+';max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'+
     '<h2 style="margin:0;font-size:20px">🏆 '+title+'</h2>'+
     '<button onclick="closeTop10()" style="border:none;background:none;font-size:22px;cursor:pointer;color:#94a3b8">&times;</button>'+
@@ -1027,10 +1278,15 @@ function showTop10(tabId, fromDay, toDay) {
     '</div>';
 
   if(!isOnline) {
+    var top10G1 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, '一组');
+    var top10G2 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, '二组');
+    var top10G3 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, '三组');
     var top10Jq = buildRanking(M, M.person_daily_junqun || {}, fromDay, toDay, isOnline, true);
-    html += '<div style="display:flex;gap:16px">'+
-      '<div style="flex:1"><h3 style="font-size:14px;color:#64748b;margin:0 0 8px">📊 业绩排名</h3><div style="display:flex;flex-direction:column;gap:6px">'+renderRankList(top10, crowns, colors)+'</div></div>'+
-      '<div style="flex:1"><h3 style="font-size:14px;color:#64748b;margin:0 0 8px">🧬 菌群业绩排名</h3><div style="display:flex;flex-direction:column;gap:6px">'+renderRankList(top10Jq, crowns, colors)+'</div></div>'+
+    html += '<div style="display:flex;gap:10px">'+
+      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#6366f1;margin:0 0 6px">📊 一组 <span style="font-size:11px;color:#94a3b8">普陀·徐汇·南京·广州</span></h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10G1, crowns, colors)+'</div></div>'+
+      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#8b5cf6;margin:0 0 6px">📊 二组 <span style="font-size:11px;color:#94a3b8">深圳·杭州·武汉</span></h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10G2, crowns, colors)+'</div></div>'+
+      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#ec4899;margin:0 0 6px">📊 三组 <span style="font-size:11px;color:#94a3b8">昆明·珠海·成都·福州</span></h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10G3, crowns, colors)+'</div></div>'+
+      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#64748b;margin:0 0 6px">🧬 菌群业绩排名</h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10Jq, crowns, colors)+'</div></div>'+
       '</div>';
   } else {
     html += '<div style="display:flex;flex-direction:column;gap:8px">'+renderRankList(top10, crowns, colors)+'</div>';
@@ -1266,6 +1522,50 @@ function importPutuo(input) {
   reader.readAsArrayBuffer(file);
 }
 
+// ====== 组织名提取 (兼容 beisen_org_full_name) ======
+function extractOrgFromBeisen(path) {
+  if(!path) return '';
+  var parts = String(path).split('_');
+  var last = parts[parts.length-1];
+  var direct = ['课程销售1组','课程销售2组','课程销售3组','课程销售4组','课程销售5组','课程销售6组',
+    '班主任1组','班主任2组','班主任3组','班主任组','线上课程销售组','销售管理部'];
+  if(direct.indexOf(last) >= 0) return last;
+  var storeMap = {'上海普陀':'上海普陀店','上海普陀店':'上海普陀店','上海徐汇店':'上海徐汇店',
+    '云南分公司':'云南分公司','南京分公司':'南京分公司','广州观心诊所':'广州观心诊所',
+    '成都分公司':'成都分公司','杭州分公司':'杭州分公司','杭州观心诊所':'杭州分公司',
+    '武汉观心诊所':'武汉观心诊所','深圳分公司':'深圳分公司','珠海分公司':'珠海分公司',
+    '福州观心诊所':'福州观心诊所'};
+  for(var i=0; i<parts.length; i++) {
+    if(storeMap[parts[i]]) return storeMap[parts[i]];
+  }
+  return '';
+}
+
+// ====== 自动识别字段名 ======
+function detectFields(cols) {
+  var lower = cols.map(function(c){ return c.toLowerCase(); });
+  function find(candidates) {
+    for(var i=0; i<candidates.length; i++) {
+      var idx = lower.indexOf(candidates[i].toLowerCase());
+      if(idx >= 0) return cols[idx];
+    }
+    for(var i=0; i<candidates.length; i++) {
+      for(var j=0; j<lower.length; j++) {
+        if(lower[j].indexOf(candidates[i].toLowerCase()) >= 0) return cols[j];
+      }
+    }
+    return null;
+  }
+  return {
+    pay_at:   find(['pay_at','支付时间','付款时间','付款日期','订单日期']),
+    pay_amt:  find(['pay_amount','支付金额','金额','实付金额','订单金额']),
+    seller:   find(['seller_name','销售','销售姓名','销售员','负责人']),
+    org:      find(['组织','beisen_org_full_name','beisen','部门','org_name','org']),
+    back_at:  find(['back_at','退费时间','退款时间','退费日期','退款日期']),
+    order_id: find(['order_id','订单号','订单ID'])
+  };
+}
+
 // ====== 底表导入 & 全量重算 ======
 function importBaseTable(input) {
   var file = input.files[0]; if(!file) return;
@@ -1277,19 +1577,30 @@ function importBaseTable(input) {
     var M = window._M;
     var julyS = M.july_start, julyE = M.july_end, juneS = M.june_start, juneE = M.june_end;
 
+    // 自动识别字段名
+    var cols = data.length > 0 ? Object.keys(data[0]) : [];
+    var F = detectFields(cols);
+    console.log('导入: 识别字段', F);
+
+    // 解析组织名：兼容 组织 和 beisen_org_full_name
+    data.forEach(function(row) {
+      var rawOrg = row[F.org] || '';
+      row._org = extractOrgFromBeisen(rawOrg);
+    });
+
     // Store full raw orders for export
     window._rawOrders = data;
 
     // Rebuild person_daily from imported raw data
     var newPD = {};
     data.forEach(function(row) {
-      var payAt = row['pay_at'] ? new Date(row['pay_at']) : null;
+      var payAt = row[F.pay_at] ? new Date(row[F.pay_at]) : null;
       if(!payAt || payAt.getMonth()+1 !== 7) return;
-      var name = row['seller_name'] || '';
+      var name = row[F.seller] || '';
       if(!name) return;
       var day = payAt.getDate();
-      var amt = parseFloat(row['pay_amount']) || 0;
-      if(!newPD[name]) { newPD[name] = {}; newPD[name]._total = 0; newPD[name]._org = row['组织'] || ''; }
+      var amt = parseFloat(row[F.pay_amt]) || 0;
+      if(!newPD[name]) { newPD[name] = {}; newPD[name]._total = 0; newPD[name]._org = row._org || ''; }
       newPD[name][String(day)] = (newPD[name][String(day)] || 0) + amt;
       newPD[name]._total += amt;
     });
@@ -1298,13 +1609,13 @@ function importBaseTable(input) {
     // Build group-level metrics from raw data
     var groupCalc = {};
     data.forEach(function(row) {
-      var org = row['组织'] || '';
+      var org = row._org || '';
       var g = M.org_to_group[org] || M.store_to_group[org] || null;
       if(!g) return;
       if(!groupCalc[g]) groupCalc[g] = {j7_inc:0, j6_inc:0, j7_ref:0, j6_ref:0};
-      var pay = parseFloat(row['pay_amount']) || 0;
-      var payAt = row['pay_at'] ? new Date(row['pay_at']) : null;
-      var backAt = row['back_at'] ? new Date(row['back_at']) : null;
+      var pay = parseFloat(row[F.pay_amt]) || 0;
+      var payAt = row[F.pay_at] ? new Date(row[F.pay_at]) : null;
+      var backAt = row[F.back_at] ? new Date(row[F.back_at]) : null;
       if(backAt && backAt.getFullYear() < 2000) backAt = null;
       // Income: by pay_at
       if(payAt && payAt >= new Date(julyS) && payAt < new Date(julyE)) groupCalc[g].j7_inc += pay;
@@ -1376,6 +1687,123 @@ function importBaseTable(input) {
   };
   reader.readAsArrayBuffer(file);
 }
+
+// ====== 渠道业绩 - 本地生活（大众点评推广通） ======
+var ECO_LOADED = false;
+
+function ecoMapStore(fullName) {
+  var map = [
+    ['上海旗舰','普陀'], ['徐汇','徐汇'], ['中环大厦','普陀'],
+    ['南京','南京'], ['珠江新城','广州'], ['深圳福田','深圳'],
+    ['杭州','杭州'], ['成都','成都'],
+    ['云南','昆明'], ['珠海','珠海'], ['福州','福州']
+  ];
+  for (var i = 0; i < map.length; i++) {
+    if (fullName.indexOf(map[i][0]) >= 0) return map[i][1];
+  }
+  return '';
+}
+
+function loadChannelData(force) {
+  if (ECO_LOADED && !force) return;
+  var tab = document.getElementById('tab-channel');
+  if (!tab) return;
+
+  var rows = window._ECO;
+  if (!rows || rows.length === 0) {
+    tab.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444">❌ 暂无本地生活数据<br><small style="color:#94a3b8">生成看板时 API 拉取失败，请重新运行 generate_dashboard.py</small></div>';
+    return;
+  }
+
+  tab.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b">⏳ 正在处理本地生活数据...</div>';
+  // 用 setTimeout 让 loading 渲染出来
+  setTimeout(function() {
+    var storeData = {};
+    rows.forEach(function(row) {
+      var nm = ecoMapStore(row['门店'] || '');
+      if (!nm) return;
+      if (!storeData[nm]) storeData[nm] = {consume:0, consult:0, visit:0, deal:0, revenue:0, target:0};
+      storeData[nm].consume += parseFloat(row['推广通消耗']) || 0;
+      storeData[nm].consult += parseInt(row['咨询总数']) || 0;
+      storeData[nm].visit   += parseInt(row['纯新到店人数']) || 0;
+      storeData[nm].deal    += parseInt(row['成交人数']) || 0;
+      storeData[nm].revenue += parseFloat(row['新客业绩']) || 0;
+      storeData[nm].target  += parseFloat(row['目标']) || 0;
+    });
+
+    var M = window._M;
+    var h = '<table><thead><tr>'+
+      '<th>门店</th>'+
+      '<th class="num">推广消耗</th><th class="num">咨询总数</th>'+
+      '<th class="num">到店人数</th><th class="num">到店率</th>'+
+      '<th class="num">成交人数</th><th class="num">新客业绩</th>'+
+      '<th class="num">客单价</th><th class="num">ROI</th>'+
+      '<th class="num">目标</th><th class="num">完成率</th>'+
+      '</tr></thead><tbody>';
+
+    var grand = {consume:0, consult:0, visit:0, deal:0, revenue:0, target:0};
+    var hasAny = false;
+
+    // 按原顺序展示所有南区门店
+    var allStores = ['普陀','徐汇','南京','广州','深圳','杭州','武汉','昆明','珠海','成都','福州'];
+    allStores.forEach(function(store) {
+      var d = storeData[store];
+      if (!d) return;
+      hasAny = true;
+      var vr = d.consult>0 ? (d.visit/d.consult*100).toFixed(1)+'%' : '—';
+      var roi = d.consume>0 ? (d.revenue/d.consume).toFixed(2) : '—';
+      var rate = d.target>0 ? (d.revenue/d.target*100).toFixed(1)+'%' : '—';
+      var aov = d.deal>0 ? fmtNum(d.revenue/d.deal) : '—';
+
+      h += '<tr>'+
+        '<td>'+store+'</td>'+
+        '<td class="num">'+fmtNum(d.consume)+'</td><td class="num">'+fmtInt(d.consult)+'</td>'+
+        '<td class="num">'+fmtInt(d.visit)+'</td><td class="num">'+vr+'</td>'+
+        '<td class="num">'+fmtInt(d.deal)+'</td><td class="num">'+fmtNum(d.revenue)+'</td>'+
+        '<td class="num">'+aov+'</td><td class="num">'+roi+'</td>'+
+        '<td class="num">'+fmtNum(d.target)+'</td><td class="num">'+rate+'</td>'+
+        '</tr>';
+      for (var k in grand) grand[k] += d[k];
+    });
+
+    // 顶部汇总卡片
+    var summaryHtml = '';
+    if (hasAny) {
+      var gvr = grand.consult>0 ? (grand.visit/grand.consult*100).toFixed(1)+'%' : '—';
+      var groi = grand.consume>0 ? (grand.revenue/grand.consume).toFixed(2) : '—';
+      var grate = grand.target>0 ? (grand.revenue/grand.target*100).toFixed(1)+'%' : '—';
+      var gaov = grand.deal>0 ? fmtNum(grand.revenue/grand.deal) : '—';
+      var visitRate = grand.consult>0 ? (grand.visit/grand.consult*100).toFixed(1)+'%' : '—';
+      var dealRate = grand.visit>0 ? (grand.deal/grand.visit*100).toFixed(1)+'%' : '—';
+
+      summaryHtml = '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">'+
+        '<div class="kpi-card" style="flex:1;min-width:120px"><div class="label">💰 推广消耗</div><div class="value">'+fmtNum(grand.consume)+'</div></div>'+
+        '<div class="kpi-card" style="flex:1;min-width:120px"><div class="label">📞 咨询总数</div><div class="value">'+fmtInt(grand.consult)+'</div></div>'+
+        '<div class="kpi-card" style="flex:1;min-width:120px"><div class="label">🚶 到店人数</div><div class="value">'+fmtInt(grand.visit)+'<div class="sub">到店率 '+visitRate+'</div></div></div>'+
+        '<div class="kpi-card" style="flex:1;min-width:120px"><div class="label">💳 成交人数</div><div class="value">'+fmtInt(grand.deal)+'<div class="sub">转化率 '+dealRate+'</div></div></div>'+
+        '<div class="kpi-card" style="flex:1;min-width:120px"><div class="label">📊 新客业绩</div><div class="value">'+fmtNum(grand.revenue)+'</div></div>'+
+        '<div class="kpi-card" style="flex:1;min-width:120px"><div class="label">🎯 目标完成</div><div class="value">'+grate+'<div class="sub">ROI '+groi+' | 客单 '+gaov+'</div></div></div>'+
+        '</div>';
+
+      h += '<tr class="subtotal" style="background:#1e293b;color:#fff;font-weight:700">'+
+        '<td>南区合计</td>'+
+        '<td class="num">'+fmtNum(grand.consume)+'</td><td class="num">'+fmtInt(grand.consult)+'</td>'+
+        '<td class="num">'+fmtInt(grand.visit)+'</td><td class="num">'+gvr+'</td>'+
+        '<td class="num">'+fmtInt(grand.deal)+'</td><td class="num">'+fmtNum(grand.revenue)+'</td>'+
+        '<td class="num">'+gaov+'</td><td class="num">'+groi+'</td>'+
+        '<td class="num">'+fmtNum(grand.target)+'</td><td class="num">'+grate+'</td>'+
+        '</tr>';
+    } else {
+      h += '<tr><td colspan="11" style="text-align:center;padding:20px;color:#94a3b8">暂无南区门店本地生活数据</td></tr>';
+    }
+
+    h += '</tbody></table>';
+    h += '<div style="text-align:center;padding:8px;font-size:11px;color:#94a3b8;margin-top:8px">数据来源: 电商部本地生活 · 大众点评推广通 | 看板每2小时自动更新</div>';
+    h = summaryHtml + h;
+    tab.innerHTML = h;
+    ECO_LOADED = true;
+  }, 10);
+}
 </script>
 '''
 
@@ -1418,18 +1846,46 @@ iframe { width: 100%; height: calc(100vh - 48px); border: none; display: block; 
 <body>
 <div class="header">
   <h1>📊 南区7月目标进展看板</h1>
-  <div class="info"><span class="dot"></span> 实时看板 · 每30秒自动同步最新数据 · <span id="timer">--</span></div>
+  <div class="info"><span class="dot"></span> 实时看板 · 每12小时自动同步最新数据</div>
 </div>
 <iframe id="db" src="南区7月目标看板.html"></iframe>
 <script>
-var n=30,t=document.getElementById('timer');
-function u(){t.textContent=n+'s后刷新'}
-setInterval(function(){n--;u();if(n<=0){document.getElementById('db').src='南区7月目标看板.html?t='+Date.now();n=30;u()}},1000);u();
+var REFRESH=43200;
+setInterval(function(){document.getElementById('db').src='南区7月目标看板.html?t='+Date.now()},REFRESH*1000);
 </script>
 </body>
 </html>'''
 with open(r'C:\Users\fanny\Desktop\数据日日\分享_南区看板.html', 'w', encoding='utf-8') as f:
     f.write(share_html)
+
+# 同步到 Vercel 部署目录（自包含版：分享头 + 看板内容 + 自动刷新）
+import shutil
+deploy_dir = r'C:\Users\fanny\Desktop\数据日日\deploy'
+os.makedirs(deploy_dir, exist_ok=True)
+
+# 在 body 后插入 deploy 顶栏
+deploy_header = '''<div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
+<h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
+<div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每12小时自动刷新</div>
+</div>
+<style>.deploy-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
+'''
+# 自动刷新脚本
+refresh_script = '<script>setInterval(function(){location.reload()},43200000)</script>'
+deploy_html = html.replace('<body>', '<body>'+deploy_header).replace('</body>', refresh_script+'</body>')
+with open(os.path.join(deploy_dir, 'index.html'), 'w', encoding='utf-8') as f:
+    f.write(deploy_html)
+
+# 自动推送到 GitHub Pages
+import subprocess
+try:
+    subprocess.run(['git', 'add', 'index.html'], cwd=deploy_dir, check=True, capture_output=True)
+    subprocess.run(['git', 'commit', '-m', f'🔄 更新看板 {pd.Timestamp.now().strftime("%m/%d %H:%M")}'],
+                   cwd=deploy_dir, capture_output=True)
+    subprocess.run(['git', 'push', 'origin', 'main'], cwd=deploy_dir, check=True, capture_output=True)
+    print('🚀 已推送 GitHub Pages: https://fannyqian.github.io/my-dashbord-for-guanxin/')
+except Exception as e:
+    print(f'⚠️ GitHub推送跳过: {e}')
 
 print(f'✅ 看板已生成: {out}')
 print(f'✅ 分享版: 分享_南区看板.html')
