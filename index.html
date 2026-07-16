@@ -843,7 +843,8 @@ function drawOneChart(canvasId, roleData, color, darkColor, title) {
   maxVal = Math.ceil(maxVal / 50000) * 50000;
 
   var dpr = window.devicePixelRatio || 1;
-  var W = canvas.clientWidth || canvas.parentElement.clientWidth - 40 || 900;
+  var W = canvas.parentElement.clientWidth - 8 || canvas.clientWidth || 880;
+  if(W < 100) W = 880;
   var H = 180;
   canvas.width = W * dpr;
   canvas.height = H * dpr;
@@ -904,8 +905,9 @@ function drawTrendChart() {
   var t3 = drawOneChart('chart_store', rd['门店'], '#f59e0b', '#b45309');
 }
 
-setTimeout(drawTrendChart, 200);
-window.addEventListener('resize', drawTrendChart);
+setTimeout(function() { drawTrendChart(); }, 500);
+setTimeout(function() { drawTrendChart(); }, 1500);
+window.addEventListener('resize', function() { setTimeout(drawTrendChart, 100); });
 </script>
 
 </head>
