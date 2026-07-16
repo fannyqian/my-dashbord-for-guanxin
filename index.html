@@ -1083,6 +1083,14 @@ window.addEventListener('resize', function() { setTimeout(drawTrendChart, 100); 
   <td class="num">298.0万</td>
 </tr>
 </tbody></table>
+<div style="margin-top:20px;padding:16px 20px;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+  <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📈 每日业绩趋势</h4>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div><div style="font-size:12px;color:#6366f1;font-weight:600;margin-bottom:2px">■ 销售</div><canvas id="chart_sales" style="width:100%;height:180px"></canvas></div>
+    <div><div style="font-size:12px;color:#10b981;font-weight:600;margin-bottom:2px">■ 班主任</div><canvas id="chart_advisor" style="width:100%;height:180px"></canvas></div>
+    <div><div style="font-size:12px;color:#f59e0b;font-weight:600;margin-bottom:2px">■ 门店</div><canvas id="chart_store" style="width:100%;height:180px"></canvas></div>
+  </div>
+</div>
 </div>
 
 <!-- Tab 2: 按分组 -->
@@ -1435,15 +1443,7 @@ window.addEventListener('resize', function() { setTimeout(drawTrendChart, 100); 
   <td class="num"><b>29.4万</b></td>
   <td class="num">13.2万</td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↑123.0%</span></td>
-</tr></tbody></table>
-<div style="margin-top:20px;padding:16px 20px;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
-  <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📈 每日业绩趋势 — 按角色</h4>
-  <div style="display:flex;flex-direction:column;gap:12px">
-    <div><div style="font-size:12px;color:#6366f1;font-weight:600;margin-bottom:2px">■ 销售</div><canvas id="chart_sales" style="width:100%;height:180px"></canvas></div>
-    <div><div style="font-size:12px;color:#10b981;font-weight:600;margin-bottom:2px">■ 班主任</div><canvas id="chart_advisor" style="width:100%;height:180px"></canvas></div>
-    <div><div style="font-size:12px;color:#f59e0b;font-weight:600;margin-bottom:2px">■ 门店</div><canvas id="chart_store" style="width:100%;height:180px"></canvas></div>
-  </div>
-</div></div><div id="tab-online_person" class="tab-content">
+</tr></tbody></table></div><div id="tab-online_person" class="tab-content">
 <div class="tab-toolbar"><button onclick="showTop10('online_person')">🏆 TOP10</button></div>
 <table>
 <thead><tr>
