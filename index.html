@@ -831,92 +831,83 @@ function loadChannelData(force) {
 function drawTrendChart() {
   var canvas = document.getElementById('trendChart');
   if(!canvas) return;
-  var ctx = canvas.getContext('2d');
   var M = window._M;
-  var july = M.july_daily || {}, june = M.june_daily || {};
+  var july = M.july_daily || {};
 
-  // 取最大天数
   var julyDays = Object.keys(july).map(Number).filter(function(d){ return d>0; }).sort(function(a,b){ return a-b; });
-  var juneDays = Object.keys(june).map(Number).filter(function(d){ return d>0; }).sort(function(a,b){ return a-b; });
-  var allDays = julyDays.concat(juneDays);
-  var maxDay = allDays.length > 0 ? Math.max.apply(null, allDays) : 15;
+  var maxDay = julyDays.length > 0 ? julyDays[julyDays.length-1] : 15;
   var labels = [];
   for(var d=1; d<=maxDay; d++) labels.push(d);
 
-  // Canvas 尺寸
-  var dpr = window.devicePixelRatio || 1;
-  var rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = 260 * dpr;
-  ctx.scale(dpr, dpr);
-  var W = rect.width, H = 260;
-  ctx.clearRect(0, 0, W, H);
-
-  // 数据转数组
   var julyVals = labels.map(function(d){ return july[String(d)] || 0; });
-  var juneVals = labels.map(function(d){ return june[String(d)] || 0; });
-  var allVals = julyVals.concat(juneVals);
-  var maxVal = Math.max.apply(null, allVals) || 1;
-  maxVal = Math.ceil(maxVal / 100000) * 100000; // 向上取整到10万
+  var maxVal = Math.max.apply(null, julyVals) || 1;
+  maxVal = Math.ceil(maxVal / 100000) * 100000;
 
-  // 绘图区域
+  // Canvas 尺寸（兼容 tab 隐藏时取父容器宽度）
+  var dpr = window.devicePixelRatio || 1;
+  var W = canvas.clientWidth || canvas.parentElement.clientWidth - 40 || 900;
+  var H = 260;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  var ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
   var pad = {top: 20, right: 20, bottom: 35, left: 55};
-  var pw = W - pad.left - pad.right;
   var ph = H - pad.top - pad.bottom;
-  var barW = Math.max(4, (pw / labels.length) * 0.35);
+  var barW = Math.max(6, (W - pad.left - pad.right) / labels.length * 0.5);
 
-  function x(d) { return pad.left + (d-0.5) * (pw / labels.length); }
+  function x(d) { return pad.left + (d-0.5) * ((W-pad.left-pad.right) / labels.length); }
   function y(v) { return pad.top + ph - (v / maxVal) * ph; }
 
-  // Y轴网格
-  ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1; ctx.fillStyle = '#94a3b8'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+  // 网格
+  ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1;
+  ctx.fillStyle = '#94a3b8'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
   for(var i=0; i<=4; i++) {
-    var val = maxVal * i / 4;
-    var yi = y(val);
+    var val = maxVal * i / 4, yi = y(val);
     ctx.beginPath(); ctx.moveTo(pad.left, yi); ctx.lineTo(W-pad.right, yi); ctx.stroke();
     ctx.fillText((val/10000).toFixed(0)+'万', pad.left-8, yi+4);
   }
 
   // X轴
   ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'center';
-  labels.forEach(function(d) {
-    ctx.fillText(d+'日', x(d), H-pad.bottom+18);
-  });
+  labels.forEach(function(d) { ctx.fillText(d+'日', x(d), H-pad.bottom+18); });
 
-  // 6月柱
-  labels.forEach(function(d, i) {
-    var v = juneVals[i];
-    if(v <= 0) return;
-    var bx = x(d) - barW/2, bw = barW, bh = (v/maxVal)*ph;
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillRect(bx, y(v), bw, bh);
-  });
-
-  // 7月柱
+  // 柱状图
   labels.forEach(function(d, i) {
     var v = julyVals[i];
     if(v <= 0) return;
     var bx = x(d) - barW/2, bw = barW, bh = (v/maxVal)*ph;
-    ctx.fillStyle = '#6366f1';
+    // 渐变色
+    var grad = ctx.createLinearGradient(bx, y(v), bx, y(0));
+    grad.addColorStop(0, '#818cf8'); grad.addColorStop(1, '#6366f1');
+    ctx.fillStyle = grad;
     ctx.fillRect(bx, y(v), bw, bh);
     // 柱顶数字
-    if(v > maxVal*0.08) {
+    if(v > maxVal*0.06) {
       ctx.fillStyle = '#1e293b'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
       ctx.fillText((v/10000).toFixed(1)+'万', x(d), y(v)-4);
     }
   });
 
-  // 趋势线 (7月)
+  // 趋势线
   ctx.strokeStyle = '#312e81'; ctx.lineWidth = 2; ctx.beginPath();
   var first = true;
   labels.forEach(function(d, i) {
-    var v = julyVals[i];
-    if(v <= 0) { first = true; return; }
-    if(first) { ctx.moveTo(x(d), y(v)); first = false; }
-    else ctx.lineTo(x(d), y(v));
+    if(julyVals[i] <= 0) { first = true; return; }
+    if(first) { ctx.moveTo(x(d), y(julyVals[i])); first = false; }
+    else ctx.lineTo(x(d), y(julyVals[i]));
   });
   ctx.stroke();
 }
+
+// tab 切换时重绘（解决隐藏 canvas 尺寸为0）
+var _origSwitchTab = switchTab;
+switchTab = function(name) {
+  _origSwitchTab(name);
+  if(name === 'role') setTimeout(drawTrendChart, 100);
+};
 drawTrendChart();
 window.addEventListener('resize', drawTrendChart);
 </script>
@@ -1444,7 +1435,7 @@ window.addEventListener('resize', drawTrendChart);
 <div style="margin-top:20px;padding:16px 20px;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <h4 style="margin:0;font-size:14px;color:#1e293b">📈 每日业绩趋势</h4>
-    <span style="font-size:11px;color:#94a3b8">蓝=7月 · 灰=6月同期</span>
+    <span style="font-size:11px;color:#94a3b8">7月每日收入  ·  柱顶标注金额</span>
   </div>
   <canvas id="trendChart" style="width:100%;height:260px"></canvas>
 </div></div><div id="tab-online_person" class="tab-content">
