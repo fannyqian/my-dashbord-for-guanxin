@@ -827,38 +827,24 @@ function loadChannelData(force) {
   }, 10);
 }
 
-// ====== 每日趋势图（按角色分组） ======
-function drawTrendChart() {
-  var canvas = document.getElementById('trendChart');
+// ====== 每日趋势图（三张独立图，按角色） ======
+function drawOneChart(canvasId, roleData, color, darkColor, title) {
+  var canvas = document.getElementById(canvasId);
   if(!canvas) return;
-  var M = window._M;
-  var rd = M.role_daily || {};
-  var roles = ['销售','班主任','门店'];
-  var colors = ['#6366f1','#10b981','#f59e0b'];
-  var darkColors = ['#4338ca','#047857','#b45309'];
 
-  // 取最大天数
-  var maxDay = 1;
-  roles.forEach(function(r) {
-    Object.keys(rd[r]||{}).map(Number).forEach(function(d){ if(d>maxDay) maxDay=d; });
-  });
+  var maxDay = 0;
+  Object.keys(roleData||{}).map(Number).forEach(function(d){ if(d>maxDay) maxDay=d; });
+  if(maxDay < 1) maxDay = 15;
   var labels = [];
   for(var d=1; d<=maxDay; d++) labels.push(d);
 
-  // 算最大值
-  var maxVal = 1;
-  roles.forEach(function(r) {
-    labels.forEach(function(d) {
-      var v = (rd[r]||{})[String(d)] || 0;
-      if(v > maxVal) maxVal = v;
-    });
-  });
+  var vals = labels.map(function(d){ return (roleData||{})[String(d)] || 0; });
+  var maxVal = Math.max.apply(null, vals.concat([1]));
   maxVal = Math.ceil(maxVal / 50000) * 50000;
 
-  // Canvas
   var dpr = window.devicePixelRatio || 1;
   var W = canvas.clientWidth || canvas.parentElement.clientWidth - 40 || 900;
-  var H = 280;
+  var H = 180;
   canvas.width = W * dpr;
   canvas.height = H * dpr;
   canvas.style.width = W + 'px';
@@ -866,58 +852,56 @@ function drawTrendChart() {
   var ctx = canvas.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  var pad = {top: 20, right: 20, bottom: 35, left: 55};
+  var pad = {top: 10, right: 15, bottom: 28, left: 50};
   var ph = H - pad.top - pad.bottom;
-  var groupW = (W - pad.left - pad.right) / labels.length;
-  var barW = Math.max(2, groupW * 0.22);
-  var gap = barW * 0.3;
+  var barW = Math.max(4, (W - pad.left - pad.right) / labels.length * 0.55);
 
-  function x(d, i) { return pad.left + d * groupW - groupW/2 + i*(barW+gap) - (roles.length-1)*(barW+gap)/2; }
-  function y(v) { return pad.top + ph - (v/maxVal)*ph; }
+  function cx(d) { return pad.left + (d-0.5) * ((W-pad.left-pad.right) / labels.length); }
+  function cy(v) { return pad.top + ph - (v/maxVal)*ph; }
 
   // 网格
   ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1;
-  ctx.fillStyle = '#94a3b8'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+  ctx.fillStyle = '#94a3b8'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
   for(var i=0; i<=4; i++) {
-    var val = maxVal * i / 4, yi = y(val);
+    var val = maxVal * i / 4, yi = cy(val);
     ctx.beginPath(); ctx.moveTo(pad.left, yi); ctx.lineTo(W-pad.right, yi); ctx.stroke();
-    ctx.fillText((val/10000).toFixed(0)+'万', pad.left-8, yi+4);
+    if(i%2==0) ctx.fillText((val/10000).toFixed(0)+'万', pad.left-6, yi+3);
   }
 
   // X轴
   ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'center';
+  labels.forEach(function(d) { ctx.fillText(d, cx(d), H-pad.bottom+14); });
+
+  // 柱 + 数字
   labels.forEach(function(d) {
-    ctx.fillText(d+'日', pad.left + (d-0.5)*groupW, H-pad.bottom+18);
+    var v = vals[d-1];
+    if(v <= 0) return;
+    var bx = cx(d) - barW/2;
+    ctx.fillStyle = color;
+    ctx.fillRect(bx, cy(v), barW, (v/maxVal)*ph);
+    ctx.fillStyle = '#1e293b'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText((v/10000).toFixed(1), cx(d), cy(v)-3);
   });
 
-  // 画柱 + 趋势线
-  roles.forEach(function(r, ri) {
-    var vals = labels.map(function(d){ return (rd[r]||{})[String(d)] || 0; });
-    // 柱
-    labels.forEach(function(d) {
-      var v = vals[d-1];
-      if(v <= 0) return;
-      var bx = x(d-0.5, ri) - barW/2;
-      ctx.fillStyle = colors[ri];
-      ctx.fillRect(bx, y(v), barW, (v/maxVal)*ph);
-      // 柱顶数字（仅最大值那天标）
-      if(v === Math.max.apply(null, vals)) {
-        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText((v/10000).toFixed(1)+'万', bx+barW/2, y(v)-4);
-      }
-    });
-    // 趋势线
-    ctx.strokeStyle = darkColors[ri]; ctx.lineWidth = 2; ctx.beginPath();
-    var first = true;
-    labels.forEach(function(d) {
-      var v = vals[d-1];
-      if(v <= 0) { first = true; return; }
-      var px = pad.left + (d-0.5)*groupW;
-      if(first) { ctx.moveTo(px, y(v)); first = false; }
-      else ctx.lineTo(px, y(v));
-    });
-    ctx.stroke();
+  // 趋势线
+  ctx.strokeStyle = darkColor; ctx.lineWidth = 2; ctx.beginPath();
+  var first = true, total = 0;
+  labels.forEach(function(d) {
+    var v = vals[d-1];
+    if(v <= 0) { first = true; return; }
+    total += v;
+    if(first) { ctx.moveTo(cx(d), cy(v)); first = false; }
+    else ctx.lineTo(cx(d), cy(v));
   });
+  ctx.stroke();
+  return total;
+}
+
+function drawTrendChart() {
+  var M = window._M, rd = M.role_daily || {};
+  var t1 = drawOneChart('chart_sales', rd['销售'], '#6366f1', '#4338ca');
+  var t2 = drawOneChart('chart_advisor', rd['班主任'], '#10b981', '#047857');
+  var t3 = drawOneChart('chart_store', rd['门店'], '#f59e0b', '#b45309');
 }
 
 setTimeout(drawTrendChart, 200);
@@ -1445,11 +1429,12 @@ window.addEventListener('resize', drawTrendChart);
   <td class="num"><span style="color:#22c55e;font-weight:600">↑123.0%</span></td>
 </tr></tbody></table>
 <div style="margin-top:20px;padding:16px 20px;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    <h4 style="margin:0;font-size:14px;color:#1e293b">📈 每日业绩趋势 — 按角色</h4>
-    <span style="font-size:11px;color:#94a3b8"><span style="color:#6366f1">■</span>销售 <span style="color:#10b981">■</span>班主任 <span style="color:#f59e0b">■</span>门店</span>
+  <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📈 每日业绩趋势 — 按角色</h4>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div><div style="font-size:12px;color:#6366f1;font-weight:600;margin-bottom:2px">■ 销售</div><canvas id="chart_sales" style="width:100%;height:180px"></canvas></div>
+    <div><div style="font-size:12px;color:#10b981;font-weight:600;margin-bottom:2px">■ 班主任</div><canvas id="chart_advisor" style="width:100%;height:180px"></canvas></div>
+    <div><div style="font-size:12px;color:#f59e0b;font-weight:600;margin-bottom:2px">■ 门店</div><canvas id="chart_store" style="width:100%;height:180px"></canvas></div>
   </div>
-  <canvas id="trendChart" style="width:100%;height:260px"></canvas>
 </div></div><div id="tab-online_person" class="tab-content">
 <div class="tab-toolbar"><button onclick="showTop10('online_person')">🏆 TOP10</button></div>
 <table>
