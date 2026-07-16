@@ -843,6 +843,26 @@ function drawOneChart(canvasId, roleData, rgb) {
   if(_charts[canvasId]) { _charts[canvasId].destroy(); }
   var ctx = canvas.getContext('2d');
 
+  // 柱顶数值标签插件（快照可见）
+  var labelPlugin = {
+    id: 'barLabels',
+    afterDatasetsDraw: function(chart) {
+      var c = chart.ctx;
+      var meta = chart.getDatasetMeta(1); // bar dataset
+      if(!meta || meta.hidden) return;
+      c.save();
+      c.font = 'bold 9px sans-serif';
+      c.fillStyle = 'rgb('+rgb+')';
+      c.textAlign = 'center';
+      meta.data.forEach(function(bar, i) {
+        var v = vals[i];
+        if(v <= 0) return;
+        c.fillText((v/10000).toFixed(1), bar.x, bar.y - 6);
+      });
+      c.restore();
+    }
+  };
+
   // 渐变填充
   var grad = ctx.createLinearGradient(0, 0, 0, 200);
   grad.addColorStop(0, 'rgba('+rgb+',0.35)');
@@ -850,6 +870,7 @@ function drawOneChart(canvasId, roleData, rgb) {
 
   _charts[canvasId] = new Chart(ctx, {
     type: 'bar',
+    plugins: [labelPlugin],
     data: {
       labels: labels,
       datasets: [
@@ -907,6 +928,7 @@ function drawOneChart(canvasId, roleData, rgb) {
       scales: {
         y: {
           beginAtZero: true,
+          grace: '12%',
           grid: { color: '#f1f5f9', drawBorder: false },
           ticks: {
             color: '#94a3b8', font: { size: 10 },
