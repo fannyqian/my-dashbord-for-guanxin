@@ -1149,7 +1149,7 @@ setTimeout(drawSparklines, 500);
 <table>
 <thead><tr>
   <th>角色</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th>
-  <th class="num">本月退费</th><th class="num">退费率</th><th class="num">本月净流水</th><th class="num">📞电话数</th>
+  <th class="num">本月退费</th><th class="num">退费率</th><th class="num">本月净流水</th><th class="num">📞电话数</th><th class="num">人均电话</th>
 </tr></thead><tbody>
 <tr>
   <td style="font-size:14px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span></td>
@@ -1166,6 +1166,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">53.7%</td>
   <td class="num"><b>74.8万</b></td>
   <td class="num" style="color:#0891b2;font-weight:600">1649</td>
+  <td class="num" style="color:#0e7490;font-weight:600">50.0</td>
 </tr><tr>
   <td style="font-size:14px"><span style="background:#fce7f3;color:#9d174d;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">班主任</span></td>
   <td class="num">200.0万</td>
@@ -1181,6 +1182,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">112.9%</td>
   <td class="num"><b>-5.7万</b></td>
   <td class="num" style="color:#0891b2;font-weight:600">547</td>
+  <td class="num" style="color:#0e7490;font-weight:600">32.2</td>
 </tr><tr>
   <td style="font-size:14px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span></td>
   <td class="num">840.0万</td>
@@ -1196,6 +1198,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">22.3%</td>
   <td class="num"><b>228.9万</b></td>
   <td class="num" style="color:#0891b2;font-weight:600">3790</td>
+  <td class="num" style="color:#0e7490;font-weight:600">64.2</td>
 </tr>
 <tr class="subtotal"><td>南区合计</td>
   <td class="num">1510.0万</td><td class="num">500.1万</td><td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
@@ -1208,6 +1211,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">202.1万</td><td class="num">40.4%</td>
   <td class="num">298.0万</td>
   <td class="num" style="color:#0891b2;font-weight:700">5986</td>
+  <td class="num" style="color:#0e7490;font-weight:700">54.9</td>
 </tr>
 </tbody></table>
 <div style="margin-top:20px">
@@ -1235,9 +1239,9 @@ setTimeout(drawSparklines, 500);
 <thead><tr>
   <th>分组</th><th>角色 <span style="font-weight:400;color:#94a3b8;font-size:10px">/趋势</span></th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
-  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th>
+  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th><th class="num">人均电话</th>
 </tr></thead><tbody>
-<tr class="section-header"><td colspan="13" style="background:#dbeafe;color:#1e40af;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #93c5fd">📡 线上组</td></tr><tr>
+<tr class="section-header"><td colspan="14" style="background:#dbeafe;color:#1e40af;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #93c5fd">📡 线上组</td></tr><tr>
   <td><b>课程5组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程5组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">70.0万</td>
@@ -1257,6 +1261,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">1.8万</td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↑456.0%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">127</td>
+  <td class="num" style="color:#0e7490;font-weight:600">21.2</td>
 </tr><tr>
   <td><b>班主任</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#fce7f3;color:#9d174d;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">班主任</span><canvas class="spark" data-group="班主任" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1277,6 +1282,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">12.7万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓144.8%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">547</td>
+  <td class="num" style="color:#0e7490;font-weight:600">32.2</td>
 </tr><tr>
   <td><b>课程2组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程2组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1297,6 +1303,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">22.6万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓90.3%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">404</td>
+  <td class="num" style="color:#0e7490;font-weight:600">40.4</td>
 </tr><tr>
   <td><b>课程3组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程3组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1317,6 +1324,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">19.6万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓15.4%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">551</td>
+  <td class="num" style="color:#0e7490;font-weight:600">110.2</td>
 </tr><tr>
   <td><b>课程4组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程4组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1337,6 +1345,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">8.7万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓4.6%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">32</td>
+  <td class="num" style="color:#0e7490;font-weight:600">8.0</td>
 </tr><tr>
   <td><b>课程6组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程6组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1357,6 +1366,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">-1.5万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓1342.1%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">36</td>
+  <td class="num" style="color:#0e7490;font-weight:600">9.0</td>
 </tr><tr>
   <td><b>课程1组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程1组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1377,7 +1387,8 @@ setTimeout(drawSparklines, 500);
   <td class="num">28.9万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓35.0%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">499</td>
-</tr><tr class="section-header"><td colspan="13" style="background:#d1fae5;color:#065f46;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #6ee7b7">🏥 线下门店</td></tr><tr>
+  <td class="num" style="color:#0e7490;font-weight:600">124.8</td>
+</tr><tr class="section-header"><td colspan="14" style="background:#d1fae5;color:#065f46;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #6ee7b7">🏥 线下门店</td></tr><tr>
   <td><b>福州</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="福州" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">45.0万</td>
@@ -1397,6 +1408,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">6.0万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓46.4%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">347</td>
+  <td class="num" style="color:#0e7490;font-weight:600">115.7</td>
 </tr><tr>
   <td><b>珠海</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="珠海" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1417,6 +1429,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">1.1万</td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↑336.0%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">951</td>
+  <td class="num" style="color:#0e7490;font-weight:600">237.8</td>
 </tr><tr>
   <td><b>杭州</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="杭州" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1437,6 +1450,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">14.7万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓33.3%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">265</td>
+  <td class="num" style="color:#0e7490;font-weight:600">44.2</td>
 </tr><tr>
   <td><b>武汉</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="武汉" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1457,6 +1471,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">14.3万</td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↑20.5%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">103</td>
+  <td class="num" style="color:#0e7490;font-weight:600">17.2</td>
 </tr><tr>
   <td><b>徐汇</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="徐汇" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1477,6 +1492,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">29.7万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓38.7%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">224</td>
+  <td class="num" style="color:#0e7490;font-weight:600">44.8</td>
 </tr><tr>
   <td><b>深圳</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="深圳" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1497,6 +1513,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">30.7万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓55.7%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">92</td>
+  <td class="num" style="color:#0e7490;font-weight:600">23.0</td>
 </tr><tr>
   <td><b>成都</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="成都" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1517,6 +1534,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">18.3万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓36.9%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">658</td>
+  <td class="num" style="color:#0e7490;font-weight:600">131.6</td>
 </tr><tr>
   <td><b>广州</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="广州" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1537,6 +1555,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">32.1万</td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↓29.7%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">240</td>
+  <td class="num" style="color:#0e7490;font-weight:600">40.0</td>
 </tr><tr>
   <td><b>昆明</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="昆明" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1557,6 +1576,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">11.6万</td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↑38.4%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">193</td>
+  <td class="num" style="color:#0e7490;font-weight:600">48.2</td>
 </tr><tr>
   <td><b>普陀</b> <span style="font-size:10px;color:#f59e0b">⚠锁定</span></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="普陀" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1577,6 +1597,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">5.3万</td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↑1463.2%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">247</td>
+  <td class="num" style="color:#0e7490;font-weight:600">24.7</td>
 </tr><tr>
   <td><b>南京</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="南京" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
@@ -1597,6 +1618,7 @@ setTimeout(drawSparklines, 500);
   <td class="num">13.2万</td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↑123.0%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">470</td>
+  <td class="num" style="color:#0e7490;font-weight:600">78.3</td>
 </tr></tbody></table></div><div id="tab-online_person" class="tab-content">
 <div class="tab-toolbar"><button onclick="showTop10('online_person')">🏆 TOP10</button></div>
 <table>
