@@ -43,6 +43,7 @@ window._ECO = [{"cpc预算": 80000, "roi": 3.89976892225695, "业绩进度": 0.2
 </script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 .tab-toolbar { display:flex; justify-content:flex-end; gap:6px; margin-bottom:8px; }
 .tab-toolbar button { padding:5px 14px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid #d1d5db; background:#fff; color:#4b5563; font-weight:500; }
@@ -827,93 +828,109 @@ function loadChannelData(force) {
   }, 10);
 }
 
-// ====== 每日趋势图（三张独立图，按角色） ======
-function drawOneChart(canvasId, roleData, color, darkColor, title) {
+// ====== 每日趋势图（Chart.js 版，带 hover 动效） ======
+var _charts = {};
+function drawOneChart(canvasId, roleData, rgb) {
   var canvas = document.getElementById(canvasId);
-  if(!canvas) return;
+  if(!canvas || typeof Chart === 'undefined') return;
 
   var maxDay = 0;
   Object.keys(roleData||{}).map(Number).forEach(function(d){ if(d>maxDay) maxDay=d; });
   if(maxDay < 1) maxDay = 15;
-  var labels = [];
-  for(var d=1; d<=maxDay; d++) labels.push(d);
+  var labels = [], vals = [];
+  for(var d=1; d<=maxDay; d++) { labels.push(d+'日'); vals.push(Math.round((roleData||{})[String(d)]||0)); }
 
-  var vals = labels.map(function(d){ return (roleData||{})[String(d)] || 0; });
-  var maxVal = Math.max.apply(null, vals.concat([1]));
-  maxVal = Math.ceil(maxVal / 50000) * 50000;
-
-  var dpr = window.devicePixelRatio || 1;
-  var W = canvas.parentElement.clientWidth - 8 || canvas.clientWidth || 880;
-  if(W < 100) W = 880;
-  var H = 180;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
+  if(_charts[canvasId]) { _charts[canvasId].destroy(); }
   var ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  var pad = {top: 14, right: 18, bottom: 30, left: 52};
-  var ph = H - pad.top - pad.bottom;
-  var barW = Math.max(4, (W - pad.left - pad.right) / labels.length * 0.55);
+  // 渐变填充
+  var grad = ctx.createLinearGradient(0, 0, 0, 200);
+  grad.addColorStop(0, 'rgba('+rgb+',0.35)');
+  grad.addColorStop(1, 'rgba('+rgb+',0.02)');
 
-  function cx(d) { return pad.left + (d-0.5) * ((W-pad.left-pad.right) / labels.length); }
-  function cy(v) { return pad.top + ph - (v/maxVal)*ph; }
-
-  // Y轴网格 + 刻度（单位 W = 万）
-  ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1;
-  ctx.fillStyle = '#94a3b8'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
-  for(var i=0; i<=4; i++) {
-    var val = maxVal * i / 4, yi = cy(val);
-    ctx.beginPath(); ctx.moveTo(pad.left, yi); ctx.lineTo(W-pad.right, yi); ctx.stroke();
-    ctx.fillText((val/10000).toFixed(0)+'W', pad.left-6, yi+3);
-  }
-  // Y轴单位标题
-  ctx.save();
-  ctx.translate(11, pad.top + ph/2); ctx.rotate(-Math.PI/2);
-  ctx.fillStyle = '#cbd5e1'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('业绩(W)', 0, 0);
-  ctx.restore();
-
-  // X轴（日期）
-  ctx.fillStyle = '#94a3b8'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
-  labels.forEach(function(d) { ctx.fillText(d+'日', cx(d), H-pad.bottom+15); });
-
-  // 柱 + 柱顶数字（W）
-  labels.forEach(function(d) {
-    var v = vals[d-1];
-    if(v <= 0) return;
-    var bx = cx(d) - barW/2;
-    ctx.fillStyle = color;
-    ctx.fillRect(bx, cy(v), barW, (v/maxVal)*ph);
-    ctx.fillStyle = '#1e293b'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText((v/10000).toFixed(1), cx(d), cy(v)-3);
+  _charts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type: 'line',
+          label: '趋势',
+          data: vals,
+          borderColor: 'rgb('+rgb+')',
+          backgroundColor: grad,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: 'rgb('+rgb+')',
+          pointBorderWidth: 2,
+          order: 0
+        },
+        {
+          type: 'bar',
+          label: '日业绩',
+          data: vals,
+          backgroundColor: 'rgba('+rgb+',0.55)',
+          hoverBackgroundColor: 'rgb('+rgb+')',
+          borderRadius: 6,
+          barPercentage: 0.55,
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      animation: { duration: 700, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,23,42,0.92)',
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 13 },
+          padding: 12,
+          cornerRadius: 8,
+          displayColors: false,
+          callbacks: {
+            title: function(items) { return items[0].label; },
+            label: function(item) {
+              var v = item.raw;
+              return '业绩：' + (v/10000).toFixed(2) + ' 万';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: '#f1f5f9', drawBorder: false },
+          ticks: {
+            color: '#94a3b8', font: { size: 10 },
+            callback: function(v) { return (v/10000).toFixed(0)+'W'; }
+          },
+          title: { display: true, text: '业绩(W)', color: '#cbd5e1', font: { size: 10 } }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 0, autoSkip: false }
+        }
+      }
+    }
   });
-
-  // 趋势线
-  ctx.strokeStyle = darkColor; ctx.lineWidth = 2; ctx.beginPath();
-  var first = true, total = 0;
-  labels.forEach(function(d) {
-    var v = vals[d-1];
-    if(v <= 0) { first = true; return; }
-    total += v;
-    if(first) { ctx.moveTo(cx(d), cy(v)); first = false; }
-    else ctx.lineTo(cx(d), cy(v));
-  });
-  ctx.stroke();
-  return total;
 }
 
 function drawTrendChart() {
   var M = window._M, rd = M.role_daily || {};
-  var t1 = drawOneChart('chart_sales', rd['销售'], '#6366f1', '#4338ca');
-  var t2 = drawOneChart('chart_advisor', rd['班主任'], '#10b981', '#047857');
-  var t3 = drawOneChart('chart_store', rd['门店'], '#f59e0b', '#b45309');
+  drawOneChart('chart_sales', rd['销售'], '99,102,241');
+  drawOneChart('chart_advisor', rd['班主任'], '16,185,129');
+  drawOneChart('chart_store', rd['门店'], '245,158,11');
 }
 
-setTimeout(function() { drawTrendChart(); }, 500);
-setTimeout(function() { drawTrendChart(); }, 1500);
-window.addEventListener('resize', function() { setTimeout(drawTrendChart, 100); });
+setTimeout(function() { drawTrendChart(); }, 400);
 </script>
 
 </head>
@@ -1083,12 +1100,21 @@ window.addEventListener('resize', function() { setTimeout(drawTrendChart, 100); 
   <td class="num">298.0万</td>
 </tr>
 </tbody></table>
-<div style="margin-top:20px;padding:16px 20px;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
-  <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📈 每日业绩趋势</h4>
-  <div style="display:flex;flex-direction:column;gap:12px">
-    <div><div style="font-size:12px;color:#6366f1;font-weight:600;margin-bottom:2px">■ 销售</div><canvas id="chart_sales" style="width:100%;height:180px"></canvas></div>
-    <div><div style="font-size:12px;color:#10b981;font-weight:600;margin-bottom:2px">■ 班主任</div><canvas id="chart_advisor" style="width:100%;height:180px"></canvas></div>
-    <div><div style="font-size:12px;color:#f59e0b;font-weight:600;margin-bottom:2px">■ 门店</div><canvas id="chart_store" style="width:100%;height:180px"></canvas></div>
+<div style="margin-top:20px">
+  <h4 style="margin:0 0 14px;font-size:15px;color:#1e293b;font-weight:700">📈 每日业绩趋势 <span style="font-size:12px;color:#94a3b8;font-weight:400">· 悬停查看详情</span></h4>
+  <div style="display:grid;grid-template-columns:1fr;gap:16px">
+    <div style="background:linear-gradient(135deg,#eef2ff,#fff);padding:18px 20px;border-radius:14px;box-shadow:0 2px 12px rgba(99,102,241,0.08);border:1px solid #e0e7ff">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="width:10px;height:10px;background:#6366f1;border-radius:3px"></span><span style="font-size:13px;color:#4338ca;font-weight:700">销售</span></div>
+      <div style="height:200px"><canvas id="chart_sales"></canvas></div>
+    </div>
+    <div style="background:linear-gradient(135deg,#ecfdf5,#fff);padding:18px 20px;border-radius:14px;box-shadow:0 2px 12px rgba(16,185,129,0.08);border:1px solid #d1fae5">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="width:10px;height:10px;background:#10b981;border-radius:3px"></span><span style="font-size:13px;color:#047857;font-weight:700">班主任</span></div>
+      <div style="height:200px"><canvas id="chart_advisor"></canvas></div>
+    </div>
+    <div style="background:linear-gradient(135deg,#fffbeb,#fff);padding:18px 20px;border-radius:14px;box-shadow:0 2px 12px rgba(245,158,11,0.08);border:1px solid #fef3c7">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="width:10px;height:10px;background:#f59e0b;border-radius:3px"></span><span style="font-size:13px;color:#b45309;font-weight:700">门店</span></div>
+      <div style="height:200px"><canvas id="chart_store"></canvas></div>
+    </div>
   </div>
 </div>
 </div>
