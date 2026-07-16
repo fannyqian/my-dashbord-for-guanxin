@@ -853,27 +853,33 @@ function drawOneChart(canvasId, roleData, color, darkColor, title) {
   var ctx = canvas.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  var pad = {top: 10, right: 15, bottom: 28, left: 50};
+  var pad = {top: 14, right: 18, bottom: 30, left: 52};
   var ph = H - pad.top - pad.bottom;
   var barW = Math.max(4, (W - pad.left - pad.right) / labels.length * 0.55);
 
   function cx(d) { return pad.left + (d-0.5) * ((W-pad.left-pad.right) / labels.length); }
   function cy(v) { return pad.top + ph - (v/maxVal)*ph; }
 
-  // 网格
+  // Y轴网格 + 刻度（单位 W = 万）
   ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1;
   ctx.fillStyle = '#94a3b8'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
   for(var i=0; i<=4; i++) {
     var val = maxVal * i / 4, yi = cy(val);
     ctx.beginPath(); ctx.moveTo(pad.left, yi); ctx.lineTo(W-pad.right, yi); ctx.stroke();
-    if(i%2==0) ctx.fillText((val/10000).toFixed(0)+'万', pad.left-6, yi+3);
+    ctx.fillText((val/10000).toFixed(0)+'W', pad.left-6, yi+3);
   }
+  // Y轴单位标题
+  ctx.save();
+  ctx.translate(11, pad.top + ph/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle = '#cbd5e1'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('业绩(W)', 0, 0);
+  ctx.restore();
 
-  // X轴
-  ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'center';
-  labels.forEach(function(d) { ctx.fillText(d, cx(d), H-pad.bottom+14); });
+  // X轴（日期）
+  ctx.fillStyle = '#94a3b8'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+  labels.forEach(function(d) { ctx.fillText(d+'日', cx(d), H-pad.bottom+15); });
 
-  // 柱 + 数字
+  // 柱 + 柱顶数字（W）
   labels.forEach(function(d) {
     var v = vals[d-1];
     if(v <= 0) return;
