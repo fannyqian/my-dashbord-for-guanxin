@@ -902,13 +902,7 @@ function drawTrendChart() {
   ctx.stroke();
 }
 
-// tab 切换时重绘（解决隐藏 canvas 尺寸为0）
-var _origSwitchTab = switchTab;
-switchTab = function(name) {
-  _origSwitchTab(name);
-  if(name === 'role') setTimeout(drawTrendChart, 100);
-};
-drawTrendChart();
+setTimeout(drawTrendChart, 200);
 window.addEventListener('resize', drawTrendChart);
 </script>
 
@@ -3754,6 +3748,7 @@ function switchTab(name){
   document.querySelectorAll(".tab-content").forEach(function(t){t.classList.remove("active")});
   document.querySelector('.tab[data-tab="'+name+'"]').classList.add("active");
   document.getElementById("tab-"+name).classList.add("active");
+  if(name === 'role') setTimeout(drawTrendChart, 100);
 }
 </script>
 <script>setInterval(function(){location.reload()},43200000)</script></body></html>
