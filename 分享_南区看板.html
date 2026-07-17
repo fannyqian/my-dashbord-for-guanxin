@@ -18,13 +18,12 @@ iframe { width: 100%; height: calc(100vh - 48px); border: none; display: block; 
 <body>
 <div class="header">
   <h1>📊 南区7月目标进展看板</h1>
-  <div class="info"><span class="dot"></span> 实时看板 · 每30秒自动同步最新数据 · <span id="timer">--</span></div>
+  <div class="info"><span class="dot"></span> 实时看板 · 每12小时自动同步最新数据</div>
 </div>
 <iframe id="db" src="南区7月目标看板.html"></iframe>
 <script>
-var n=30,t=document.getElementById('timer');
-function u(){t.textContent=n+'s后刷新'}
-setInterval(function(){n--;u();if(n<=0){document.getElementById('db').src='南区7月目标看板.html?t='+Date.now();n=30;u()}},1000);u();
+var REFRESH=43200;
+setInterval(function(){document.getElementById('db').src='南区7月目标看板.html?t='+Date.now()},REFRESH*1000);
 </script>
 </body>
 </html>

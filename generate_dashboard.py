@@ -4,6 +4,7 @@
 
 import pandas as pd
 import numpy as np
+from collections import defaultdict
 
 # ==================== 加载数据 ====================
 import os, glob
@@ -88,6 +89,12 @@ def extract_org(beisen_path):
 orders['组织'] = orders['beisen_org_full_name'].apply(extract_org)
 # 过滤掉未能识别组织的行
 orders = orders.dropna(subset=['组织'])
+
+# === 特殊归属规则：指定销售的底表收入改派到其他门店 ===
+# 余佼组织架构在普陀，但底表业绩计入徐汇店（2026-07-17 确认）
+SELLER_ORG_OVERRIDE = {'余佼': '上海徐汇店'}
+for _nm, _org in SELLER_ORG_OVERRIDE.items():
+    orders.loc[orders['seller_name'] == _nm, '组织'] = _org
 
 # ==================== 映射表 ====================
 # 参考7.9 sheet角色定义: 销售/班主任(含观心学院)/门店
@@ -246,6 +253,7 @@ cm_df = pd.DataFrame(cm_list)
 # ==================== 康博嘉业绩导入 ====================
 kangbojia_store_extra = {}  # store_name -> extra_amount
 kangbojia_cm_extra = {}     # cm_name -> extra_amount
+kangbojia_store_daily = defaultdict(lambda: defaultdict(float))  # store -> day -> amt
 kbj_store_map = {
     '观心正德诊所': '广州',
     '武汉观心精神专科门诊部': '武汉',
@@ -270,6 +278,7 @@ if kbj_files:
     # 检测是否为原始交易数据（列数>10 = 原始明细，<=10 = 预汇总）
     if len(kbj_df.columns) > 10:
         # 原始交易数据：按所在诊所 + 客户经理分别汇总实际收入
+        kbj_time_col = kbj_df.columns[0]    # 收费时间
         kbj_store_col = kbj_df.columns[47]  # 所在诊所
         kbj_cm_col = kbj_df.columns[11]     # 客户经理
         kbj_amt_col = kbj_df.columns[33]    # 实际收入
@@ -282,6 +291,11 @@ if kbj_files:
             amt = float(row[kbj_amt_col]) if pd.notna(row[kbj_amt_col]) else 0
             store = kbj_store_map[raw_store]
             kangbojia_store_extra[store] = kangbojia_store_extra.get(store, 0) + amt
+            # 每日汇总
+            try:
+                kbj_day = str(pd.to_datetime(row[kbj_time_col]).day)
+                kangbojia_store_daily[store][kbj_day] += amt
+            except: pass
             if cm and cm != 'nan' and cm != '测试医生':
                 kangbojia_cm_extra[cm] = kangbojia_cm_extra.get(cm, 0) + amt
     else:
@@ -298,19 +312,24 @@ if kbj_files:
 kangbojia_total = sum(kangbojia_store_extra.values())
 
 # ==================== 同期筛选 ====================
-# 数据截止日（显示用）
-JULY_CUTOFF = '2026-07-15'; JUNE_CUTOFF = '2026-06-15'
-# period_income/period_refund 用 < end，所以 end 要设为截止日+1
-JULY_START = '2026-07-01'; JULY_END = '2026-07-16'
-JUNE_START = '2026-06-01'; JUNE_END = '2026-06-16'
+# 自动取当天为截止日，环比取上月同天（period_income 用 < end，所以 end = cutoff+1）
+from datetime import date as _date, timedelta as _td
+_today = _date.today()
+JULY_CUTOFF = _today.strftime('%Y-%m-%d')
+JULY_END = (_today + _td(days=1)).strftime('%Y-%m-%d')
+JULY_START = f'{_today.year}-07-01'
+# 上月同天（处理月底溢出：min(当天, 上月最后一天)）
+_june_last = (_today.replace(day=1) - _td(days=1)).day
+_june_day = min(_today.day, _june_last)
+_june_cutoff = _today.replace(month=_today.month-1, day=_june_day) if _today.month > 1 else _today.replace(year=_today.year-1, month=12, day=_june_day)
+JUNE_CUTOFF = _june_cutoff.strftime('%Y-%m-%d')
+JUNE_END = (_june_cutoff + _td(days=1)).strftime('%Y-%m-%d')
+JUNE_START = f'{_june_cutoff.year}-06-01'
 # 显示用日期
-from datetime import datetime as _dt
-_july_cutoff_dt = _dt.strptime(JULY_CUTOFF, '%Y-%m-%d')
-_DATE_CN = f'{_july_cutoff_dt.month}月{_july_cutoff_dt.day}日'
-_DATE_DOT = f'{_july_cutoff_dt.year%100:02d}.{_july_cutoff_dt.month:02d}.{_july_cutoff_dt.day:02d}'
-_DATE_DAY = str(_july_cutoff_dt.day)
-_june_cutoff_dt = _dt.strptime(JUNE_CUTOFF, '%Y-%m-%d')
-_DATE_JUNE_CN = f'{_june_cutoff_dt.month}月{_june_cutoff_dt.day}日'
+_DATE_CN = f'{_today.month}月{_today.day}日'
+_DATE_DOT = f'{_today.year%100:02d}.{_today.month:02d}.{_today.day:02d}'
+_DATE_DAY = str(_today.day)
+_DATE_JUNE_CN = f'{_june_cutoff.month}月{_june_cutoff.day}日'
 
 # 收入: 按 pay_at
 def period_income(df, start, end):
@@ -416,12 +435,33 @@ ONLINE_ORDER = sorted([g for g in ONLINE_GROUPS if g in group_metrics], key=lamb
 OFFLINE_ORDER = sorted([g for g in OFFLINE_GROUPS if g in group_metrics], key=lambda g: group_metrics[g]['rate'])
 
 # ==================== Level 3a: 线上个人 ====================
+# ==================== 电话数据加载 (按销售姓名汇总通话人数) ====================
+phone_calls = {}  # name -> 通话人数
+try:
+    phone_files = [f for f in glob.glob(os.path.join(data_dir, '电话', '*.xlsx'))
+                   if not os.path.basename(f).startswith('~$')]
+    if phone_files:
+        phone_file = max(phone_files, key=os.path.getmtime)
+        phone_df = pd.read_excel(phone_file)
+        name_col = next((c for c in phone_df.columns if '姓名' in c or '销售' in c), phone_df.columns[0])
+        call_col = next((c for c in phone_df.columns if '通话人数' in c or '通话' in c), None)
+        if call_col:
+            for _, prow in phone_df.iterrows():
+                nm = str(prow[name_col]).strip()
+                if not nm or nm == 'nan': continue
+                cv = prow[call_col]
+                cv = int(cv) if pd.notna(cv) else 0
+                phone_calls[nm] = phone_calls.get(nm, 0) + cv
+        print(f'📞 电话数据: {os.path.basename(phone_file)} — {len(phone_calls)}人 共{sum(phone_calls.values())}通话')
+except Exception as e:
+    print(f'⚠️ 电话数据加载失败: {e}')
+
 person_online_list = []
 for (grp_name, person_name), tgt in online_person_target.items():
     p_orders = orders[(orders['seller_name']==person_name)]
     m = calc_metrics(p_orders, tgt)
     person_online_list.append({
-        'group': grp_name, 'name': person_name, **m
+        'group': grp_name, 'name': person_name, 'calls': phone_calls.get(person_name, 0), **m
     })
 person_online_df = pd.DataFrame(person_online_list)
 
@@ -430,15 +470,17 @@ person_cm_list = []
 for _, cm in cm_df.iterrows():
     store = cm['store']; name = cm['name']; tgt = cm['target']
     is_putuo = (store == '普陀')
+    p_orders = orders[(orders['seller_name']==name)]
+    # 特殊归属销售（如余佼）多店挂名时，底表订单只计入改派后的门店行
+    if name in SELLER_ORG_OVERRIDE:
+        p_orders = p_orders[p_orders['target_group'] == store]
     if is_putuo:
         # 普陀个案业绩 = 明细汇总 + 底表订单
-        p_orders = orders[(orders['seller_name']==name)]
         done = cm['done_locked'] + period_income(p_orders, JULY_START, JULY_END)
         ref_raw = period_refund(p_orders, JULY_START, JULY_END)
         prev_raw = cm['prev_month']
         prev_ref_raw = cm['refund_locked']
     else:
-        p_orders = orders[(orders['seller_name']==name)]
         done = period_income(p_orders, JULY_START, JULY_END)
         ref_raw = period_refund(p_orders, JULY_START, JULY_END)
         prev_raw = period_income(p_orders, JUNE_START, JUNE_END)
@@ -456,7 +498,7 @@ for _, cm in cm_df.iterrows():
         'refund': ref_raw, 'prev_refund': prev_ref_raw, 'refund_chg': ref_chg,
         'prev_done': prev_raw, 'done_chg': done_chg,
         'net': net, 'prev_net': prev_net, 'net_chg': net_chg,
-        'is_putuo': is_putuo,
+        'is_putuo': is_putuo, 'calls': phone_calls.get(name, 0),
     })
 person_cm_df = pd.DataFrame(person_cm_list)
 
@@ -469,6 +511,32 @@ for cm_name, extra in kangbojia_cm_extra.items():
         person_cm_df.at[idx, 'rate'] = safe_div(person_cm_df.at[idx, 'done'], person_cm_df.at[idx, 'target'])
         person_cm_df.at[idx, 'net'] = person_cm_df.at[idx, 'done'] - person_cm_df.at[idx, 'refund']
         person_cm_df.at[idx, 'net_chg'] = safe_div(person_cm_df.at[idx, 'net'] - person_cm_df.at[idx, 'prev_net'], person_cm_df.at[idx, 'prev_net'])
+
+# ==================== 电话数汇总 (分组/角色) ====================
+group_calls = {}  # group -> 通话总数
+for _, r in person_online_df.iterrows():
+    group_calls[r['group']] = group_calls.get(r['group'], 0) + int(r.get('calls', 0))
+for _, r in person_cm_df.iterrows():
+    group_calls[r['store']] = group_calls.get(r['store'], 0) + int(r.get('calls', 0))
+
+group_count = {}  # group -> 人数
+for _, r in person_online_df.iterrows():
+    group_count[r['group']] = group_count.get(r['group'], 0) + 1
+for _, r in person_cm_df.iterrows():
+    group_count[r['store']] = group_count.get(r['store'], 0) + 1
+
+role_calls = {'销售': 0, '班主任': 0, '门店': 0}
+role_count = {'销售': 0, '班主任': 0, '门店': 0}
+for _, r in person_online_df.iterrows():
+    if str(r['group']).startswith('课程'):
+        role_calls['销售'] += int(r.get('calls', 0)); role_count['销售'] += 1
+    elif '班主任' in str(r['group']):
+        role_calls['班主任'] += int(r.get('calls', 0)); role_count['班主任'] += 1
+for _, r in person_cm_df.iterrows():
+    role_calls['门店'] += int(r.get('calls', 0)); role_count['门店'] += 1
+
+def avg_calls(total, cnt):
+    return f'{total/cnt:.1f}' if cnt > 0 else '—'
 
 # ==================== HTML 渲染 ====================
 def fmt(n):
@@ -579,6 +647,8 @@ def role_row(role, m):
   <td class="num">{fmt(m['refund'])}</td>
   {refund_td(m['refund'], m['done'])}
   <td class="num"><b>{fmt(m['net'])}</b></td>
+  <td class="num" style="color:#0891b2;font-weight:600">{role_calls.get(role, 0)}</td>
+  <td class="num col-avgcall" style="color:#0e7490;font-weight:600">{avg_calls(role_calls.get(role,0), role_count.get(role,0))}</td>
 </tr>'''
 
 # Build group-level rows (Level 2)
@@ -586,7 +656,7 @@ def group_row(g, m, role):
     note = ' <span style="font-size:10px;color:#f59e0b">⚠锁定</span>' if g == '普陀' else ''
     return f'''<tr>
   <td><b>{g}</b>{note}</td>
-  <td>{role_badge(role)}</td>
+  <td><div style="display:flex;align-items:center;gap:8px">{role_badge(role)}<canvas class="spark" data-group="{g}" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">{fmt(m['target'])}</td>
   <td class="num"><b>{fmt(m['done'])}</b></td>
   {rate_td(m['rate'])}
@@ -597,11 +667,14 @@ def group_row(g, m, role):
   <td class="num"><b>{fmt(m['net'])}</b></td>
   <td class="num">{fmt(m['prev_net'])}</td>
   <td class="num">{chg_html(m['net_chg'])}</td>
+  <td class="num" style="color:#0891b2;font-weight:600">{group_calls.get(g, 0)}</td>
+  <td class="num col-avgcall" style="color:#0e7490;font-weight:600">{avg_calls(group_calls.get(g,0), group_count.get(g,0))}</td>
 </tr>'''
 
 # Build person rows (Level 3)
 def person_row(name, group_label, tgt, m, person_type='sales_advisor'):
     note = ' <span style="font-size:10px;color:#f59e0b">⚠锁定</span>' if m.get('is_putuo') else ''
+    calls = int(m.get('calls', 0)) if hasattr(m, 'get') else 0
     return f'''<tr>
   <td>{group_label}</td>
   <td>{name}{note}</td>
@@ -615,6 +688,7 @@ def person_row(name, group_label, tgt, m, person_type='sales_advisor'):
   <td class="num"><b>{fmt(m['net'])}</b></td>
   <td class="num">{fmt(m['prev_net'])}</td>
   <td class="num">{chg_html(m['net_chg'])}</td>
+  <td class="num" style="color:#0891b2;font-weight:600">{calls}</td>
 </tr>'''
 
 # ==================== 生成 HTML ====================
@@ -664,11 +738,13 @@ tr.section-header:hover td{{background:inherit!important}}
 <button onclick="exportBaseTable()" style="padding:8px 18px;background:#fff;color:#1e293b;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📥 导出底表</button>
 <button onclick="snapshot()" style="padding:8px 18px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📸 快照</button>
 <label style="padding:8px 18px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
-  📤 导入底表 <input type="file" onchange="importBaseTable(this)" accept=".xlsx,.xls" style="display:none">
+  📤 导入底表 <input type="file" onchange="importBaseTable(this)" accept=".xlsx,.xls,.csv" style="display:none">
 </label>
-<button onclick="exportPutuoTemplate()" style="padding:8px 18px;background:#fff;color:#b45309;border:1px solid #f59e0b;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📥 普陀模板</button>
+<label style="padding:8px 18px;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
+  📤 导入康博嘉 <input type="file" onchange="importKangbojia(this)" accept=".xlsx,.xls" style="display:none">
+</label>
 <label style="padding:8px 18px;background:#fef3c7;color:#b45309;border:1px solid #f59e0b;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
-  ⚠ 导入普陀 <input type="file" onchange="importPutuo(this)" accept=".xlsx,.xls" style="display:none">
+  📤 导入普陀明细 <input type="file" onchange="importPutuoDetail(this)" accept=".xlsx,.xls" style="display:none">
 </label>
 </div>
 </div>
@@ -751,29 +827,48 @@ tr.section-header:hover td{{background:inherit!important}}
 <table>
 <thead><tr>
   <th>角色</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th>
-  <th class="num">本月退费</th><th class="num">退费率</th><th class="num">本月净流水</th>
+  <th class="num">本月退费</th><th class="num">退费率</th><th class="num">本月净流水</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th>
 </tr></thead><tbody>
 {''.join(role_row(r, role_metrics[r]) for r in ['销售','班主任','门店'])}
 <tr class="subtotal"><td>南区合计</td>
   <td class="num">{fmt(total_metrics['target'])}</td><td class="num">{fmt(total_metrics['done'])}</td>{rate_td(total_metrics['rate'])}
   <td class="num">{fmt(total_metrics['refund'])}</td>{refund_td(total_metrics['refund'], total_metrics['done'])}
   <td class="num">{fmt(total_metrics['net'])}</td>
+  <td class="num" style="color:#0891b2;font-weight:700">{sum(role_calls.values())}</td>
+  <td class="num col-avgcall" style="color:#0e7490;font-weight:700">{avg_calls(sum(role_calls.values()), sum(role_count.values()))}</td>
 </tr>
 </tbody></table>
+<div style="margin-top:20px">
+  <h4 style="margin:0 0 14px;font-size:15px;color:#1e293b;font-weight:700">📈 每日业绩趋势 <span style="font-size:12px;color:#94a3b8;font-weight:400">· 悬停查看详情</span></h4>
+  <div style="display:grid;grid-template-columns:1fr;gap:16px">
+    <div style="background:linear-gradient(135deg,#eef2ff,#fff);padding:18px 20px;border-radius:14px;box-shadow:0 2px 12px rgba(99,102,241,0.08);border:1px solid #e0e7ff">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="width:10px;height:10px;background:#6366f1;border-radius:3px"></span><span style="font-size:13px;color:#4338ca;font-weight:700">销售</span></div>
+      <div style="height:200px"><canvas id="chart_sales"></canvas></div>
+    </div>
+    <div style="background:linear-gradient(135deg,#ecfdf5,#fff);padding:18px 20px;border-radius:14px;box-shadow:0 2px 12px rgba(16,185,129,0.08);border:1px solid #d1fae5">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="width:10px;height:10px;background:#10b981;border-radius:3px"></span><span style="font-size:13px;color:#047857;font-weight:700">班主任</span></div>
+      <div style="height:200px"><canvas id="chart_advisor"></canvas></div>
+    </div>
+    <div style="background:linear-gradient(135deg,#fffbeb,#fff);padding:18px 20px;border-radius:14px;box-shadow:0 2px 12px rgba(245,158,11,0.08);border:1px solid #fef3c7">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="width:10px;height:10px;background:#f59e0b;border-radius:3px"></span><span style="font-size:13px;color:#b45309;font-weight:700">门店</span></div>
+      <div style="height:200px"><canvas id="chart_store"></canvas></div>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- Tab 2: 按分组 -->
 <div id="tab-group" class="tab-content">
 <table>
 <thead><tr>
-  <th>分组</th><th>角色</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
+  <th>分组</th><th>角色 <span style="font-weight:400;color:#94a3b8;font-size:10px">/趋势</span></th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
-  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th>
+  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th>
 </tr></thead><tbody>
 '''
 
 # Group rows — 线上组
-html += '<tr class="section-header"><td colspan="12" style="background:#dbeafe;color:#1e40af;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #93c5fd">📡 线上组</td></tr>'
+html += '<tr class="section-header"><td colspan="14" style="background:#dbeafe;color:#1e40af;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #93c5fd">📡 线上组</td></tr>'
 for g in ONLINE_ORDER:
     m = group_metrics.get(g)
     if m is None or m['target'] == 0: continue
@@ -781,7 +876,7 @@ for g in ONLINE_ORDER:
     html += group_row(g, m, role)
 
 # Group rows — 线下门店
-html += '<tr class="section-header"><td colspan="12" style="background:#d1fae5;color:#065f46;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #6ee7b7">🏥 线下门店</td></tr>'
+html += '<tr class="section-header"><td colspan="14" style="background:#d1fae5;color:#065f46;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #6ee7b7">🏥 线下门店</td></tr>'
 for g in OFFLINE_ORDER:
     m = group_metrics.get(g)
     if m is None or m['target'] == 0: continue
@@ -796,13 +891,13 @@ html += '''<div id="tab-online_person" class="tab-content">
 <thead><tr>
   <th>分组</th><th>销售</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
-  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th>
+  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th>
 </tr></thead><tbody>
 '''
 
 person_online_sorted = person_online_df.sort_values(['group','rate'], ascending=[True,True])
 last_group = ''
-group_sub = {'target':0,'done':0,'refund':0,'prev_done':0,'prev_refund':0,'net':0,'prev_net':0}
+group_sub = {'target':0,'done':0,'refund':0,'prev_done':0,'prev_refund':0,'net':0,'prev_net':0,'calls':0}
 for _, r in person_online_sorted.iterrows():
     if r['group'] != last_group:
         if last_group and group_sub['target'] > 0:
@@ -814,9 +909,9 @@ for _, r in person_online_sorted.iterrows():
   <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
   <td class="num">{refund_chg_html(safe_div(sub_ref-group_sub['prev_refund'],group_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
-  <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td></tr>'''
+  <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td><td class="num" style="color:#0891b2;font-weight:700">{group_sub['calls']}</td></tr>'''
         last_group = r['group']
-        group_sub = {'target':0,'done':0,'refund':0,'prev_done':0,'prev_refund':0,'net':0,'prev_net':0}
+        group_sub = {'target':0,'done':0,'refund':0,'prev_done':0,'prev_refund':0,'net':0,'prev_net':0,'calls':0}
     group_sub['target'] += r['target']
     group_sub['done'] += r['done']
     group_sub['refund'] += r['refund']
@@ -824,6 +919,7 @@ for _, r in person_online_sorted.iterrows():
     group_sub['prev_refund'] += r['prev_refund']
     group_sub['net'] += r['net']
     group_sub['prev_net'] += r['prev_net']
+    group_sub['calls'] += int(r.get('calls', 0))
     html += person_row(r['name'], r['group'], r['target'], r, 'sales_advisor')
 # last group subtotal
 if last_group and group_sub['target'] > 0:
@@ -835,7 +931,7 @@ if last_group and group_sub['target'] > 0:
   <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
   <td class="num">{refund_chg_html(safe_div(sub_ref-group_sub['prev_refund'],group_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
-  <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td></tr>'''
+  <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td><td class="num" style="color:#0891b2;font-weight:700">{group_sub['calls']}</td></tr>'''
 
 html += '''</tbody></table></div>'''
 
@@ -845,13 +941,13 @@ html += '''<div id="tab-cm_person" class="tab-content">
 <thead><tr>
   <th>分院</th><th>个案经理</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
-  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th>
+  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th>
 </tr></thead><tbody>
 '''
 
 cm_sorted = person_cm_df.sort_values(['store','rate'], ascending=[True,True])
 last_store = ''
-store_sub = {'target':0,'done':0,'refund':0,'prev_done':0,'prev_refund':0,'net':0,'prev_net':0}
+store_sub = {'target':0,'done':0,'refund':0,'prev_done':0,'prev_refund':0,'net':0,'prev_net':0,'calls':0}
 for _, r in cm_sorted.iterrows():
     if r['store'] != last_store:
         if last_store and store_sub['target'] > 0:
@@ -863,9 +959,9 @@ for _, r in cm_sorted.iterrows():
   <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
   <td class="num">{refund_chg_html(safe_div(sub_ref-store_sub['prev_refund'],store_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
-  <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td></tr>'''
+  <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td><td class="num" style="color:#0891b2;font-weight:700">{store_sub['calls']}</td></tr>'''
         last_store = r['store']
-        store_sub = {'target':0,'done':0,'refund':0,'prev_done':0,'prev_refund':0,'net':0,'prev_net':0}
+        store_sub = {'target':0,'done':0,'refund':0,'prev_done':0,'prev_refund':0,'net':0,'prev_net':0,'calls':0}
     store_sub['target'] += r['target']
     store_sub['done'] += r['done']
     store_sub['refund'] += r['refund']
@@ -873,6 +969,7 @@ for _, r in cm_sorted.iterrows():
     store_sub['prev_refund'] += r['prev_refund']
     store_sub['net'] += r['net']
     store_sub['prev_net'] += r['prev_net']
+    store_sub['calls'] += int(r.get('calls', 0))
     html += person_row(r['name'], r['store'], r['target'], r, 'cm')
 # last store subtotal
 if last_store and store_sub['target'] > 0:
@@ -884,7 +981,7 @@ if last_store and store_sub['target'] > 0:
   <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
   <td class="num">{refund_chg_html(safe_div(sub_ref-store_sub['prev_refund'],store_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
-  <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td></tr>'''
+  <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td><td class="num" style="color:#0891b2;font-weight:700">{store_sub['calls']}</td></tr>'''
 
 html += '''</tbody></table></div>'''
 
@@ -903,6 +1000,19 @@ function switchTab(name){{
   document.querySelectorAll(".tab-content").forEach(function(t){{t.classList.remove("active")}});
   document.querySelector('.tab[data-tab="'+name+'"]').classList.add("active");
   document.getElementById("tab-"+name).classList.add("active");
+  if(name === 'role') setTimeout(drawTrendChart, 100);
+}}
+var _avgCallHidden = false;
+function toggleAvgCall(){{
+  _avgCallHidden = !_avgCallHidden;
+  document.querySelectorAll(".col-avgcall").forEach(function(el){{
+    // 保留列头的眼睛可点，隐藏数值单元格；列头文字变淡
+    if(el.tagName === 'TD'){{ el.style.display = _avgCallHidden ? 'none' : ''; }}
+    else {{
+      var txt = el.childNodes[0];
+      if(txt) txt.textContent = _avgCallHidden ? '' : '人均电话 ';
+    }}
+  }});
 }}
 </script>
 </body></html>'''
@@ -1004,6 +1114,44 @@ for _, row in jq_orders.iterrows():
     person_daily_junqun[name]['_total'] = person_daily_junqun[name].get('_total', 0) + amt
     person_daily_junqun[name]['_org'] = row['组织']
 
+# 每日业绩汇总 (趋势图用 — 按角色)
+role_daily = {'销售': defaultdict(float), '班主任': defaultdict(float), '门店': defaultdict(float)}
+group_daily = defaultdict(lambda: defaultdict(float))  # 按分组每日
+for _, row in july_orders.iterrows():
+    org = row['组织']
+    role = classify_role(org)
+    day = str(row['pay_at'].day)
+    amt = float(row['pay_amount'])
+    if role in role_daily:
+        role_daily[role][day] += amt
+    grp = row.get('target_group')
+    if pd.notna(grp):
+        group_daily[grp][day] += amt
+# 转普通 dict
+for r in role_daily:
+    role_daily[r] = dict(role_daily[r])
+group_daily = {g: dict(v) for g, v in group_daily.items()}
+
+# 趋势图截止日 = 底表最新支付日（避免普陀/康博嘉出现半天数据点）
+trend_max_day = int(july_orders['pay_at'].max().day) if len(july_orders) else 31
+
+# 普陀明细每日叠加到门店和普陀分组（只到趋势截止日）
+if putuo_file and 'CM姓名' in putuo_df.columns and '收款金额' in putuo_df.columns:
+    for _, prow in putuo_df.iterrows():
+        pd_day = pd.to_datetime(prow['日期']).day
+        if pd_day > trend_max_day: continue
+        d = str(pd_day)
+        amt = float(prow['收款金额']) if pd.notna(prow['收款金额']) else 0
+        role_daily['门店'][d] = role_daily['门店'].get(d, 0) + amt
+        group_daily['普陀'][d] = group_daily['普陀'].get(d, 0) + amt
+
+# 康博嘉每日叠加到门店和对应分组（仅南区5家，只到趋势截止日）
+for store, dvals in kangbojia_store_daily.items():
+    for d, amt in dvals.items():
+        if int(d) > trend_max_day: continue
+        role_daily['门店'][d] = role_daily['门店'].get(d, 0) + amt
+        group_daily[store][d] = group_daily[store].get(d, 0) + amt
+
 # ====== 预加载电商本地生活数据 ======
 print('🔄 拉取本地生活数据...', end=' ')
 eco_data_raw = []
@@ -1020,12 +1168,15 @@ except Exception as e:
 
 mapping_json = json.dumps({
     'org_to_group': ORG_TO_GROUP,
+    'seller_org_override': SELLER_ORG_OVERRIDE,
     'store_to_group': STORE_MAP,
     'store_to_trio': STORE_TO_TRIO,
     'sales_orgs': SALES_ORGS,
     'advisor_orgs': ADVISOR_ORGS,
     'target_map': target_map,
     'putuo_locked': putuo_locked_done,
+    'putuo_detail_total': putuo_extra,
+    'putuo_base_orders': putuo_order_done,
     'online_person_target': {f'{k[0]}|{k[1]}': v for k, v in online_person_target.items()},
     'cm_list': cm_list,
     'time_progress': TIME_PROGRESS,
@@ -1033,6 +1184,8 @@ mapping_json = json.dumps({
     'june_start': JUNE_START, 'june_end': JUNE_END,
     'person_daily': person_daily,
     'person_daily_junqun': person_daily_junqun,
+    'role_daily': role_daily,
+    'group_daily': group_daily,
 }, ensure_ascii=False)
 
 # ==================== 交互式 JS 工具条 ====================
@@ -1045,6 +1198,7 @@ window._ECO = ''' + json.dumps(eco_data_raw, ensure_ascii=False) + ''';
 </script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 .tab-toolbar { display:flex; justify-content:flex-end; gap:6px; margin-bottom:8px; }
 .tab-toolbar button { padding:5px 14px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid #d1d5db; background:#fff; color:#4b5563; font-weight:500; }
@@ -1164,6 +1318,19 @@ function rebuildRefund(td,ref,done,type){
 }
 function refreshAll(){
   var tds,rTotals={tgt:0,done:0,ref:0,net:0},row,st,g;
+  // 先按分组行同步角色行（销售=课程组/班主任/门店），保证导入·编辑后按角色表和KPI一致
+  var _gAgg={"销售":{done:0,ref:0},"班主任":{done:0,ref:0},"门店":{done:0,ref:0}};
+  document.querySelectorAll("#tab-group tbody tr:not(.subtotal):not(.section-header)").forEach(function(row){
+    var t=row.querySelectorAll("td"); if(t.length<12) return;
+    var gn=t[0].textContent.replace("⚠锁定","").trim();
+    var rk=gn.indexOf("课程")===0?"销售":(gn==="班主任"?"班主任":"门店");
+    _gAgg[rk].done+=parseNum(t[3]); _gAgg[rk].ref+=parseNum(t[6]);
+  });
+  var _rNames=["销售","班主任","门店"];
+  document.querySelectorAll("#tab-role tbody tr:not(.subtotal)").forEach(function(row,i){
+    var a=_gAgg[_rNames[i]]; if(!a) return; var t=row.querySelectorAll("td"); if(t.length<7) return;
+    writeNum(t[2],a.done); writeNum(t[4],a.ref);
+  });
   // role tab
   document.querySelectorAll("#tab-role tbody tr:not(.subtotal)").forEach(function(row){tds=row.querySelectorAll("td");if(tds.length<7)return;var t=parseNum(tds[1]),d=parseNum(tds[2]),r=parseNum(tds[4]);rTotals.tgt+=t;rTotals.done+=d;rTotals.ref+=r;rTotals.net+=d-r;writeNum(tds[5],d-r);rebuildBar(tds[3],d/t);rebuildRefund(tds[4].nextElementSibling,r,d,"group")});
   st=document.querySelector("#tab-role tr.subtotal");if(st){tds=st.querySelectorAll("td");writeNum(tds[1],rTotals.tgt);writeNum(tds[2],rTotals.done);rebuildBar(tds[3],rTotals.done/rTotals.tgt);writeNum(tds[4],rTotals.ref);writeNum(tds[5],rTotals.net);rebuildRefund(tds[4].nextElementSibling,rTotals.ref,rTotals.done,"group")}
@@ -1374,150 +1541,247 @@ function exportBaseTable() {
 }
 
 // ====== 普陀模板导出 ======
-function exportPutuoTemplate() {
-  var M = window._M;
-  // Gather 普陀 data from CM table
-  var cmTab = document.getElementById('tab-cm_person');
-  var rows = cmTab.querySelectorAll('tbody tr:not(.subtotal)');
-  var templateRows = [['门店业绩','门店退款','个案经理','完成业绩']];
-  var totalRef = 0;
-  rows.forEach(function(row) {
-    var tds = row.querySelectorAll('td');
-    if(tds.length < 4 || tds[0].textContent.trim() !== '普陀') return;
-    var name = tds[1].textContent.replace('⚠锁定','').trim();
-    var done = parseNum(tds[3]);
-    var ref = parseNum(tds[6]);
-    totalRef += ref;
-    templateRows.push(['', '', name, done]);
-  });
-  // Add summary rows
-  var grpRows = document.querySelectorAll('#tab-group tbody tr:not(.subtotal):not(.section-header)');
-  var putuoTotal = 0, putuoRefTotal = 0;
-  grpRows.forEach(function(row) {
-    var tds = row.querySelectorAll('td');
-    if(tds.length < 12) return;
-    if(tds[0].textContent.replace('⚠锁定','').trim() !== '普陀') return;
-    putuoTotal = parseNum(tds[3]);
-    putuoRefTotal = parseNum(tds[6]);
-  });
-  templateRows.push(['', '', '', '']);
-  templateRows.push([putuoTotal, putuoRefTotal, '合计', putuoTotal]);
-  var ws = XLSX.utils.aoa_to_sheet(templateRows);
-  // Set column widths
-  ws['!cols'] = [{wch:14},{wch:14},{wch:12},{wch:14}];
-  var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, '普陀');
-  XLSX.writeFile(wb, '普陀门店数据模板.xlsx');
+// ====== 康博嘉云数据导入 ======
+// ====== 导入进度条（成功绿/失败红） ======
+function ensureImportBar() {
+  var box = document.getElementById('import-progress');
+  if (box) return box;
+  box = document.createElement('div');
+  box.id = 'import-progress';
+  box.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;width:340px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:12px 16px;font-size:13px;display:none';
+  box.innerHTML = '<div id="imp-label" style="margin-bottom:8px;color:#334155;font-weight:600"></div>'+
+    '<div style="background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden"><div id="imp-bar" style="height:100%;width:0%;border-radius:6px;background:#3b82f6;transition:width .3s"></div></div>'+
+    '<div id="imp-msg" style="margin-top:8px;color:#64748b;font-size:12px;white-space:pre-line"></div>';
+  document.body.appendChild(box);
+  return box;
+}
+var _impTimer = null;
+function importProgress(label, pct) {
+  var box = ensureImportBar();
+  if (_impTimer) { clearTimeout(_impTimer); _impTimer = null; }
+  box.style.display = 'block';
+  document.getElementById('imp-label').textContent = '⏳ ' + label;
+  var bar = document.getElementById('imp-bar');
+  bar.style.background = '#3b82f6';
+  bar.style.width = (pct || 0) + '%';
+  document.getElementById('imp-msg').textContent = '';
+}
+function importDone(ok, label, msg) {
+  var box = ensureImportBar();
+  box.style.display = 'block';
+  var bar = document.getElementById('imp-bar');
+  bar.style.width = '100%';
+  bar.style.background = ok ? '#22c55e' : '#ef4444';
+  document.getElementById('imp-label').textContent = (ok ? '✅ ' : '❌ ') + label;
+  document.getElementById('imp-msg').textContent = msg || '';
+  if (_impTimer) clearTimeout(_impTimer);
+  _impTimer = setTimeout(function(){ box.style.display = 'none'; }, ok ? 6000 : 15000);
 }
 
-// ====== 普陀专属导入 ======
-function importPutuo(input) {
+var KBJ_STORE_MAP = {
+  '观心正德诊所': '广州', '武汉观心精神专科门诊部': '武汉',
+  '深圳观心正德综合门诊部': '深圳', '南京建邺观心综合门诊部': '南京',
+  '杭州观心正念诊所有限公司': '杭州'
+};
+
+function importKangbojia(input) {
   var file = input.files[0]; if(!file) return;
+  importProgress('导入康博嘉：'+file.name+'（读取文件…）', 15);
   var reader = new FileReader();
+  reader.onerror = function(){ importDone(false, '康博嘉导入失败', '文件读取失败，请重试'); };
   reader.onload = function(e) {
-    var wb = XLSX.read(e.target.result, {type:'array', cellDates: true});
-    var sheet = wb.Sheets[wb.SheetNames[0]];
-    // Try both object mode and array mode
-    var data = XLSX.utils.sheet_to_json(sheet);
-    console.log('普陀导入: 原始数据行数=' + data.length, data.slice(0,3));
-    // Detect columns from first row
+    importProgress('导入康博嘉：'+file.name+'（解析中…）', 50);
+    setTimeout(function(){
+    var wb;
+    try { wb = XLSX.read(e.target.result, {type:'array', cellDates: true}); }
+    catch(err) { importDone(false, '康博嘉导入失败', '文件解析失败：'+err.message+'\\n请用 Excel 打开该文件另存为 .xlsx 后重新导入'); return; }
+    // 自动选列数最多的 sheet（兼容带标题页的格式）
+    var bestSheet = wb.SheetNames[0], bestCols = 0;
+    wb.SheetNames.forEach(function(sn) {
+      var s = wb.Sheets[sn];
+      if(!s['!ref']) return;
+      var range = XLSX.utils.decode_range(s['!ref']);
+      if(range.e.c > bestCols) { bestCols = range.e.c; bestSheet = sn; }
+    });
+    var data = XLSX.utils.sheet_to_json(wb.Sheets[bestSheet]);
     var cols = data.length > 0 ? Object.keys(data[0]) : [];
-    console.log('普陀导入: 列名=' + cols.join(', '));
-    // Map columns flexibly
-    var nameCol = cols.find(function(c){ return c.indexOf('个案')>=0 || c.indexOf('经理')>=0 || c.indexOf('姓名')>=0 || c === 'name'; }) || cols[2] || '';
-    var doneCol = cols.find(function(c){ return c.indexOf('完成')>=0 || c.indexOf('业绩')>=0 || c === 'done'; }) || cols[3] || '';
-    var revCol = cols.find(function(c){ return c.indexOf('门店业绩')>=0 || c.indexOf('业绩')>=0; }) || cols[0] || '';
-    var refCol = cols.find(function(c){ return c.indexOf('退款')>=0 || c.indexOf('退费')>=0; }) || cols[1] || '';
-    console.log('普陀导入: nameCol='+nameCol+' doneCol='+doneCol+' revCol='+revCol+' refCol='+refCol);
+    console.log('康博嘉导入: sheet='+bestSheet+' 行数='+data.length+' 列='+cols.join(','));
 
-    var putuoDone = {};  // name -> done
-    var totalPutuo = 0, storeRefund = null;
+    // 查找列：名称精确匹配优先，位置索引兜底（防止首行空单元格导致列序漂移）
+    var storeCol = (cols.indexOf('所在诊所')>=0 ? '所在诊所' : null) || cols.find(function(c){ return c.indexOf('诊所')>=0 || c.indexOf('机构')>=0 || c.indexOf('所在')>=0; }) || cols[47] || '';
+    var cmCol = (cols.indexOf('客户经理')>=0 ? '客户经理' : null) || cols.find(function(c){ return c.indexOf('客户经理')>=0 || c.indexOf('经理')>=0; }) || cols[11] || '';
+    var amtCol = (cols.indexOf('实际收入')>=0 ? '实际收入' : null) || cols.find(function(c){ return c.indexOf('实际收入')>=0 || c.indexOf('收入')>=0 || c.indexOf('金额')>=0; }) || cols[33] || '';
+    if(!storeCol || !cmCol || !amtCol) {
+      importDone(false, '康博嘉导入失败', '未识别到数据列。请确认文件包含：所在诊所、客户经理、实际收入'); return;
+    }
+    console.log('康博嘉导入: storeCol='+storeCol+' cmCol='+cmCol+' amtCol='+amtCol);
+
+    // 按门店+客户经理汇总（仅南区5家）
+    var storeTotal = {}, cmTotal = {};
+    var matched = 0;
     data.forEach(function(row) {
-      var name = (row[nameCol] || '').toString().trim();
-      var done = parseFloat(row[doneCol]) || 0;
-      var storeRev = parseFloat(row[revCol]) || 0;
-      var storeRef = parseFloat(row[refCol]) || 0;
-      if(storeRev > 0 && !name) totalPutuo = storeRev;
-      if(storeRef > 0 && !name) storeRefund = storeRef;
-      if(name && name !== '合计' && done > 0) {
-        putuoDone[name] = done;
-        console.log('普陀导入: 个案 '+name+' = '+done);
-      }
+      var rawStore = (row[storeCol] || '').toString().trim();
+      var mapped = KBJ_STORE_MAP[rawStore];
+      if(!mapped) return;
+      var cm = (row[cmCol] || '').toString().trim();
+      var amt = parseFloat(row[amtCol]) || 0;
+      if(!cm || cm === 'nan' || cm === '测试医生') return;
+      storeTotal[mapped] = (storeTotal[mapped] || 0) + amt;
+      cmTotal[cm] = (cmTotal[cm] || 0) + amt;
+      matched++;
     });
-    // Merge summary row values
-    if(totalPutuo === 0) {
-      Object.values(putuoDone).forEach(function(v) { totalPutuo += v; });
-    }
-    console.log('普陀导入: totalPutuo='+totalPutuo+' 个案数='+Object.keys(putuoDone).length);
-    if(totalPutuo === 0 && Object.keys(putuoDone).length === 0) {
-      alert('未识别到普陀数据。列名: '+cols.join(',')+' -- 请确保表格包含个案经理和完成业绩列'); return;
-    }
+    console.log('康博嘉导入: 匹配'+matched+'条, 门店:', storeTotal, 'CM:', cmTotal);
+    if(matched === 0) { importDone(false, '康博嘉导入失败', '未匹配到南区5家门店数据。请确认所在诊所列包含：\\n'+Object.keys(KBJ_STORE_MAP).join('、')); return; }
 
-    // Update CM person table - 普陀 rows
+    // 存储到 _M
+    window._M.kbj_store = storeTotal;
+    window._M.kbj_cm = cmTotal;
+
+    // 先回退上次导入的康博嘉增量（防止重复叠加）
+    if(window._M._kbj_prev_store) {
+      document.querySelectorAll('#tab-group tbody tr:not(.subtotal):not(.section-header)').forEach(function(row) {
+        var tds = row.querySelectorAll('td');
+        if(tds.length < 12) return;
+        var storeName = tds[0].textContent.replace('⚠锁定','').trim();
+        var prev = window._M._kbj_prev_store[storeName] || 0;
+        if(prev > 0) writeNum(tds[3], parseNum(tds[3]) - prev);
+      });
+      var cmTab2 = document.getElementById('tab-cm_person');
+      if(cmTab2) {
+        cmTab2.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
+          var tds = row.querySelectorAll('td');
+          if(tds.length < 4) return;
+          var name = tds[1].textContent.replace(/<[^>]+>/g,'').replace('🔗KBJ','').replace('⚠锁定','').trim();
+          var prev = window._M._kbj_prev_cm[name] || 0;
+          if(prev > 0) writeNum(tds[3], parseNum(tds[3]) - prev);
+        });
+      }
+    }
+    window._M._kbj_prev_store = storeTotal;
+    window._M._kbj_prev_cm = cmTotal;
+
+    // 更新 CM 表（叠加康博嘉业绩到对应CM）
     var cmTab = document.getElementById('tab-cm_person');
-    if(!cmTab) { console.log('普陀导入: CM tab not found!'); return; }
-    var cmRows = cmTab.querySelectorAll('tbody tr:not(.subtotal)');
-    console.log('普陀导入: CM表行数=' + cmRows.length);
-    var cmGroupSub = {tgt:0, done:0, ref:0, net:0};
-    var updatedCount = 0;
-    cmRows.forEach(function(row) {
+    if(cmTab) {
+      cmTab.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
+        var tds = row.querySelectorAll('td');
+        if(tds.length < 4) return;
+        var name = tds[1].textContent.replace(/<[^>]+>/g,'').replace('🔗KBJ','').replace('⚠锁定','').trim();
+        var extra = cmTotal[name] || 0;
+        if(extra > 0) {
+          writeNum(tds[3], parseNum(tds[3]) + extra);
+          tds[1].innerHTML = name + ' <span style="font-size:10px;color:#059669">🔗KBJ</span>';
+        }
+      });
+    }
+
+    // 更新门店行（叠加康博嘉到对应门店）
+    document.querySelectorAll('#tab-group tbody tr:not(.subtotal):not(.section-header)').forEach(function(row) {
       var tds = row.querySelectorAll('td');
-      if(tds.length < 4) return;
-      var store = tds[0].textContent.trim();
-      if(store !== '普陀') return;
-      var name = tds[1].textContent.replace('⚠锁定','').trim();
-      var newDone = putuoDone[name];
-      if(newDone !== undefined) {
-        console.log('普陀导入: 更新CM '+name+' 从 '+parseNum(tds[3])+' → '+newDone);
-        writeNum(tds[3], newDone);
-        tds[1].innerHTML = name + ' <span style="font-size:10px;color:#f59e0b">⚠锁定</span>';
-        var tgt = parseNum(tds[2]);
-        rebuildBar(tds[4], newDone/tgt);
-        var ref = parseNum(tds[6]);
-        writeNum(tds[10], newDone - ref);
-        rebuildRefund(tds[7], ref, newDone, 'cm');
-        updatedCount++;
+      if(tds.length < 12) return;
+      var storeName = tds[0].textContent.replace('⚠锁定','').trim();
+      var extra = storeTotal[storeName] || 0;
+      if(extra > 0) writeNum(tds[3], parseNum(tds[3]) + extra);
+    });
+
+    // 全量刷新
+    refreshAll();
+    importDone(true, '康博嘉导入完成', '匹配 '+matched+' 条 · '+Object.keys(storeTotal).length+' 家门店 · '+Object.keys(cmTotal).length+' 位CM');
+    }, 30);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ====== 普陀明细导入（康博嘉同格式） ======
+function importPutuoDetail(input) {
+  var file = input.files[0]; if(!file) return;
+  importProgress('导入普陀明细：'+file.name+'（读取文件…）', 15);
+  var reader = new FileReader();
+  reader.onerror = function(){ importDone(false, '普陀明细导入失败', '文件读取失败，请重试'); };
+  reader.onload = function(e) {
+    importProgress('导入普陀明细：'+file.name+'（解析中…）', 50);
+    setTimeout(function(){
+    var wb;
+    try { wb = XLSX.read(e.target.result, {type:'array', cellDates: true}); }
+    catch(err) { importDone(false, '普陀明细导入失败', '文件解析失败：'+err.message+'\\n请用 Excel 打开该文件另存为 .xlsx 后重新导入'); return; }
+    // 自动选列数最多的 sheet
+    var bestSheet = wb.SheetNames[0], bestCols = 0;
+    wb.SheetNames.forEach(function(sn) {
+      var s = wb.Sheets[sn];
+      if(!s['!ref']) return;
+      var range = XLSX.utils.decode_range(s['!ref']);
+      if(range.e.c > bestCols) { bestCols = range.e.c; bestSheet = sn; }
+    });
+    var data = XLSX.utils.sheet_to_json(wb.Sheets[bestSheet]);
+    var cols = data.length > 0 ? Object.keys(data[0]) : [];
+    // 表头不在第一行时（文件带标题行），自动向下查找含 CM姓名+收款金额 的表头行
+    if(cols.indexOf('CM姓名')<0 || cols.indexOf('收款金额')<0) {
+      var aoa = XLSX.utils.sheet_to_json(wb.Sheets[bestSheet], {header:1});
+      for(var hi=0; hi<Math.min(10, aoa.length); hi++) {
+        var vals = (aoa[hi]||[]).map(String);
+        if(vals.indexOf('CM姓名')>=0 && vals.indexOf('收款金额')>=0) {
+          data = XLSX.utils.sheet_to_json(wb.Sheets[bestSheet], {range: hi});
+          cols = data.length > 0 ? Object.keys(data[0]) : [];
+          console.log('普陀明细导入: 表头在第'+(hi+1)+'行');
+          break;
+        }
       }
-      cmGroupSub.tgt += parseNum(tds[2]);
-      cmGroupSub.done += parseNum(tds[3]);
-      cmGroupSub.ref += parseNum(tds[6]);
-      cmGroupSub.net += parseNum(tds[10]);
-    });
-    console.log('普陀导入: 更新了'+updatedCount+'条CM记录');
+    }
+    console.log('普陀明细导入: sheet='+bestSheet+' 行数='+data.length);
 
-    // Update CM subtotal for 普陀
-    cmTab.querySelectorAll('tbody tr.subtotal').forEach(function(st) {
-      var tds = st.querySelectorAll('td');
-      if(tds[0].textContent.trim() !== '普陀') return;
-      writeNum(tds[2], cmGroupSub.tgt);
-      writeNum(tds[3], cmGroupSub.done);
-      rebuildBar(tds[4], cmGroupSub.done/cmGroupSub.tgt);
-      writeNum(tds[6], cmGroupSub.ref);
-      rebuildRefund(tds[7], cmGroupSub.ref, cmGroupSub.done, 'cm');
-      writeNum(tds[9], cmGroupSub.net);
-    });
+    // 查找列：CM姓名(或客户经理)、收款金额(或实际收入)
+    var cmCol = cols.find(function(c){ return c.indexOf('CM')>=0 || c.indexOf('客户经理')>=0 || c.indexOf('经理')>=0; }) || '';
+    var amtCol = cols.find(function(c){ return c.indexOf('收款金额')>=0 || c.indexOf('实际收入')>=0 || c.indexOf('金额')>=0; }) || '';
+    if(!cmCol || !amtCol) {
+      importDone(false, '普陀明细导入失败', '未识别到数据列。请确认文件包含：CM姓名/客户经理、收款金额/实际收入'); return;
+    }
+    console.log('普陀明细导入: cmCol='+cmCol+' amtCol='+amtCol);
 
-    // Update group table - 普陀 row
-    var grpRows = document.querySelectorAll('#tab-group tbody tr:not(.subtotal):not(.section-header)');
-    grpRows.forEach(function(row) {
+    // 按CM汇总
+    var cmDone = {}, total = 0;
+    data.forEach(function(row) {
+      var cm = (row[cmCol] || '').toString().trim();
+      var amt = parseFloat(row[amtCol]) || 0;
+      if(!cm || cm === 'nan') { total += amt; return; }  // 空CM归入门店总业绩
+      cmDone[cm] = (cmDone[cm] || 0) + amt;
+      total += amt;
+    });
+    console.log('普陀明细导入: 总='+total+' CM数='+Object.keys(cmDone).length, cmDone);
+
+    // 存储到 _M（普陀总业绩 = 门诊明细 + 底表普陀订单）
+    window._M.putuo_extra = cmDone;
+    window._M.putuo_detail_total = total;
+    window._M.putuo_locked = total + (window._M.putuo_base_orders || 0);
+
+    // 更新 CM 表中普陀行
+    var cmTab = document.getElementById('tab-cm_person');
+    if(cmTab) {
+      cmTab.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
+        var tds = row.querySelectorAll('td');
+        if(tds.length < 4) return;
+        if(tds[0].textContent.trim() !== '普陀') return;
+        var name = tds[1].textContent.replace('⚠锁定','').trim();
+        var newDone = cmDone[name];
+        if(newDone !== undefined) {
+          writeNum(tds[3], newDone);
+          tds[1].innerHTML = name + ' <span style="font-size:10px;color:#f59e0b">⚠锁定</span>';
+        }
+      });
+    }
+
+    // 更新分组表普陀行（门店总业绩联动）
+    document.querySelectorAll('#tab-group tbody tr:not(.subtotal):not(.section-header)').forEach(function(row) {
       var tds = row.querySelectorAll('td');
       if(tds.length < 12) return;
       if(tds[0].textContent.replace('⚠锁定','').trim() !== '普陀') return;
-      writeNum(tds[3], totalPutuo);
-      var tgt = parseNum(tds[2]);
-      rebuildBar(tds[4], totalPutuo/tgt);
-      if(storeRefund !== null) { writeNum(tds[6], storeRefund); }
-      var ref = parseNum(tds[6]);
-      writeNum(tds[9], totalPutuo - ref);
-      rebuildRefund(tds[7], ref, totalPutuo, 'group');
+      writeNum(tds[3], window._M.putuo_locked);
+      rebuildBar(tds[4], window._M.putuo_locked / parseNum(tds[2]));
     });
 
-    // Update window._M.putuo_locked for底表导入 consistency
-    window._M.putuo_locked = totalPutuo;
-
-    // Full refresh cascades to role table, KPIs, etc
+    // 全量刷新
     refreshAll();
-    alert('✅ 普陀数据已更新！总业绩: '+fmtNum(totalPutuo)+'，个案数: '+Object.keys(putuoDone).length);
+    importDone(true, '普陀明细导入完成', '总业绩 '+fmtNum(total)+' · CM数 '+Object.keys(cmDone).length+'\\n普陀门店行已联动更新（含底表订单部分）');
+    }, 30);
   };
   reader.readAsArrayBuffer(file);
 }
@@ -1569,11 +1833,23 @@ function detectFields(cols) {
 // ====== 底表导入 & 全量重算 ======
 function importBaseTable(input) {
   var file = input.files[0]; if(!file) return;
+  var isCsv = /\.csv$/i.test(file.name);
+  importProgress('导入底表：'+file.name+'（读取文件…）', 15);
   var reader = new FileReader();
+  reader.onerror = function(){ importDone(false, '底表导入失败', '文件读取失败，请重试'); };
   reader.onload = function(e) {
-    var wb = XLSX.read(e.target.result, {type:'array', cellDates: true});
+    importProgress('导入底表：'+file.name+'（解析重算中…）', 50);
+    setTimeout(function(){
+    var wb;
+    try {
+      // CSV 用文本模式读取，避免中文乱码
+      wb = XLSX.read(e.target.result, isCsv ? {type:'string'} : {type:'array', cellDates: true});
+    } catch(err) {
+      importDone(false, '底表导入失败', '文件解析失败：'+err.message+'\\n若文件损坏，请用 Excel 打开另存为 .xlsx 后重新导入'); return;
+    }
     var sheet = wb.Sheets[wb.SheetNames[0]];
     var data = XLSX.utils.sheet_to_json(sheet);
+    if(!data.length) { importDone(false, '底表导入失败', '未读到数据行，请检查文件内容'); return; }
     var M = window._M;
     var julyS = M.july_start, julyE = M.july_end, juneS = M.june_start, juneE = M.june_end;
 
@@ -1583,9 +1859,13 @@ function importBaseTable(input) {
     console.log('导入: 识别字段', F);
 
     // 解析组织名：兼容 组织 和 beisen_org_full_name
+    var sellerOvr = M.seller_org_override || {};
     data.forEach(function(row) {
       var rawOrg = row[F.org] || '';
       row._org = extractOrgFromBeisen(rawOrg);
+      // 特殊归属规则（如余佼→徐汇）
+      var snm = String(row[F.seller] || '').trim();
+      if(sellerOvr[snm]) row._org = sellerOvr[snm];
     });
 
     // Store full raw orders for export
@@ -1634,7 +1914,13 @@ function importBaseTable(input) {
       var gc = groupCalc[gName];
       if(!gc) return;
       var tgt = parseNum(tds[2]);
-      var done = gName === '普陀' ? M.putuo_locked : gc.j7_inc;
+      var done = gc.j7_inc;
+      if(gName === '普陀') {
+        // 普陀 = 本次底表订单 + 门诊明细（明细沿用最近一次导入/生成值）
+        M.putuo_base_orders = gc.j7_inc;
+        done = gc.j7_inc + (M.putuo_detail_total || 0);
+        M.putuo_locked = done;
+      }
       writeNum(tds[3], done);
       rebuildBar(tds[4], done/tgt);
       // chg
@@ -1681,11 +1967,16 @@ function importBaseTable(input) {
       rebuildRefund(tds[4].nextElementSibling, rc.ref, rc.done, 'group');
     });
 
+    // 底表重算已重写门店行，清除康博嘉叠加基线（防止旧基线导致重复回退）
+    window._M._kbj_prev_store = null;
+    window._M._kbj_prev_cm = null;
+
     // Full refresh for subtotals, KPIs, etc
     refreshAll();
-    alert('✅ 底表导入完成！所有数据已刷新');
+    importDone(true, '底表导入完成', data.length+' 行订单已全量重算\\n康博嘉增量已重置，请接着导入最新康博嘉文件');
+    }, 30);
   };
-  reader.readAsArrayBuffer(file);
+  if(isCsv) reader.readAsText(file, 'utf-8'); else reader.readAsArrayBuffer(file);
 }
 
 // ====== 渠道业绩 - 本地生活（大众点评推广通） ======
@@ -1804,6 +2095,216 @@ function loadChannelData(force) {
     ECO_LOADED = true;
   }, 10);
 }
+
+// ====== 每日趋势图（Chart.js 版，带 hover 动效） ======
+var _charts = {};
+function drawOneChart(canvasId, roleData, rgb) {
+  var canvas = document.getElementById(canvasId);
+  if(!canvas || typeof Chart === 'undefined') return;
+
+  var maxDay = 0;
+  Object.keys(roleData||{}).map(Number).forEach(function(d){ if(d>maxDay) maxDay=d; });
+  if(maxDay < 1) maxDay = 15;
+  var labels = [], vals = [];
+  for(var d=1; d<=maxDay; d++) { labels.push(d+'日'); vals.push(Math.round((roleData||{})[String(d)]||0)); }
+
+  if(_charts[canvasId]) { _charts[canvasId].destroy(); }
+  var ctx = canvas.getContext('2d');
+
+  // 柱顶数值标签插件（快照可见）
+  var labelPlugin = {
+    id: 'barLabels',
+    afterDatasetsDraw: function(chart) {
+      var c = chart.ctx;
+      var meta = chart.getDatasetMeta(1); // bar dataset
+      if(!meta || meta.hidden) return;
+      c.save();
+      c.font = 'bold 9px sans-serif';
+      c.fillStyle = 'rgb('+rgb+')';
+      c.textAlign = 'center';
+      meta.data.forEach(function(bar, i) {
+        var v = vals[i];
+        if(v <= 0) return;
+        c.fillText((v/10000).toFixed(1), bar.x, bar.y - 6);
+      });
+      c.restore();
+    }
+  };
+
+  // 渐变填充
+  var grad = ctx.createLinearGradient(0, 0, 0, 200);
+  grad.addColorStop(0, 'rgba('+rgb+',0.35)');
+  grad.addColorStop(1, 'rgba('+rgb+',0.02)');
+
+  _charts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    plugins: [labelPlugin],
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type: 'line',
+          label: '趋势',
+          data: vals,
+          borderColor: 'rgb('+rgb+')',
+          backgroundColor: grad,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: 'rgb('+rgb+')',
+          pointBorderWidth: 2,
+          order: 0
+        },
+        {
+          type: 'bar',
+          label: '日业绩',
+          data: vals,
+          backgroundColor: 'rgba('+rgb+',0.55)',
+          hoverBackgroundColor: 'rgb('+rgb+')',
+          borderRadius: 6,
+          barPercentage: 0.55,
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      animation: { duration: 700, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,23,42,0.92)',
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 13 },
+          padding: 12,
+          cornerRadius: 8,
+          displayColors: false,
+          callbacks: {
+            title: function(items) { return items[0].label; },
+            label: function(item) {
+              var v = item.raw;
+              return '业绩：' + (v/10000).toFixed(2) + ' 万';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grace: '12%',
+          grid: { color: '#f1f5f9', drawBorder: false },
+          ticks: {
+            color: '#94a3b8', font: { size: 10 },
+            callback: function(v) { return (v/10000).toFixed(0)+'W'; }
+          },
+          title: { display: true, text: '业绩(W)', color: '#cbd5e1', font: { size: 10 } }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 0, autoSkip: false }
+        }
+      }
+    }
+  });
+}
+
+function drawTrendChart() {
+  var M = window._M, rd = M.role_daily || {};
+  drawOneChart('chart_sales', rd['销售'], '99,102,241');
+  drawOneChart('chart_advisor', rd['班主任'], '16,185,129');
+  drawOneChart('chart_store', rd['门店'], '245,158,11');
+}
+
+setTimeout(function() { drawTrendChart(); }, 400);
+
+// ====== 分组迷你趋势线 (sparkline) + hover 大图 ======
+function drawSparklines() {
+  var M = window._M, gd = M.group_daily || {};
+  document.querySelectorAll('canvas.spark').forEach(function(cv) {
+    var g = cv.getAttribute('data-group');
+    var data = gd[g] || {};
+    var maxDay = 0;
+    Object.keys(data).map(Number).forEach(function(d){ if(d>maxDay) maxDay=d; });
+    if(maxDay < 1) maxDay = 15;
+    var vals = [];
+    for(var d=1; d<=maxDay; d++) vals.push(data[String(d)] || 0);
+    var maxV = Math.max.apply(null, vals.concat([1]));
+    var dpr = window.devicePixelRatio || 1;
+    var W = 80, H = 26;
+    cv.width = W*dpr; cv.height = H*dpr;
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,W,H);
+    // 迷你面积+线
+    var grad = ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,'rgba(99,102,241,0.3)'); grad.addColorStop(1,'rgba(99,102,241,0.02)');
+    function px(i){ return 2 + i*((W-4)/(vals.length-1||1)); }
+    function py(v){ return H-3 - (v/maxV)*(H-6); }
+    // 面积
+    ctx.beginPath(); ctx.moveTo(px(0), H-2);
+    vals.forEach(function(v,i){ ctx.lineTo(px(i), py(v)); });
+    ctx.lineTo(px(vals.length-1), H-2); ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+    // 线
+    ctx.beginPath();
+    vals.forEach(function(v,i){ i===0 ? ctx.moveTo(px(i),py(v)) : ctx.lineTo(px(i),py(v)); });
+    ctx.strokeStyle = '#6366f1'; ctx.lineWidth = 1.5; ctx.stroke();
+    // 末点
+    var li = vals.length-1;
+    ctx.beginPath(); ctx.arc(px(li), py(vals[li]), 2, 0, 2*Math.PI);
+    ctx.fillStyle = '#6366f1'; ctx.fill();
+
+    // hover 事件
+    cv.onmouseenter = function(e){ showSparkPopup(g, data, maxDay, e); };
+    cv.onmousemove = function(e){ moveSparkPopup(e); };
+    cv.onmouseleave = function(){ hideSparkPopup(); };
+  });
+}
+
+var _sparkPopup = null, _sparkChart = null;
+function showSparkPopup(g, data, maxDay, e) {
+  hideSparkPopup();
+  _sparkPopup = document.createElement('div');
+  _sparkPopup.style.cssText = 'position:fixed;z-index:9999;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.16);padding:14px 16px;width:360px;pointer-events:none';
+  _sparkPopup.innerHTML = '<div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:8px">📈 '+g+' · 每日业绩趋势</div><div style="height:180px"><canvas id="_sparkBig"></canvas></div>';
+  document.body.appendChild(_sparkPopup);
+  moveSparkPopup(e);
+
+  var labels = [], vals = [];
+  for(var d=1; d<=maxDay; d++){ labels.push(d+'日'); vals.push(Math.round(data[String(d)]||0)); }
+  var ctx = document.getElementById('_sparkBig').getContext('2d');
+  var grad = ctx.createLinearGradient(0,0,0,180);
+  grad.addColorStop(0,'rgba(99,102,241,0.35)'); grad.addColorStop(1,'rgba(99,102,241,0.02)');
+  _sparkChart = new Chart(ctx, {
+    type:'bar',
+    plugins:[{id:'bl',afterDatasetsDraw:function(c){var cc=c.ctx,m=c.getDatasetMeta(1);if(!m)return;cc.save();cc.font='bold 9px sans-serif';cc.fillStyle='#6366f1';cc.textAlign='center';m.data.forEach(function(b,i){if(vals[i]>0)cc.fillText((vals[i]/10000).toFixed(1),b.x,b.y-5)});cc.restore();}}],
+    data:{labels:labels,datasets:[
+      {type:'line',data:vals,borderColor:'rgb(99,102,241)',backgroundColor:grad,borderWidth:2.5,fill:true,tension:0.4,pointRadius:2,order:0},
+      {type:'bar',data:vals,backgroundColor:'rgba(99,102,241,0.5)',borderRadius:5,barPercentage:0.55,order:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{y:{beginAtZero:true,grace:'14%',grid:{color:'#f1f5f9'},ticks:{color:'#94a3b8',font:{size:9},callback:function(v){return (v/10000).toFixed(0)+'W';}}},
+        x:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:9},maxRotation:0,autoSkip:false}}}}
+  });
+}
+function moveSparkPopup(e) {
+  if(!_sparkPopup) return;
+  var x = e.clientX + 16, y = e.clientY + 16;
+  if(x + 380 > window.innerWidth) x = e.clientX - 376;
+  if(y + 230 > window.innerHeight) y = e.clientY - 226;
+  _sparkPopup.style.left = x+'px'; _sparkPopup.style.top = y+'px';
+}
+function hideSparkPopup() {
+  if(_sparkChart){ _sparkChart.destroy(); _sparkChart = null; }
+  if(_sparkPopup){ _sparkPopup.remove(); _sparkPopup = null; }
+}
+setTimeout(drawSparklines, 500);
 </script>
 '''
 
