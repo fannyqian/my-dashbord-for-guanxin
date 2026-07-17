@@ -439,8 +439,7 @@ function importKangbojia(input) {
     setTimeout(function(){
     var wb;
     try { wb = XLSX.read(e.target.result, {type:'array', cellDates: true}); }
-    catch(err) { importDone(false, '康博嘉导入失败', '文件解析失败：'+err.message+'
-请用 Excel 打开该文件另存为 .xlsx 后重新导入'); return; }
+    catch(err) { importDone(false, '康博嘉导入失败', '文件解析失败：'+err.message+'\n请用 Excel 打开该文件另存为 .xlsx 后重新导入'); return; }
     // 自动选列数最多的 sheet（兼容带标题页的格式）
     var bestSheet = wb.SheetNames[0], bestCols = 0;
     wb.SheetNames.forEach(function(sn) {
@@ -477,8 +476,7 @@ function importKangbojia(input) {
       matched++;
     });
     console.log('康博嘉导入: 匹配'+matched+'条, 门店:', storeTotal, 'CM:', cmTotal);
-    if(matched === 0) { importDone(false, '康博嘉导入失败', '未匹配到南区5家门店数据。请确认所在诊所列包含：
-'+Object.keys(KBJ_STORE_MAP).join('、')); return; }
+    if(matched === 0) { importDone(false, '康博嘉导入失败', '未匹配到南区5家门店数据。请确认所在诊所列包含：\n'+Object.keys(KBJ_STORE_MAP).join('、')); return; }
 
     // 存储到 _M
     window._M.kbj_store = storeTotal;
@@ -550,8 +548,7 @@ function importPutuoDetail(input) {
     setTimeout(function(){
     var wb;
     try { wb = XLSX.read(e.target.result, {type:'array', cellDates: true}); }
-    catch(err) { importDone(false, '普陀明细导入失败', '文件解析失败：'+err.message+'
-请用 Excel 打开该文件另存为 .xlsx 后重新导入'); return; }
+    catch(err) { importDone(false, '普陀明细导入失败', '文件解析失败：'+err.message+'\n请用 Excel 打开该文件另存为 .xlsx 后重新导入'); return; }
     // 自动选列数最多的 sheet
     var bestSheet = wb.SheetNames[0], bestCols = 0;
     wb.SheetNames.forEach(function(sn) {
@@ -628,8 +625,7 @@ function importPutuoDetail(input) {
 
     // 全量刷新
     refreshAll();
-    importDone(true, '普陀明细导入完成', '总业绩 '+fmtNum(total)+' · CM数 '+Object.keys(cmDone).length+'
-普陀门店行已联动更新（含底表订单部分）');
+    importDone(true, '普陀明细导入完成', '总业绩 '+fmtNum(total)+' · CM数 '+Object.keys(cmDone).length+'\n普陀门店行已联动更新（含底表订单部分）');
     }, 30);
   };
   reader.readAsArrayBuffer(file);
@@ -694,8 +690,7 @@ function importBaseTable(input) {
       // CSV 用文本模式读取，避免中文乱码
       wb = XLSX.read(e.target.result, isCsv ? {type:'string'} : {type:'array', cellDates: true});
     } catch(err) {
-      importDone(false, '底表导入失败', '文件解析失败：'+err.message+'
-若文件损坏，请用 Excel 打开另存为 .xlsx 后重新导入'); return;
+      importDone(false, '底表导入失败', '文件解析失败：'+err.message+'\n若文件损坏，请用 Excel 打开另存为 .xlsx 后重新导入'); return;
     }
     var sheet = wb.Sheets[wb.SheetNames[0]];
     var data = XLSX.utils.sheet_to_json(sheet);
@@ -823,8 +818,7 @@ function importBaseTable(input) {
 
     // Full refresh for subtotals, KPIs, etc
     refreshAll();
-    importDone(true, '底表导入完成', data.length+' 行订单已全量重算
-康博嘉增量已重置，请接着导入最新康博嘉文件');
+    importDone(true, '底表导入完成', data.length+' 行订单已全量重算\n康博嘉增量已重置，请接着导入最新康博嘉文件');
     }, 30);
   };
   if(isCsv) reader.readAsText(file, 'utf-8'); else reader.readAsArrayBuffer(file);
