@@ -471,9 +471,12 @@ for _, cm in cm_df.iterrows():
     store = cm['store']; name = cm['name']; tgt = cm['target']
     is_putuo = (store == '普陀')
     p_orders = orders[(orders['seller_name']==name)]
-    # 特殊归属销售（如余佼）多店挂名时，底表订单只计入改派后的门店行
+    # 特殊归属销售（如余佼）多店挂名时：底表订单归属 override 目标门店用于
+    # 门店级汇总，但个人业绩应将底表订单计入原门店（非 override 目标门店）
     if name in SELLER_ORG_OVERRIDE:
-        p_orders = p_orders[p_orders['target_group'] == store]
+        override_target = STORE_MAP.get(SELLER_ORG_OVERRIDE[name], '')
+        if store == override_target:
+            p_orders = p_orders.iloc[0:0]  # 底表订单归入原门店行
     if is_putuo:
         # 普陀个案业绩 = 明细汇总 + 底表订单
         done = cm['done_locked'] + period_income(p_orders, JULY_START, JULY_END)
@@ -1195,6 +1198,13 @@ import_toolbar = '''
 window._M = ''' + mapping_json + ''';
 window._TP = window._M.time_progress;
 window._ECO = ''' + json.dumps(eco_data_raw, ensure_ascii=False) + ''';
+// 初始化普陀CM业绩基线（用于导入时回退，防止重复叠加）
+window._M._prev_putuo_cm = {};
+(window._M.cm_list || []).forEach(function(cm) {
+  if (cm.store === '普陀' && cm.done_locked > 0) {
+    window._M._prev_putuo_cm[cm.name] = cm.done_locked;
+  }
+});
 </script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -1737,6 +1747,28 @@ function importPutuoDetail(input) {
     }
     console.log('普陀明细导入: cmCol='+cmCol+' amtCol='+amtCol);
 
+    // 先回退上次导入的普陀CM业绩（防止重复叠加）
+    if(window._M._prev_putuo_cm) {
+      var cmTabPre = document.getElementById('tab-cm_person');
+      if(cmTabPre) {
+        cmTabPre.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
+          var tds = row.querySelectorAll('td');
+          if(tds.length < 4) return;
+          if(tds[0].textContent.trim() !== '普陀') return;
+          var pname = tds[1].textContent.replace('⚠锁定','').replace('🔗KBJ','').trim();
+          var prev = window._M._prev_putuo_cm[pname] || 0;
+          if(prev > 0) writeNum(tds[3], parseNum(tds[3]) - prev);
+        });
+      }
+      // 回退分组表普陀行的上次明细汇总部分
+      document.querySelectorAll('#tab-group tbody tr:not(.subtotal):not(.section-header)').forEach(function(row) {
+        var tds = row.querySelectorAll('td');
+        if(tds.length < 12) return;
+        if(tds[0].textContent.replace('⚠锁定','').trim() !== '普陀') return;
+        writeNum(tds[3], parseNum(tds[3]) - (window._M._prev_putuo_total || 0));
+      });
+    }
+
     // 按CM汇总
     var cmDone = {}, total = 0;
     data.forEach(function(row) {
@@ -1750,20 +1782,22 @@ function importPutuoDetail(input) {
 
     // 存储到 _M（普陀总业绩 = 门诊明细 + 底表普陀订单）
     window._M.putuo_extra = cmDone;
+    window._M._prev_putuo_cm = cmDone;
+    window._M._prev_putuo_total = total;
     window._M.putuo_detail_total = total;
     window._M.putuo_locked = total + (window._M.putuo_base_orders || 0);
 
-    // 更新 CM 表中普陀行
+    // 更新 CM 表中普陀行（叠加门诊明细，保留底表订单部分）
     var cmTab = document.getElementById('tab-cm_person');
     if(cmTab) {
       cmTab.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
         var tds = row.querySelectorAll('td');
         if(tds.length < 4) return;
         if(tds[0].textContent.trim() !== '普陀') return;
-        var name = tds[1].textContent.replace('⚠锁定','').trim();
-        var newDone = cmDone[name];
-        if(newDone !== undefined) {
-          writeNum(tds[3], newDone);
+        var name = tds[1].textContent.replace('⚠锁定','').replace('🔗KBJ','').trim();
+        var addDone = cmDone[name];
+        if(addDone !== undefined) {
+          writeNum(tds[3], parseNum(tds[3]) + addDone);
           tds[1].innerHTML = name + ' <span style="font-size:10px;color:#f59e0b">⚠锁定</span>';
         }
       });
@@ -1774,8 +1808,8 @@ function importPutuoDetail(input) {
       var tds = row.querySelectorAll('td');
       if(tds.length < 12) return;
       if(tds[0].textContent.replace('⚠锁定','').trim() !== '普陀') return;
-      writeNum(tds[3], window._M.putuo_locked);
-      rebuildBar(tds[4], window._M.putuo_locked / parseNum(tds[2]));
+      writeNum(tds[3], parseNum(tds[3]) + total);
+      rebuildBar(tds[4], parseNum(tds[3]) / parseNum(tds[2]));
     });
 
     // 全量刷新
