@@ -376,6 +376,20 @@ _DATE_DOT = f'{_today.year%100:02d}.{_today.month:02d}.{_today.day:02d}'
 _DATE_DAY = str(_today.day)
 _DATE_JUNE_CN = f'{_june_cutoff.month}月{_june_cutoff.day}日'
 
+# 周度定义：第一周=1日到第一个周日，之后周一到周日，不跨月
+import calendar as _cal
+_wk_last = _cal.monthrange(_today.year, _today.month)[1]
+_wk_first_wday = _date(_today.year, _today.month, 1).weekday()  # 0=Mon
+_wk1_end = 7 - _wk_first_wday if _wk_first_wday != 6 else 1
+_week_defs = []  # [(label, start_day, end_day)]
+_ws = 1
+while _ws <= _wk_last:
+    _we = min(_wk1_end if _ws == 1 else _ws + 6, _wk_last)
+    _sd = _date(_today.year, _today.month, _ws)
+    _ed = _date(_today.year, _today.month, _we)
+    _week_defs.append((f'W{len(_week_defs)+1} ({_sd.month}/{_sd.day}-{_ed.month}/{_ed.day})', _ws, _we))
+    _ws = _we + 1
+
 # 收入: 按 pay_at
 def period_income(df, start, end):
     return df[(df['pay_at']>=start)&(df['pay_at']<end)]['pay_amount'].sum()
@@ -730,7 +744,8 @@ def group_row(g, m, role):
   <td class="num">{chg_html(m['net_chg'])}</td>
   <td class="num" style="color:#0891b2;font-weight:600">{group_calls.get(g, 0)}</td>
   <td class="num col-avgcall" style="color:#0e7490;font-weight:600">{avg_calls(group_calls.get(g,0), group_count.get(g,0))}</td>
-</tr>'''
+</tr>
+<tr class="weekly-row" data-weekly-group="{g}"><td colspan="2" style="text-align:right;font-size:10px;color:#94a3b8;padding-right:4px">📅周</td><td colspan="12"><div class="weekly-bar-row" data-group="{g}" style="display:flex;gap:12px;align-items:flex-end;justify-content:center;padding:4px 0"></div></td></tr>'''
 
 # Build person rows (Level 3)
 def person_row(name, group_label, tgt, m, person_type='sales_advisor'):
@@ -915,6 +930,10 @@ tr.section-header:hover td{{background:inherit!important}}
       <div style="height:200px"><canvas id="chart_store"></canvas></div>
     </div>
   </div>
+</div>
+<div style="margin-top:24px">
+  <h4 style="margin:0 0 14px;font-size:15px;color:#1e293b;font-weight:700">📅 每周业绩趋势 <span style="font-size:12px;color:#94a3b8;font-weight:400">· 周度对比</span></h4>
+  <div id="weekly-role-container" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
 </div>
 </div>
 
@@ -1255,6 +1274,7 @@ mapping_json = json.dumps({
     'person_daily_junqun': person_daily_junqun,
     'role_daily': role_daily,
     'group_daily': group_daily,
+    'week_defs': _week_defs,
 }, ensure_ascii=False)
 
 # ==================== 交互式 JS 工具条 ====================
@@ -2405,6 +2425,73 @@ function hideSparkPopup() {
   if(_sparkPopup){ _sparkPopup.remove(); _sparkPopup = null; }
 }
 setTimeout(drawSparklines, 500);
+
+// ====== 周度业绩渲染 ======
+function drawWeeklyRoles() {
+  var M = window._M, wdefs = M.week_defs || [], rd = M.role_daily || {};
+  var container = document.getElementById('weekly-role-container');
+  if(!container || !wdefs.length) return;
+  var roles = [
+    {key:'销售', label:'销售', color:'#6366f1', bg:'#eef2ff'},
+    {key:'班主任', label:'班主任', color:'#10b981', bg:'#ecfdf5'},
+    {key:'门店', label:'门店', color:'#f59e0b', bg:'#fffbeb'}
+  ];
+  var html = '';
+  roles.forEach(function(r){
+    var data = rd[r.key] || {};
+    var weekly = [];
+    var maxV = 0;
+    wdefs.forEach(function(w){
+      var v = 0;
+      for(var d=w[1]; d<=w[2]; d++) v += (data[String(d)] || 0);
+      weekly.push({label: w[0].split(' ')[0], val: v});
+      if(v > maxV) maxV = v;
+    });
+    if(maxV < 1) maxV = 100000;
+    var bars = '';
+    weekly.forEach(function(w){
+      var pct = Math.min(w.val/maxV*100, 100);
+      bars += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:50px">'+
+        '<span style="font-size:10px;color:#475569;font-weight:600">'+(w.val/10000).toFixed(1)+'万</span>'+
+        '<div style="width:100%;height:48px;background:#f1f5f9;border-radius:6px;overflow:hidden;position:relative">'+
+        '<div style="position:absolute;bottom:0;width:100%;height:'+pct+'%;background:'+r.color+';border-radius:6px;transition:height 0.4s"></div>'+
+        '</div><span style="font-size:9px;color:#94a3b8;white-space:nowrap">'+w.label+'</span></div>';
+    });
+    html += '<div style="background:linear-gradient(135deg,'+r.bg+',#fff);padding:14px 16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:1px solid #e2e8f0">'+
+      '<div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:10px">'+r.label+'</div>'+
+      '<div style="display:flex;gap:8px;align-items:flex-end">'+bars+'</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function drawWeeklyGroups() {
+  var M = window._M, wdefs = M.week_defs || [], gd = M.group_daily || {};
+  document.querySelectorAll('.weekly-bar-row').forEach(function(div){
+    var g = div.getAttribute('data-group');
+    var data = gd[g] || {};
+    var weekly = [];
+    var maxV = 0;
+    wdefs.forEach(function(w){
+      var v = 0;
+      for(var d=w[1]; d<=w[2]; d++) v += (data[String(d)] || 0);
+      weekly.push({label: w[0].split(' ')[0], val: v});
+      if(v > maxV) maxV = v;
+    });
+    if(maxV < 1) maxV = 50000;
+    var bars = '';
+    weekly.forEach(function(w){
+      var pct = Math.min(w.val/maxV*100, 100);
+      var barColor = w.val > 0 ? '#6366f1' : '#cbd5e1';
+      bars += '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:70px">'+
+        '<span style="font-size:10px;color:#1e293b;font-weight:600">'+(w.val/10000).toFixed(1)+'万</span>'+
+        '<div style="width:100%;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden;border:1px solid #e2e8f0">'+
+        '<div style="width:'+pct+'%;height:100%;background:'+barColor+';border-radius:7px;transition:width 0.4s"></div>'+
+        '</div><span style="font-size:9px;color:#94a3b8;white-space:nowrap">'+w.label+'</span></div>';
+    });
+    div.innerHTML = bars;
+  });
+}
+setTimeout(function(){ drawWeeklyRoles(); drawWeeklyGroups(); }, 700);
 </script>
 '''
 
