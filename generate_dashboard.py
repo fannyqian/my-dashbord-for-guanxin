@@ -2419,16 +2419,22 @@ import shutil
 deploy_dir = r'C:\Users\fanny\Desktop\数据日日\deploy'
 os.makedirs(deploy_dir, exist_ok=True)
 
+# 防缓存：在 <head> 末尾插入 meta 标签
+_cache_buster = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
+_cache_meta = f'<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="{_cache_buster}">'
+# 自动刷新脚本（每2小时 + 首次加载强制拉最新）
+_refresh_script = f'<script>var _v="{_cache_buster}";if(localStorage.getItem("_dv")!==_v){{localStorage.setItem("_dv",_v);location.reload(true)}}setInterval(function(){{location.reload(true)}},7200000)</script>'
+
+# 在 head 末尾插入缓存控制
+deploy_html = html.replace('</head>', _cache_meta + '</head>')
 # 在 body 后插入 deploy 顶栏
 deploy_header = '''<div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
-<div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每12小时自动刷新</div>
+<div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
 </div>
 <style>.deploy-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
 '''
-# 自动刷新脚本
-refresh_script = '<script>setInterval(function(){location.reload()},43200000)</script>'
-deploy_html = html.replace('<body>', '<body>'+deploy_header).replace('</body>', refresh_script+'</body>')
+deploy_html = deploy_html.replace('<body>', '<body>'+deploy_header).replace('</body>', _refresh_script+'</body>')
 with open(os.path.join(deploy_dir, 'index.html'), 'w', encoding='utf-8') as f:
     f.write(deploy_html)
 
