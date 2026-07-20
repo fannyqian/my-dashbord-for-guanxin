@@ -933,7 +933,7 @@ tr.section-header:hover td{{background:inherit!important}}
 </div>
 <div style="margin-top:24px">
   <h4 style="margin:0 0 14px;font-size:15px;color:#1e293b;font-weight:700">📅 每周业绩趋势 <span style="font-size:12px;color:#94a3b8;font-weight:400">· 周度对比</span></h4>
-  <div id="weekly-role-container" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
+  <div id="weekly-role-container"></div>
 </div>
 </div>
 
@@ -2431,37 +2431,48 @@ function drawWeeklyRoles() {
   var M = window._M, wdefs = M.week_defs || [], rd = M.role_daily || {};
   var container = document.getElementById('weekly-role-container');
   if(!container || !wdefs.length) return;
-  var roles = [
-    {key:'销售', label:'销售', color:'#6366f1', bg:'#eef2ff'},
-    {key:'班主任', label:'班主任', color:'#10b981', bg:'#ecfdf5'},
-    {key:'门店', label:'门店', color:'#f59e0b', bg:'#fffbeb'}
-  ];
-  var html = '';
+  var roles = ['销售','班主任','门店'];
+  var maxW = {}; roles.forEach(function(r){ maxW[r]=0; });
+  // 计算每周业绩
+  var weekly = {}; // {role: [{label,val}]}
   roles.forEach(function(r){
-    var data = rd[r.key] || {};
-    var weekly = [];
-    var maxV = 0;
+    weekly[r] = [];
+    var data = rd[r] || {};
     wdefs.forEach(function(w){
       var v = 0;
       for(var d=w[1]; d<=w[2]; d++) v += (data[String(d)] || 0);
-      weekly.push({label: w[0].split(' ')[0], val: v});
-      if(v > maxV) maxV = v;
+      weekly[r].push({label:w[0],val:v});
     });
-    if(maxV < 1) maxV = 100000;
-    var bars = '';
-    weekly.forEach(function(w){
-      var pct = Math.min(w.val/maxV*100, 100);
-      bars += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:50px">'+
-        '<span style="font-size:10px;color:#475569;font-weight:600">'+(w.val/10000).toFixed(1)+'万</span>'+
-        '<div style="width:100%;height:48px;background:#f1f5f9;border-radius:6px;overflow:hidden;position:relative">'+
-        '<div style="position:absolute;bottom:0;width:100%;height:'+pct+'%;background:'+r.color+';border-radius:6px;transition:height 0.4s"></div>'+
-        '</div><span style="font-size:9px;color:#94a3b8;white-space:nowrap">'+w.label+'</span></div>';
-    });
-    html += '<div style="background:linear-gradient(135deg,'+r.bg+',#fff);padding:14px 16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:1px solid #e2e8f0">'+
-      '<div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:10px">'+r.label+'</div>'+
-      '<div style="display:flex;gap:8px;align-items:flex-end">'+bars+'</div></div>';
   });
-  container.innerHTML = html;
+  // 渲染表格
+  var h = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  h += '<thead><tr style="border-bottom:2px solid #e2e8f0">';
+  h += '<th style="text-align:left;padding:8px">角色</th><th style="text-align:left;padding:8px">周</th>';
+  h += '<th class="num" style="padding:8px">目标</th><th class="num" style="padding:8px">完成</th>';
+  h += '<th style="text-align:center;min-width:160px;padding:8px">完成率</th></tr></thead><tbody>';
+  roles.forEach(function(r){
+    weekly[r].forEach(function(w, i){
+      var cls = i===0 ? '' : ' style="border-top:1px solid #f1f5f9"';
+      var pct = 0;
+      var barColor = '#cbd5e1', barBg = '#f8fafc', barWrapBg = '#f8fafc';
+      var badge = '';
+      if(w.val > 0) {
+        pct = Math.min(w.val/150000*100, 100);
+        barColor = '#6366f1'; barBg = '#eef2ff'; barWrapBg = '#f8fafc';
+      }
+      h += '<tr'+cls+'><td style="padding:8px;font-weight:600;color:#1e293b">'+r+'</td>';
+      h += '<td style="padding:8px;color:#64748b;font-size:11px">'+w.label+'</td>';
+      h += '<td class="num" style="padding:8px;color:#94a3b8">—</td>';
+      h += '<td class="num" style="padding:8px"><b>'+fmtNum2(w.val)+'</b></td>';
+      h += '<td style="padding:6px 8px;min-width:160px"><div style="display:flex;align-items:center;gap:6px">';
+      h += '<div style="flex:1;height:20px;background:'+barWrapBg+';border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">';
+      h += '<div style="width:'+pct+'%;height:100%;background:'+barColor+';border-radius:10px;transition:width 0.3s"></div>';
+      h += '<div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b">—</div>';
+      h += '</div>'+badge+'</div></td></tr>';
+    });
+  });
+  h += '</tbody></table>';
+  container.innerHTML = h;
 }
 
 function drawWeeklyGroups() {
@@ -2469,27 +2480,33 @@ function drawWeeklyGroups() {
   document.querySelectorAll('.weekly-bar-row').forEach(function(div){
     var g = div.getAttribute('data-group');
     var data = gd[g] || {};
-    var weekly = [];
     var maxV = 0;
     wdefs.forEach(function(w){
       var v = 0;
       for(var d=w[1]; d<=w[2]; d++) v += (data[String(d)] || 0);
-      weekly.push({label: w[0].split(' ')[0], val: v});
       if(v > maxV) maxV = v;
     });
     if(maxV < 1) maxV = 50000;
     var bars = '';
-    weekly.forEach(function(w){
-      var pct = Math.min(w.val/maxV*100, 100);
-      var barColor = w.val > 0 ? '#6366f1' : '#cbd5e1';
+    wdefs.forEach(function(w){
+      var v = 0;
+      for(var d=w[1]; d<=w[2]; d++) v += (data[String(d)] || 0);
+      var pct = Math.min(v/maxV*100, 100);
+      var barColor = v > 0 ? '#6366f1' : '#cbd5e1';
       bars += '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:70px">'+
-        '<span style="font-size:10px;color:#1e293b;font-weight:600">'+(w.val/10000).toFixed(1)+'万</span>'+
-        '<div style="width:100%;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden;border:1px solid #e2e8f0">'+
-        '<div style="width:'+pct+'%;height:100%;background:'+barColor+';border-radius:7px;transition:width 0.4s"></div>'+
-        '</div><span style="font-size:9px;color:#94a3b8;white-space:nowrap">'+w.label+'</span></div>';
+        '<span style="font-size:10px;color:#1e293b;font-weight:600">'+fmtNum2(v)+'</span>'+
+        '<div style="width:100%;height:16px;background:#f1f5f9;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0">'+
+        '<div style="width:'+pct+'%;height:100%;background:'+barColor+';border-radius:8px;transition:width 0.4s"></div>'+
+        '</div><span style="font-size:9px;color:#94a3b8;white-space:nowrap">'+w[0].split(' ')[0]+'</span></div>';
     });
     div.innerHTML = bars;
   });
+}
+// fmtNum2: compact number formatting for JS
+function fmtNum2(v) {
+  if(v >= 10000) return (v/10000).toFixed(1)+'万';
+  if(v >= 1000) return (v/1000).toFixed(1)+'千';
+  return ''+Math.round(v);
 }
 setTimeout(function(){ drawWeeklyRoles(); drawWeeklyGroups(); }, 700);
 </script>
