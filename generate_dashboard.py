@@ -437,6 +437,7 @@ OFFLINE_ORDER = sorted([g for g in OFFLINE_GROUPS if g in group_metrics], key=la
 # ==================== Level 3a: 线上个人 ====================
 # ==================== 电话数据加载 (按销售姓名汇总通话人数) ====================
 phone_calls = {}  # name -> 通话人数
+PHONE_NAME_FIX = {'李钰坤': '李玉坤', '李家慧': '李家惠'}  # 错别字修正
 try:
     phone_files = [f for f in glob.glob(os.path.join(data_dir, '电话', '*.xlsx'))
                    if not os.path.basename(f).startswith('~$')]
@@ -446,9 +447,20 @@ try:
         name_col = next((c for c in phone_df.columns if '姓名' in c or '销售' in c), phone_df.columns[0])
         call_col = next((c for c in phone_df.columns if '通话人数' in c or '通话' in c), None)
         if call_col:
+            # 去重：防止同名同次数重复行导致翻倍
+            dedup_cols = [name_col, call_col]
+            org_col = next((c for c in phone_df.columns if '组织' in c or '部门' in c), None)
+            if org_col:
+                dedup_cols.insert(1, org_col)
+            before = len(phone_df)
+            phone_df = phone_df.drop_duplicates(subset=dedup_cols)
+            if len(phone_df) < before:
+                print(f'📞 电话去重: {before} → {len(phone_df)} 行')
             for _, prow in phone_df.iterrows():
                 nm = str(prow[name_col]).strip()
                 if not nm or nm == 'nan': continue
+                # 错别字修正
+                nm = PHONE_NAME_FIX.get(nm, nm)
                 cv = prow[call_col]
                 cv = int(cv) if pd.notna(cv) else 0
                 phone_calls[nm] = phone_calls.get(nm, 0) + cv
@@ -471,12 +483,13 @@ for _, cm in cm_df.iterrows():
     store = cm['store']; name = cm['name']; tgt = cm['target']
     is_putuo = (store == '普陀')
     p_orders = orders[(orders['seller_name']==name)]
-    # 特殊归属销售（如余佼）多店挂名时：底表订单归属 override 目标门店用于
-    # 门店级汇总，但个人业绩应将底表订单计入原门店（非 override 目标门店）
+    # 特殊归属销售（如余佼）多店挂名时：底表订单归入 override 目标门店行，
+    # 原门店行（普陀）只保留 HG0019 明细，不叠加底表订单
     if name in SELLER_ORG_OVERRIDE:
         override_target = STORE_MAP.get(SELLER_ORG_OVERRIDE[name], '')
-        if store == override_target:
-            p_orders = p_orders.iloc[0:0]  # 底表订单归入原门店行
+        if store != override_target:
+            # 非目标门店行（如余佼的普陀行）：只保留 HG0019 明细，排除底表订单
+            p_orders = p_orders.iloc[0:0]
     if is_putuo:
         # 普陀个案业绩 = 明细汇总 + 底表订单
         done = cm['done_locked'] + period_income(p_orders, JULY_START, JULY_END)
