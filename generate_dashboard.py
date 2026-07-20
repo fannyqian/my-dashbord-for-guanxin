@@ -1149,7 +1149,10 @@ for r in role_daily:
 group_daily = {g: dict(v) for g, v in group_daily.items()}
 
 # 趋势图截止日 = 底表最新支付日（避免普陀/康博嘉出现半天数据点）
+# 如果最新日=今天（数据不完整），回退到昨天
 trend_max_day = int(july_orders['pay_at'].max().day) if len(july_orders) else 31
+if trend_max_day >= _today.day:
+    trend_max_day = _today.day - 1
 
 # 普陀明细每日叠加到门店和普陀分组（只到趋势截止日）
 if putuo_file and 'CM姓名' in putuo_df.columns and '收款金额' in putuo_df.columns:
@@ -1167,6 +1170,11 @@ for store, dvals in kangbojia_store_daily.items():
         if int(d) > trend_max_day: continue
         role_daily['门店'][d] = role_daily['门店'].get(d, 0) + amt
         group_daily[store][d] = group_daily[store].get(d, 0) + amt
+
+# 截断趋势图：排除 trend_max_day 之后的数据（当天数据不完整）
+for r in role_daily:
+    role_daily[r] = {d: v for d, v in role_daily[r].items() if int(d) <= trend_max_day}
+group_daily = {g: {d: v for d, v in dv.items() if int(d) <= trend_max_day} for g, dv in group_daily.items()}
 
 # ====== 预加载电商本地生活数据 ======
 print('🔄 拉取本地生活数据...', end=' ')
