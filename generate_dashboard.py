@@ -217,7 +217,52 @@ putuo_store_perf = 0
 putuo_store_refund = 0
 
 if putuo_file:
-    putuo_df = pd.read_excel(putuo_file)
+    # 1. 尝试读取，自动修复 $A$1 坏单元格引用
+    try:
+        putuo_df = pd.read_excel(putuo_file)
+    except Exception as e:
+        if '$' in str(e):
+            print(f'🔧 普陀文件损坏($引用)，自动修复中...')
+            import zipfile, re, io
+            fixed_path = putuo_file.replace('.xlsx', '_fixed.xlsx').replace('.xls', '_fixed.xls')
+            zin = zipfile.ZipFile(putuo_file)
+            zout = zipfile.ZipFile(fixed_path, 'w', zipfile.ZIP_DEFLATED)
+            for item in zin.infolist():
+                data = zin.read(item.filename)
+                if item.filename.startswith('xl/worksheets/') and item.filename.endswith('.xml'):
+                    data = re.sub(rb'r="\$([A-Z]+)\$(\d+)"', rb'r="\1\2"', data)
+                    data = re.sub(rb'ref="\$([A-Z]+)\$(\d+)', rb'ref="\1\2', data)
+                    data = re.sub(rb':\$([A-Z]+)\$(\d+)"', rb':\1\2"', data)
+                zout.writestr(item, data)
+            zout.close()
+            zin.close()
+            putuo_df = pd.read_excel(fixed_path)
+            os.replace(fixed_path, putuo_file)  # 替换原文件，下次不用再修
+            print(f'🔧 普陀文件已修复并覆盖原文件')
+        else:
+            raise
+
+    # 2. 自动检测表头行：扫描前5行找到含"CM姓名"/"收款金额"的真表头
+    if 'CM姓名' not in putuo_df.columns or '收款金额' not in putuo_df.columns:
+        raw = pd.read_excel(putuo_file, header=None)
+        header_row = None
+        for i in range(min(5, len(raw))):
+            row_vals = [str(v) for v in raw.iloc[i].values]
+            row_text = ' '.join(row_vals)
+            if ('CM' in row_text and ('姓名' in row_text or '经理' in row_text)) or '收款金额' in row_text:
+                header_row = i
+                break
+        if header_row is not None:
+            putuo_df = raw.iloc[header_row+1:].copy()
+            putuo_df.columns = [str(v).strip() for v in raw.iloc[header_row].values]
+            putuo_df = putuo_df.reset_index(drop=True)
+            # 过滤空行（患者编号为空）
+            if '患者编号' in putuo_df.columns:
+                putuo_df = putuo_df[putuo_df['患者编号'].notna() & (putuo_df['患者编号'].astype(str).str.strip() != '')]
+            # 另存规范版覆盖原文件
+            putuo_df.to_excel(putuo_file, index=False)
+            print(f'🔧 普陀表头自动检测: 第{header_row+1}行为真表头，已规范化覆盖')
+
     # 自动识别格式：明细格式有 CM姓名/收款金额 列，模板格式有 个案经理/门店业绩 列
     if 'CM姓名' in putuo_df.columns and '收款金额' in putuo_df.columns:
         # 新格式：原始交易明细 → 按CM汇总
