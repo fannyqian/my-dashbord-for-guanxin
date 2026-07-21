@@ -160,6 +160,40 @@ for i in range(1, 7):
 if '线上班主任' in target_map:
     target_map['班主任'] = target_map.pop('线上班主任')
 
+# 解析本周目标 (Sheet1 col 3: "7.20-7.26周目标")
+def _parse_week_tgt(val):
+    """解析 "25.0万元" / "15.0万" → 250000 / 150000"""
+    if pd.isna(val): return 0
+    s = str(val).strip().replace('元','').replace(',','')
+    if s.endswith('万'):
+        return float(s[:-1]) * 10000
+    try:
+        return float(s)
+    except:
+        return 0
+
+weekly_target_map = {}
+current_section_w = None
+for _, row in target_summary.iterrows():
+    label = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ''
+    g = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else ''
+    w = row.iloc[3] if len(row) > 3 else 0  # col 3 = 7.20-7.26周目标
+    if g in ('分组','nan','') or g == '合计':
+        if label in ('线上','线下门店'): current_section_w = label
+        continue
+    if label in ('线上','线下门店'): current_section_w = label
+    val = _parse_week_tgt(w)
+    if val > 0:
+        weekly_target_map[g] = val
+# 对齐分组名
+for i in range(1, 7):
+    old_k = f'销售{i}组'
+    new_k = f'课程{i}组'
+    if old_k in weekly_target_map:
+        weekly_target_map[new_k] = weekly_target_map.pop(old_k)
+if '线上班主任' in weekly_target_map:
+    weekly_target_map['班主任'] = weekly_target_map.pop('线上班主任')
+
 # === 用户指定目标（覆盖 Sheet1） ===
 # 重算分节汇总
 section_tgts = {'线上': 0, '线下门店': 0}
@@ -714,38 +748,63 @@ def rate_td(val):
 
 # Build role-level rows (Level 1)
 def role_row(role, m):
+    wt = _role_week_tgt.get(role, 0)
+    wd = _role_week_done.get(role, 0)
+    wpct = wd/wt*100 if wt > 0 else 0
+    wbar = '#10b981' if wpct >= 80 else '#f59e0b' if wpct >= 50 else '#dc2626'
+    _wd_fmt = fmt(wd)
+    _wt_fmt = fmt(wt)
+    _w_pct_str = f'{wpct:.1f}%'
     return f'''<tr>
   <td style="font-size:14px">{role_badge(role)}</td>
-  <td class="num">{fmt(m['target'])}</td>
-  <td class="num"><b>{fmt(m['done'])}</b></td>
-  {rate_td(m['rate'])}
-  <td class="num">{fmt(m['refund'])}</td>
-  {refund_td(m['refund'], m['done'])}
-  <td class="num"><b>{fmt(m['net'])}</b></td>
+  <td class="num">{fmt(m["target"])}</td>
+  <td class="num"><b>{fmt(m["done"])}</b></td>
+  {rate_td(m["rate"])}
+  <td class="num">{fmt(m["refund"])}</td>
+  {refund_td(m["refund"], m["done"])}
+  <td class="num"><b>{fmt(m["net"])}</b></td>
   <td class="num" style="color:#0891b2;font-weight:600">{role_calls.get(role, 0)}</td>
   <td class="num col-avgcall" style="color:#0e7490;font-weight:600">{avg_calls(role_calls.get(role,0), role_count.get(role,0))}</td>
+  <td class="num" style="color:#64748b">{_wt_fmt}</td>
+  <td style="min-width:130px"><div style="display:flex;align-items:center;gap:6px;min-width:130px">
+  <div style="flex:1;height:18px;background:#f1f5f9;border-radius:9px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
+    <div style="width:{min(wpct,100)}%;height:100%;background:{wbar};border-radius:9px;transition:width 0.3s"></div>
+    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b">{_wd_fmt} ({_w_pct_str})</div>
+  </div></div></td>
 </tr>'''
 
 # Build group-level rows (Level 2)
 def group_row(g, m, role):
     note = ' <span style="font-size:10px;color:#f59e0b">⚠锁定</span>' if g == '普陀' else ''
+    wt = _group_week_tgt.get(g, 0)
+    wd = _group_week_done.get(g, 0)
+    wpct = wd/wt*100 if wt > 0 else 0
+    wbar = '#10b981' if wpct >= 80 else '#f59e0b' if wpct >= 50 else '#dc2626'
+    _wd_fmt = fmt(wd)
+    _wt_fmt = fmt(wt)
+    _w_pct_str = f'{wpct:.1f}%'
     return f'''<tr>
   <td><b>{g}</b>{note}</td>
   <td><div style="display:flex;align-items:center;gap:8px">{role_badge(role)}<canvas class="spark" data-group="{g}" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
-  <td class="num">{fmt(m['target'])}</td>
-  <td class="num"><b>{fmt(m['done'])}</b></td>
-  {rate_td(m['rate'])}
-  <td class="num">{chg_html(m['done_chg'])}</td>
-  <td class="num">{fmt(m['refund'])}</td>
-  {refund_td(m['refund'], m['done'])}
-  <td class="num">{refund_chg_html(m['refund_chg'])}</td>
-  <td class="num"><b>{fmt(m['net'])}</b></td>
-  <td class="num">{fmt(m['prev_net'])}</td>
-  <td class="num">{chg_html(m['net_chg'])}</td>
+  <td class="num">{fmt(m["target"])}</td>
+  <td class="num"><b>{fmt(m["done"])}</b></td>
+  {rate_td(m["rate"])}
+  <td class="num">{chg_html(m["done_chg"])}</td>
+  <td class="num">{fmt(m["refund"])}</td>
+  {refund_td(m["refund"], m["done"])}
+  <td class="num">{refund_chg_html(m["refund_chg"])}</td>
+  <td class="num"><b>{fmt(m["net"])}</b></td>
+  <td class="num">{fmt(m["prev_net"])}</td>
+  <td class="num">{chg_html(m["net_chg"])}</td>
   <td class="num" style="color:#0891b2;font-weight:600">{group_calls.get(g, 0)}</td>
   <td class="num col-avgcall" style="color:#0e7490;font-weight:600">{avg_calls(group_calls.get(g,0), group_count.get(g,0))}</td>
-</tr>
-<tr class="weekly-row" data-weekly-group="{g}"><td colspan="2" style="text-align:right;font-size:10px;color:#94a3b8;padding-right:4px">📅周</td><td colspan="12"><div class="weekly-bar-row" data-group="{g}" style="display:flex;gap:12px;align-items:flex-end;justify-content:center;padding:4px 0"></div></td></tr>'''
+  <td class="num" style="color:#64748b">{_wt_fmt}</td>
+  <td style="min-width:130px"><div style="display:flex;align-items:center;gap:6px;min-width:130px">
+  <div style="flex:1;height:18px;background:#f1f5f9;border-radius:9px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
+    <div style="width:{min(wpct,100)}%;height:100%;background:{wbar};border-radius:9px;transition:width 0.3s"></div>
+    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b">{_wd_fmt} ({_w_pct_str})</div>
+  </div></div></td>
+</tr>'''
 
 # Build person rows (Level 3)
 def person_row(name, group_label, tgt, m, person_type='sales_advisor'):
@@ -766,6 +825,67 @@ def person_row(name, group_label, tgt, m, person_type='sales_advisor'):
   <td class="num">{chg_html(m['net_chg'])}</td>
   <td class="num" style="color:#0891b2;font-weight:600">{calls}</td>
 </tr>'''
+
+# ==================== 本周目标 & 进展 ====================
+# 本周 = 当前所在周 (7/20-7/26)
+_cur_week = None
+for _w in _week_defs:
+    if _w[1] <= _today.day <= _w[2]:
+        _cur_week = _w
+        break
+
+def _week_progress_full(role_or_group, by='role'):
+    """本周至今每日业绩：底表订单 + 普陀明细 + 康博嘉"""
+    if not _cur_week:
+        return 0
+    total = 0
+    for d in range(_cur_week[1], _today.day + 1):
+        day_start = _date(_today.year, _today.month, d)
+        day_end = _date(_today.year, _today.month, d + 1) if d < _wk_last else _date(_today.year, 8, 1)
+        # 1) 底表订单
+        mask = (orders['pay_at'] >= str(day_start)) & (orders['pay_at'] < str(day_end))
+        day_orders = orders[mask]
+        if by == 'role':
+            for _, row in day_orders.iterrows():
+                if classify_role(row['组织']) == role_or_group:
+                    total += float(row['pay_amount'])
+        else:
+            for _, row in day_orders.iterrows():
+                if row.get('target_group') == role_or_group:
+                    total += float(row['pay_amount'])
+        # 2) 普陀明细（仅对门店角色/普陀分组生效）
+        if (by == 'role' and role_or_group == '门店') or (by == 'group' and role_or_group == '普陀'):
+            if putuo_file and putuo_df is not None and '收款金额' in putuo_df.columns:
+                try:
+                    for _, prow in putuo_df.iterrows():
+                        try:
+                            pd_day = pd.to_datetime(prow['日期']).day
+                        except:
+                            continue
+                        if pd_day == d:
+                            total += float(prow['收款金额']) if pd.notna(prow['收款金额']) else 0
+                except:
+                    pass
+        # 3) 康博嘉（仅对门店角色/对应门店分组生效）
+        if by == 'role' and role_or_group == '门店':
+            for store, dvals in kangbojia_store_daily.items():
+                total += dvals.get(str(d), 0)
+        elif by == 'group' and role_or_group in kangbojia_store_daily:
+            total += kangbojia_store_daily[role_or_group].get(str(d), 0)
+    return total
+
+# 角色本周目标（从目标表读取）
+_sales_week_tgt = sum(weekly_target_map.get(g, 0) for g in ['课程1组','课程2组','课程3组','课程4组','课程5组','课程6组'])
+_store_week_tgt = sum(weekly_target_map.get(g, 0) for g in OFFLINE_TGT_GROUPS)
+_role_week_tgt = {
+    '销售': _sales_week_tgt,
+    '班主任': weekly_target_map.get('班主任', 0),
+    '门店': _store_week_tgt,
+}
+_role_week_done = {r: _week_progress_full(r, 'role') for r in ['销售','班主任','门店']}
+# 分组本周数据（直接从目标表读取）
+_group_week_tgt = {g: weekly_target_map.get(g, 0) for g in list(ONLINE_TGT_GROUPS) + list(OFFLINE_TGT_GROUPS)}
+_group_week_done = {g: _week_progress_full(g, 'group') for g in _group_week_tgt}
 
 # ==================== 生成 HTML ====================
 html = f'''<!DOCTYPE html>
@@ -900,10 +1020,15 @@ tr.section-header:hover td{{background:inherit!important}}
 
 <!-- Tab 1: 按角色 -->
 <div id="tab-role" class="tab-content active">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
+  <span style="font-size:13px;font-weight:600;color:#475569">📅 月度目标进展</span>
+  <select id="month-sel-role" onchange="syncMonthSel('role',this.value);renderMonthlyRole(this.value)" style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#1e293b;background:#fff"></select>
+</div>
+<div id="monthly-role-body">
 <table>
 <thead><tr>
   <th>角色</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th>
-  <th class="num">本月退费</th><th class="num">退费率</th><th class="num">本月净流水</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th>
+  <th class="num">本月退费</th><th class="num">退费率</th><th class="num">本月净流水</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th class="num">本周目标</th><th style="min-width:130px">本周目标进展</th>
 </tr></thead><tbody>
 {''.join(role_row(r, role_metrics[r]) for r in ['销售','班主任','门店'])}
 <tr class="subtotal"><td>南区合计</td>
@@ -912,8 +1037,11 @@ tr.section-header:hover td{{background:inherit!important}}
   <td class="num">{fmt(total_metrics['net'])}</td>
   <td class="num" style="color:#0891b2;font-weight:700">{sum(role_calls.values())}</td>
   <td class="num col-avgcall" style="color:#0e7490;font-weight:700">{avg_calls(sum(role_calls.values()), sum(role_count.values()))}</td>
+  <td class="num" style="color:#64748b">{fmt(sum(_role_week_tgt.values()))}</td>
+  <td class="num" style="font-weight:700;color:#1e293b">{fmt(sum(_role_week_done.values()))} ({sum(_role_week_done.values())/sum(_role_week_tgt.values())*100 if sum(_role_week_tgt.values())>0 else 0:.1f}%)</td>
 </tr>
 </tbody></table>
+</div><!-- end monthly-role-body -->
 <div style="margin-top:20px">
   <h4 style="margin:0 0 14px;font-size:15px;color:#1e293b;font-weight:700">📈 每日业绩趋势 <span style="font-size:12px;color:#94a3b8;font-weight:400">· 悬停查看详情</span></h4>
   <div style="display:grid;grid-template-columns:1fr;gap:16px">
@@ -931,24 +1059,25 @@ tr.section-header:hover td{{background:inherit!important}}
     </div>
   </div>
 </div>
-<div style="margin-top:24px">
-  <h4 style="margin:0 0 14px;font-size:15px;color:#1e293b;font-weight:700">📅 每周业绩趋势 <span style="font-size:12px;color:#94a3b8;font-weight:400">· 周度对比</span></h4>
-  <div id="weekly-role-container"></div>
-</div>
 </div>
 
 <!-- Tab 2: 按分组 -->
 <div id="tab-group" class="tab-content">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
+  <span style="font-size:13px;font-weight:600;color:#475569">📅 月度目标进展</span>
+  <select id="month-sel-group" onchange="syncMonthSel('group',this.value);renderMonthlyGroup(this.value)" style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#1e293b;background:#fff"></select>
+</div>
+<div id="monthly-group-body">
 <table>
 <thead><tr>
   <th>分组</th><th>角色 <span style="font-weight:400;color:#94a3b8;font-size:10px">/趋势</span></th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
-  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th>
+  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th class="num">本周目标</th><th style="min-width:130px">本周目标进展</th>
 </tr></thead><tbody>
 '''
 
 # Group rows — 线上组
-html += '<tr class="section-header"><td colspan="14" style="background:#dbeafe;color:#1e40af;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #93c5fd">📡 线上组</td></tr>'
+html += '<tr class="section-header"><td colspan="16" style="background:#dbeafe;color:#1e40af;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #93c5fd">📡 线上组</td></tr>'
 for g in ONLINE_ORDER:
     m = group_metrics.get(g)
     if m is None or m['target'] == 0: continue
@@ -956,14 +1085,16 @@ for g in ONLINE_ORDER:
     html += group_row(g, m, role)
 
 # Group rows — 线下门店
-html += '<tr class="section-header"><td colspan="14" style="background:#d1fae5;color:#065f46;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #6ee7b7">🏥 线下门店</td></tr>'
+html += '<tr class="section-header"><td colspan="16" style="background:#d1fae5;color:#065f46;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #6ee7b7">🏥 线下门店</td></tr>'
 for g in OFFLINE_ORDER:
     m = group_metrics.get(g)
     if m is None or m['target'] == 0: continue
     role = classify_role(orders[orders['target_group']==g]['组织'].iloc[0]) if len(orders[orders['target_group']==g]) > 0 else '其他'
     html += group_row(g, m, role)
 
-html += '''</tbody></table></div>'''
+html += '''</tbody></table>
+</div><!-- end monthly-group-body -->
+</div>'''
 
 # Tab 3: 线上个人
 html += '''<div id="tab-online_person" class="tab-content">
@@ -1087,7 +1218,7 @@ function toggleAvgCall(){{
   _avgCallHidden = !_avgCallHidden;
   document.querySelectorAll(".col-avgcall").forEach(function(el){{
     // 保留列头的眼睛可点，隐藏数值单元格；列头文字变淡
-    if(el.tagName === 'TD'){{ el.style.display = _avgCallHidden ? 'none' : ''; }}
+    if(el.tagName === 'TD'){{ el.style.visibility = _avgCallHidden ? 'hidden' : ''; }}
     else {{
       var txt = el.childNodes[0];
       if(txt) txt.textContent = _avgCallHidden ? '' : '人均电话 ';
@@ -1275,6 +1406,15 @@ mapping_json = json.dumps({
     'role_daily': role_daily,
     'group_daily': group_daily,
     'week_defs': _week_defs,
+    'online_groups': ONLINE_ORDER,
+    'offline_groups': OFFLINE_ORDER,
+    'role_metrics': {r: {k: v for k, v in m.items()} for r, m in role_metrics.items()},
+    'role_calls': role_calls,
+    'role_count': role_count,
+    'group_metrics': {g: {k: v for k, v in m.items()} for g, m in group_metrics.items()},
+    'group_calls': group_calls,
+    'group_count': group_count,
+    'current_month': f'{_today.year}-{_today.month:02d}',
 }, ensure_ascii=False)
 
 # ==================== 交互式 JS 工具条 ====================
@@ -2426,89 +2566,56 @@ function hideSparkPopup() {
 }
 setTimeout(drawSparklines, 500);
 
-// ====== 周度业绩渲染 ======
-function drawWeeklyRoles() {
-  var M = window._M, wdefs = M.week_defs || [], rd = M.role_daily || {};
-  var container = document.getElementById('weekly-role-container');
-  if(!container || !wdefs.length) return;
-  var roles = ['销售','班主任','门店'];
-  var maxW = {}; roles.forEach(function(r){ maxW[r]=0; });
-  // 计算每周业绩
-  var weekly = {}; // {role: [{label,val}]}
-  roles.forEach(function(r){
-    weekly[r] = [];
-    var data = rd[r] || {};
-    wdefs.forEach(function(w){
-      var v = 0;
-      for(var d=w[1]; d<=w[2]; d++) v += (data[String(d)] || 0);
-      weekly[r].push({label:w[0],val:v});
+setTimeout(function(){ initMonthSelectors(); }, 700);
+
+function initMonthSelectors() {
+  var M = window._M;
+  var cur = M.current_month || '';
+  // months available: just current for now; future months can be added
+  var months = [cur];
+  ['month-sel-role','month-sel-group'].forEach(function(id){
+    var sel = document.getElementById(id);
+    if(!sel || sel.options.length) return;
+    months.forEach(function(m){
+      var opt = document.createElement('option');
+      var parts = m.split('-');
+      opt.value = m;
+      opt.textContent = parts[0]+'年'+parseInt(parts[1])+'月';
+      opt.selected = true;
+      sel.appendChild(opt);
     });
   });
-  // 渲染表格
-  var h = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
-  h += '<thead><tr style="border-bottom:2px solid #e2e8f0">';
-  h += '<th style="text-align:left;padding:8px">角色</th><th style="text-align:left;padding:8px">周</th>';
-  h += '<th class="num" style="padding:8px">目标</th><th class="num" style="padding:8px">完成</th>';
-  h += '<th style="text-align:center;min-width:160px;padding:8px">完成率</th></tr></thead><tbody>';
-  roles.forEach(function(r){
-    weekly[r].forEach(function(w, i){
-      var cls = i===0 ? '' : ' style="border-top:1px solid #f1f5f9"';
-      var pct = 0;
-      var barColor = '#cbd5e1', barBg = '#f8fafc', barWrapBg = '#f8fafc';
-      var badge = '';
-      if(w.val > 0) {
-        pct = Math.min(w.val/150000*100, 100);
-        barColor = '#6366f1'; barBg = '#eef2ff'; barWrapBg = '#f8fafc';
-      }
-      h += '<tr'+cls+'><td style="padding:8px;font-weight:600;color:#1e293b">'+r+'</td>';
-      h += '<td style="padding:8px;color:#64748b;font-size:11px">'+w.label+'</td>';
-      h += '<td class="num" style="padding:8px;color:#94a3b8">—</td>';
-      h += '<td class="num" style="padding:8px"><b>'+fmtNum2(w.val)+'</b></td>';
-      h += '<td style="padding:6px 8px;min-width:160px"><div style="display:flex;align-items:center;gap:6px">';
-      h += '<div style="flex:1;height:20px;background:'+barWrapBg+';border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">';
-      h += '<div style="width:'+pct+'%;height:100%;background:'+barColor+';border-radius:10px;transition:width 0.3s"></div>';
-      h += '<div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b">—</div>';
-      h += '</div>'+badge+'</div></td></tr>';
-    });
-  });
-  h += '</tbody></table>';
-  container.innerHTML = h;
 }
 
-function drawWeeklyGroups() {
-  var M = window._M, wdefs = M.week_defs || [], gd = M.group_daily || {};
-  document.querySelectorAll('.weekly-bar-row').forEach(function(div){
-    var g = div.getAttribute('data-group');
-    var data = gd[g] || {};
-    var maxV = 0;
-    wdefs.forEach(function(w){
-      var v = 0;
-      for(var d=w[1]; d<=w[2]; d++) v += (data[String(d)] || 0);
-      if(v > maxV) maxV = v;
-    });
-    if(maxV < 1) maxV = 50000;
-    var bars = '';
-    wdefs.forEach(function(w){
-      var v = 0;
-      for(var d=w[1]; d<=w[2]; d++) v += (data[String(d)] || 0);
-      var pct = Math.min(v/maxV*100, 100);
-      var barColor = v > 0 ? '#6366f1' : '#cbd5e1';
-      bars += '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:70px">'+
-        '<span style="font-size:10px;color:#1e293b;font-weight:600">'+fmtNum2(v)+'</span>'+
-        '<div style="width:100%;height:16px;background:#f1f5f9;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0">'+
-        '<div style="width:'+pct+'%;height:100%;background:'+barColor+';border-radius:8px;transition:width 0.4s"></div>'+
-        '</div><span style="font-size:9px;color:#94a3b8;white-space:nowrap">'+w[0].split(' ')[0]+'</span></div>';
-    });
-    div.innerHTML = bars;
-  });
+function syncMonthSel(src, val) {
+  var other = src === 'role' ? 'month-sel-group' : 'month-sel-role';
+  var sel = document.getElementById(other);
+  if(sel) sel.value = val;
 }
-// fmtNum2: compact number formatting for JS
-function fmtNum2(v) {
-  if(v >= 10000) return (v/10000).toFixed(1)+'万';
-  if(v >= 1000) return (v/1000).toFixed(1)+'千';
-  return ''+Math.round(v);
+
+function renderMonthlyRole(month) {
+  var M = window._M;
+  var body = document.getElementById('monthly-role-body');
+  if(!body) return;
+  if(month !== M.current_month) {
+    body.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px">暂无 '+month+' 数据</div>';
+    return;
+  }
+  // restore: show the static content (reload page to restore, or just keep visible)
+  // Since current month is always rendered statically, just reload
+  location.reload();
 }
-setTimeout(function(){ drawWeeklyRoles(); drawWeeklyGroups(); }, 700);
+
+function renderMonthlyGroup(month) {
+  var M = window._M;
+  var body = document.getElementById('monthly-group-body');
+  if(!body) return;
+  if(month !== M.current_month) {
+    body.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px">暂无 '+month+' 数据</div>';
+    return;
+  }
+  location.reload();
+}
 </script>
 '''
 
