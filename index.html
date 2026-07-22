@@ -32,6 +32,23 @@ tr.section-header:hover td{background:inherit!important}
 .subtotal td{background:#f8fafc!important;font-weight:700;border-top:1px solid #e2e8f0}
 .footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:20px}
 .section-title{font-size:14px;font-weight:700;color:#1e293b;padding:12px 0 8px;border-bottom:1px solid #e2e8f0;margin-bottom:12px}
+/* ===== 退款分析美化 ===== */
+.metric-card{position:relative;background:linear-gradient(135deg,#ffffff 0%,#fafbff 100%);border-radius:16px;padding:18px 20px;box-shadow:0 2px 12px rgba(15,23,42,0.06);border:1px solid #eef2f7;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.metric-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(15,23,42,0.1)}
+.metric-card::before{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--accent,#6366f1)}
+.metric-label{font-size:12px;color:#64748b;margin-bottom:6px;font-weight:500}
+.metric-value{font-size:26px;font-weight:800;line-height:1.1;letter-spacing:-0.5px}
+.metric-sub{font-size:11px;color:#94a3b8;margin-top:4px}
+.refund-panel{background:#fff;border-radius:16px;padding:20px;border:1px solid #eef2f7;box-shadow:0 2px 8px rgba(15,23,42,0.04);margin-bottom:18px}
+.refund-panel h4{display:flex;align-items:center;gap:8px}
+.refund-panel-title{font-size:15px;font-weight:700;color:#0f172a;margin:0 0 16px;display:flex;align-items:center;gap:8px}
+.refund-panel-title::before{content:"";width:4px;height:16px;background:linear-gradient(180deg,#6366f1,#8b5cf6);border-radius:2px}
+#tab-refund_reason table thead th{background:#f8fafc;position:sticky;top:0}
+#tab-refund_reason table tbody tr:hover td{background:#f5f3ff}
+.refund-sel{padding:6px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:12px;color:#475569;background:#fff;cursor:pointer;transition:border-color .2s}
+.refund-sel:hover{border-color:#8b5cf6}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;font-size:11px;font-weight:700;margin-right:6px}
+.prod-tag{display:inline-block;background:#eef2ff;color:#4338ca;border-radius:6px;padding:2px 8px;margin:2px;font-size:11px;font-weight:500}
 @media(max-width:768px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 
@@ -1234,8 +1251,13 @@ function renderMonthlyGroup(month) {
 }
 </script>
 
-</head>
-<body>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260722173506"></head>
+<body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
+<h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
+<div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
+</div>
+<style>.deploy-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
+
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
 <div><h1>📊 南区7月目标进展看板</h1>
@@ -4182,78 +4204,78 @@ function renderMonthlyGroup(month) {
   <td class="num"><span style="color:#ef4444;font-weight:600">↓9.8%</span></td><td class="num" style="color:#0891b2;font-weight:700">1061</td></tr></tbody></table></div><div id="tab-channel" class="tab-content">
 <div style="text-align:center;padding:40px;color:#94a3b8">👆 点击「渠道业绩」标签加载本地生活数据</div>
 </div><div id="tab-refund_reason" class="tab-content">
-  <div style="margin-bottom:20px">
-    <h2 style="margin:0 0 8px;font-size:18px;color:#1e293b">📊 7月退款原因分析</h2>
-    <div style="font-size:12px;color:#64748b">数据截止: 7月22日 | 口径: back_at ∈ 2026-07 且 refund_total > 0</div>
+  <div style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 55%,#a855f7 100%);border-radius:16px;padding:22px 26px;margin-bottom:22px;color:#fff;box-shadow:0 6px 20px rgba(99,102,241,0.25)">
+    <h2 style="margin:0 0 6px;font-size:20px;font-weight:800;letter-spacing:-0.3px">📊 7月退款原因分析</h2>
+    <div style="font-size:12.5px;opacity:0.9">数据截止 7月22日 ｜ 口径：back_at ∈ 2026-07 且 refund_total &gt; 0</div>
   </div>
 
   <!-- 核心指标卡片 -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
-    <div class="metric-card">
-      <div class="metric-label">退款总额</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px">
+    <div class="metric-card" style="--accent:#dc2626">
+      <div class="metric-label">💰 退款总额</div>
       <div class="metric-value" style="color:#dc2626" id="refund_total_amt">—</div>
       <div class="metric-sub" id="refund_total_cnt">—</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">线上退款</div>
+    <div class="metric-card" style="--accent:#3b82f6">
+      <div class="metric-label">🌐 线上退款</div>
       <div class="metric-value" style="color:#3b82f6" id="refund_online_amt">—</div>
       <div class="metric-sub" id="refund_online_pct">—</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">门店退款</div>
+    <div class="metric-card" style="--accent:#10b981">
+      <div class="metric-label">🏥 门店退款</div>
       <div class="metric-value" style="color:#10b981" id="refund_store_amt">—</div>
       <div class="metric-sub" id="refund_store_pct">—</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">可干预退款</div>
+    <div class="metric-card" style="--accent:#f59e0b">
+      <div class="metric-label">🎯 可干预退款</div>
       <div class="metric-value" style="color:#f59e0b" id="refund_intervenable">—</div>
       <div class="metric-sub" id="refund_intervenable_pct">—</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">无有效归因</div>
+    <div class="metric-card" style="--accent:#94a3b8">
+      <div class="metric-label">❔ 无有效归因</div>
       <div class="metric-value" style="color:#94a3b8" id="refund_no_attr">—</div>
       <div class="metric-sub" id="refund_no_attr_pct">—</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">大额退款(≥1000元)</div>
+    <div class="metric-card" style="--accent:#7c3aed">
+      <div class="metric-label">🔺 大额退款(≥1000元)</div>
       <div class="metric-value" style="color:#7c3aed" id="refund_large_amt">—</div>
       <div class="metric-sub" id="refund_large_cnt">—</div>
     </div>
   </div>
 
   <!-- 渠道占比 + 退款原因饼图 -->
-  <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
-    <div style="flex:1;min-width:300px;background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
-      <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📊 线上/门店退款占比</h4>
+  <div style="display:flex;gap:18px;margin-bottom:18px;flex-wrap:wrap">
+    <div class="refund-panel" style="flex:1;min-width:300px;margin-bottom:0">
+      <div class="refund-panel-title">线上 / 门店退款占比</div>
       <div style="height:280px"><canvas id="chart_refund_channel"></canvas></div>
     </div>
-    <div style="flex:1;min-width:300px;background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
-      <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📊 退款原因分布（按金额）</h4>
+    <div class="refund-panel" style="flex:1.3;min-width:340px;margin-bottom:0">
+      <div class="refund-panel-title">退款原因分布（按金额）</div>
       <div style="height:280px"><canvas id="chart_refund_reason_pie"></canvas></div>
     </div>
   </div>
 
   <!-- 退款原因明细表 -->
-  <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px">
-    <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📋 退款原因明细</h4>
+  <div class="refund-panel">
+    <div class="refund-panel-title">退款原因明细</div>
     <table id="refund_reason_table"><thead><tr>
-      <th>退款原因</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">金额占比</th><th class="num">大额单数</th><th class="num">可干预/无归因</th><th style="min-width:150px">占比</th>
+      <th>退款原因</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">金额占比</th><th class="num">大额单数</th><th>归因类型</th><th style="min-width:150px">占比</th>
     </tr></thead><tbody></tbody></table>
   </div>
 
   <!-- 退款产品结构(服务类型) Top10 -->
-  <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px">
-    <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📦 退款产品结构 Top10（按金额）</h4>
+  <div class="refund-panel">
+    <div class="refund-panel-title">退款产品结构 Top10（按金额）</div>
     <table id="refund_service_table"><thead><tr>
       <th>服务类型/产品</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">占总退款</th><th style="min-width:150px">占比</th>
     </tr></thead><tbody></tbody></table>
   </div>
 
   <!-- 线上销售退款 Top50 -->
-  <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-      <h4 style="margin:0;font-size:14px;color:#1e293b">👤 线上销售退款排名 Top50</h4>
-      <select id="refund-online-org-sel" onchange="renderRefundSellerTable()" style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px">
+  <div class="refund-panel">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div class="refund-panel-title" style="margin:0">线上销售退款排名 Top50</div>
+      <select id="refund-online-org-sel" class="refund-sel" onchange="renderRefundSellerTable()">
         <option value="__all__">全部组织</option>
       </select>
     </div>
@@ -4263,10 +4285,10 @@ function renderMonthlyGroup(month) {
   </div>
 
   <!-- 线下门店CM退款 Top50 -->
-  <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-      <h4 style="margin:0;font-size:14px;color:#1e293b">🏥 线下门店CM退款排名 Top50</h4>
-      <select id="refund-store-org-sel" onchange="renderRefundCMTable()" style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px">
+  <div class="refund-panel">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div class="refund-panel-title" style="margin:0">线下门店 CM 退款排名 Top50</div>
+      <select id="refund-store-org-sel" class="refund-sel" onchange="renderRefundCMTable()">
         <option value="__all__">全部门店</option>
       </select>
     </div>
@@ -4276,24 +4298,24 @@ function renderMonthlyGroup(month) {
   </div>
 
   <!-- 退款省份 Top15 + 省份×原因热力图 -->
-  <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
-    <div style="flex:1;min-width:320px;background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
-      <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">🗺️ 退款省份 Top15（含未属地）</h4>
+  <div style="display:flex;gap:18px;margin-bottom:18px;flex-wrap:wrap">
+    <div class="refund-panel" style="flex:1;min-width:320px;margin-bottom:0">
+      <div class="refund-panel-title">退款省份 Top15（含未属地）</div>
       <div style="max-height:460px;overflow-y:auto">
         <table id="refund_province_table"><thead><tr>
           <th>省份/地区</th><th class="num">退款单数</th><th class="num">退款金额</th><th style="min-width:120px">占比</th>
         </tr></thead><tbody></tbody></table>
       </div>
     </div>
-    <div style="flex:1.4;min-width:520px;background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
-      <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">🔥 省份 × 退款原因热力图（金额）</h4>
+    <div class="refund-panel" style="flex:1.4;min-width:520px;margin-bottom:0">
+      <div class="refund-panel-title">省份 × 退款原因热力图（金额）</div>
       <div style="overflow-x:auto"><div id="heatmap_container"></div></div>
     </div>
   </div>
 
   <!-- 各组织退款对比 -->
-  <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
-    <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📊 各组织退款原因对比（按组织退款金额降序，堆叠）</h4>
+  <div class="refund-panel" style="margin-bottom:0">
+    <div class="refund-panel-title">各组织退款原因对比（按组织退款金额降序，堆叠）</div>
     <div style="height:440px"><canvas id="chart_refund_org"></canvas></div>
   </div>
 </div>
@@ -4323,8 +4345,8 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'商家操作失误':1,'效果不满意':1,'家人不支持':1,'时间/适配冲突':1,'价格问题':1,'服务未交付/联系不上':1,'教材问题':1};
-var NO_ATTR = {'其他/未说明':1,'未填写原因':1,'主动放弃/拍错':1};
+var INTERVENABLE = {'家人不支持':1,'效果不满意':1,'时间/适配冲突':1,'服务未交付/联系不上':1,'商家操作失误':1,'价格问题':1,'教材问题':1};
+var NO_ATTR = {'主动放弃/拍错':1,'未填写原因':1,'其他/未说明':1};
 
 function populateRefundDropdowns() {
   var D = window._M.refund_reasons;
@@ -4465,16 +4487,17 @@ function renderRefundReasonTable(rows, totalAmt) {
   sorted.forEach(function(r) {
     var pct = (r.amount / totalAmt * 100).toFixed(1);
     var cat = INTERVENABLE[r.category] ? '可干预' : (NO_ATTR[r.category] ? '无归因' : '其他');
-    var catColor = INTERVENABLE[r.category] ? '#f59e0b' : (NO_ATTR[r.category] ? '#94a3b8' : '#64748b');
+    var catBg = INTERVENABLE[r.category] ? '#fef3c7' : (NO_ATTR[r.category] ? '#f1f5f9' : '#e0e7ff');
+    var catColor = INTERVENABLE[r.category] ? '#b45309' : (NO_ATTR[r.category] ? '#64748b' : '#4338ca');
     var barColor = pct > 20 ? '#6366f1' : pct > 10 ? '#8b5cf6' : '#c4b5fd';
     html += '<tr>' +
-      '<td>' + r.category + '</td>' +
+      '<td style="font-weight:600">' + r.category + '</td>' +
       '<td class="num">' + r.count + '</td>' +
-      '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
+      '<td class="num" style="font-weight:600">¥' + fmtNum(r.amount) + '</td>' +
       '<td class="num">' + pct + '%</td>' +
       '<td class="num">' + (r.large_count || 0) + '</td>' +
-      '<td class="num"><span style="color:' + catColor + ';font-weight:600">' + cat + '</span></td>' +
-      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:' + barColor + ';border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:45px;text-align:right">' + pct + '%</span></div></td>' +
+      '<td><span style="background:' + catBg + ';color:' + catColor + ';padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">' + cat + '</span></td>' +
+      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:16px;background:#f1f5f9;border-radius:8px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:linear-gradient(90deg,' + barColor + ',' + barColor + 'cc);border-radius:8px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:45px;text-align:right">' + pct + '%</span></div></td>' +
       '</tr>';
   });
   tbody.innerHTML = html;
@@ -4505,17 +4528,23 @@ function _prodTop3Html(products) {
   }).join('');
 }
 function _reasonTag(reason) {
-  var color = INTERVENABLE[reason] ? '#f59e0b' : (NO_ATTR[reason] ? '#94a3b8' : '#64748b');
-  return '<span style="color:' + color + ';font-weight:600">' + reason + '</span>';
+  var bg = INTERVENABLE[reason] ? '#fef3c7' : (NO_ATTR[reason] ? '#f1f5f9' : '#e0e7ff');
+  var color = INTERVENABLE[reason] ? '#b45309' : (NO_ATTR[reason] ? '#64748b' : '#4338ca');
+  return '<span style="background:' + bg + ';color:' + color + ';padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap">' + reason + '</span>';
 }
-function _rankRowHtml(r, barColor) {
+function _rankBadge(i) {
+  var colors = ['#f59e0b','#94a3b8','#d97706'];
+  if (i < 3) return '<span class="rank-badge" style="background:' + colors[i] + ';color:#fff">' + (i+1) + '</span>';
+  return '<span class="rank-badge" style="background:#f1f5f9;color:#94a3b8">' + (i+1) + '</span>';
+}
+function _rankRowHtml(r, idx, orgColor) {
   return '<tr>' +
-    '<td><b style="color:#6366f1">' + r.org + '</b></td>' +
-    '<td>' + r.name + '</td>' +
+    '<td>' + _rankBadge(idx) + '<b style="color:' + orgColor + '">' + r.org + '</b></td>' +
+    '<td style="font-weight:600">' + r.name + '</td>' +
     '<td class="num">' + r.count + '</td>' +
-    '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
+    '<td class="num" style="font-weight:700;color:#dc2626">¥' + fmtNum(r.amount) + '</td>' +
     '<td class="num">' + r.rate + '%</td>' +
-    '<td class="num">' + r.large_count + '</td>' +
+    '<td class="num">' + (r.large_count > 0 ? '<span style="color:#7c3aed;font-weight:600">' + r.large_count + '</span>' : '0') + '</td>' +
     '<td>' + _reasonTag(r.reason) + '</td>' +
     '<td>' + _prodTop3Html(r.products) + '</td>' +
     '</tr>';
@@ -4527,7 +4556,7 @@ function renderRefundSellerTable() {
   var sel = document.getElementById('refund-online-org-sel');
   var org = sel ? sel.value : '__all__';
   var rows = D.online_seller_rank.filter(function(r) { return org === '__all__' || r.org === org; });
-  tbody.innerHTML = rows.map(function(r) { return _rankRowHtml(r, '#3b82f6'); }).join('');
+  tbody.innerHTML = rows.map(function(r, i) { return _rankRowHtml(r, i, '#3b82f6'); }).join('');
 }
 function renderRefundCMTable() {
   var D = window._M.refund_reasons;
@@ -4536,7 +4565,7 @@ function renderRefundCMTable() {
   var sel = document.getElementById('refund-store-org-sel');
   var org = sel ? sel.value : '__all__';
   var rows = D.store_cm_rank.filter(function(r) { return org === '__all__' || r.org === org; });
-  tbody.innerHTML = rows.map(function(r) { return _rankRowHtml(r, '#10b981'); }).join('');
+  tbody.innerHTML = rows.map(function(r, i) { return _rankRowHtml(r, i, '#10b981'); }).join('');
 }
 
 function renderRefundProvinceTable(rows, totalAmt) {
@@ -4546,11 +4575,12 @@ function renderRefundProvinceTable(rows, totalAmt) {
   rows.forEach(function(r) {
     var pct = (r.amount / totalAmt * 100).toFixed(1);
     var barColor = r.province === '未属地' ? '#f59e0b' : '#10b981';
+    var nameHtml = r.province === '未属地' ? '<span style="color:#b45309">⚠ ' + r.province + '</span>' : r.province;
     html += '<tr>' +
-      '<td>' + r.province + '</td>' +
+      '<td style="font-weight:600">' + nameHtml + '</td>' +
       '<td class="num">' + r.count + '</td>' +
       '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
-      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:' + barColor + ';border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px">' + pct + '%</span></div></td>' +
+      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:16px;background:#f1f5f9;border-radius:8px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:linear-gradient(90deg,' + barColor + ',' + barColor + 'cc);border-radius:8px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px">' + pct + '%</span></div></td>' +
       '</tr>';
   });
   tbody.innerHTML = html;
@@ -4646,4 +4676,4 @@ function navigateToRefund(orgName) {
   switchTab('refund_reason');
 }
 </script>
-</body></html>
+<script>var _v="20260722173506";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
