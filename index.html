@@ -1234,7 +1234,7 @@ function renderMonthlyGroup(month) {
 }
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260722170545"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260722170907"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -4187,29 +4187,105 @@ function renderMonthlyGroup(month) {
   <td class="num"><span style="color:#ef4444;font-weight:600">↓9.8%</span></td><td class="num" style="color:#0891b2;font-weight:700">1061</td></tr></tbody></table></div><div id="tab-channel" class="tab-content">
 <div style="text-align:center;padding:40px;color:#94a3b8">👆 点击「渠道业绩」标签加载本地生活数据</div>
 </div><div id="tab-refund_reason" class="tab-content">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
-    <span style="font-size:13px;font-weight:600;color:#475569">🏥 筛选组织</span>
-    <select id="refund-org-sel" onchange="renderRefundReason()" style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#1e293b;background:#fff">
-      <option value="__all__">全部组织</option>
-    </select>
-    <span style="font-size:12px;color:#94a3b8;margin-left:auto" id="refund-summary-label"></span>
+  <div style="margin-bottom:20px">
+    <h2 style="margin:0 0 8px;font-size:18px;color:#1e293b">📊 7月退款原因分析</h2>
+    <div style="font-size:12px;color:#64748b">数据截止: 7月22日 | 口径: back_at ∈ 2026-07 且 refund_total > 0</div>
   </div>
-  <div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap">
-    <div style="flex:1;min-width:350px;background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
-      <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📊 退款原因分布（按金额）</h4>
-      <div style="height:320px"><canvas id="chart_refund_pie"></canvas></div>
+
+  <!-- 核心指标卡片 -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+    <div class="metric-card">
+      <div class="metric-label">退款总额</div>
+      <div class="metric-value" style="color:#dc2626" id="refund_total_amt">—</div>
+      <div class="metric-sub" id="refund_total_cnt">—</div>
     </div>
-    <div style="flex:1;min-width:400px;background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
-      <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📋 退款原因明细</h4>
-      <div style="max-height:320px;overflow-y:auto">
-        <table id="refund-detail-table"><thead><tr>
-          <th>退款原因</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">金额占比</th><th style="min-width:120px">占比</th>
+    <div class="metric-card">
+      <div class="metric-label">线上退款</div>
+      <div class="metric-value" style="color:#3b82f6" id="refund_online_amt">—</div>
+      <div class="metric-sub" id="refund_online_pct">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">门店退款</div>
+      <div class="metric-value" style="color:#10b981" id="refund_store_amt">—</div>
+      <div class="metric-sub" id="refund_store_pct">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">可干预退款</div>
+      <div class="metric-value" style="color:#f59e0b" id="refund_intervenable">—</div>
+      <div class="metric-sub" id="refund_intervenable_pct">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">无有效归因</div>
+      <div class="metric-value" style="color:#94a3b8" id="refund_no_attr">—</div>
+      <div class="metric-sub" id="refund_no_attr_pct">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">大额退款(≥1000元)</div>
+      <div class="metric-value" style="color:#7c3aed" id="refund_large_amt">—</div>
+      <div class="metric-sub" id="refund_large_cnt">—</div>
+    </div>
+  </div>
+
+  <!-- 渠道占比 + 退款原因饼图 -->
+  <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+    <div style="flex:1;min-width:300px;background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
+      <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📊 线上/门店退款占比</h4>
+      <div style="height:280px"><canvas id="chart_refund_channel"></canvas></div>
+    </div>
+    <div style="flex:1;min-width:300px;background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
+      <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📊 退款原因分布（按金额）</h4>
+      <div style="height:280px"><canvas id="chart_refund_reason_pie"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 退款原因明细表 -->
+  <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px">
+    <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📋 退款原因明细</h4>
+    <table id="refund_reason_table"><thead><tr>
+      <th>退款原因</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">金额占比</th><th class="num">大额单数</th><th class="num">可干预/无归因</th><th style="min-width:150px">占比</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <!-- 退款产品结构(服务类型) Top10 -->
+  <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px">
+    <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📦 退款产品结构 Top10（按金额）</h4>
+    <table id="refund_service_table"><thead><tr>
+      <th>服务类型/产品</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">占总退款</th><th style="min-width:150px">占比</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <!-- 线上销售退款 Top20 -->
+  <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px">
+    <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">👤 线上销售退款排名 Top20</h4>
+    <table id="refund_seller_table"><thead><tr>
+      <th>销售姓名</th><th>归属组织</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">占线上退款</th><th class="num">大额单数</th><th style="min-width:150px">占比</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <!-- 退款省份 Top10 + 省份×原因交叉图 -->
+  <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+    <div style="flex:1;min-width:350px;background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
+      <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">🗺️ 退款省份 Top10</h4>
+      <div style="max-height:400px;overflow-y:auto">
+        <table id="refund_province_table"><thead><tr>
+          <th>省份</th><th class="num">退款单数</th><th class="num">退款金额</th><th style="min-width:120px">占比</th>
         </tr></thead><tbody></tbody></table>
       </div>
     </div>
+    <div style="flex:1;min-width:450px;background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
+      <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📊 省份 × 退款原因热力图</h4>
+      <div style="height:400px"><canvas id="chart_province_reason"></canvas></div>
+    </div>
   </div>
+
+  <!-- 各组织退款对比 -->
   <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
-    <h4 style="margin:0 0 12px;font-size:14px;color:#1e293b">📊 各组织退款原因对比</h4>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <h4 style="margin:0;font-size:14px;color:#1e293b">📊 各组织退款原因对比</h4>
+      <select id="refund-org-sel" onchange="renderRefundOrgChart()" style="padding:4px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px">
+        <option value="__all__">全部组织</option>
+      </select>
+    </div>
     <div style="height:400px"><canvas id="chart_refund_org"></canvas></div>
   </div>
 </div>
@@ -4239,6 +4315,9 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
+var INTERVENABLE = {'时间/适配冲突':1,'效果不满意':1,'商家操作失误':1,'教材问题':1,'价格问题':1,'服务未交付/联系不上':1,'家人不支持':1};
+var NO_ATTR = {'未填写原因':1,'其他/未说明':1,'主动放弃/拍错':1};
+
 function populateRefundOrgDropdown() {
   var sel = document.getElementById('refund-org-sel');
   if (!sel || sel.options.length > 1) return;
@@ -4251,68 +4330,70 @@ function populateRefundOrgDropdown() {
     sel.appendChild(opt);
   });
 }
+
 function renderRefundReason() {
-  var data = window._M.refund_reasons; if (!data) return;
-  var sel = document.getElementById('refund-org-sel');
-  var org = sel ? sel.value : '__all__';
-  var rows = org === '__all__' ? data.overall : (data.by_org[org] || []);
-  var totalAmt = rows.reduce(function(s,r){return s+r.amount;}, 0);
-  var totalCnt = rows.reduce(function(s,r){return s+r.count;}, 0);
-  var label = document.getElementById('refund-summary-label');
-  if (label) label.textContent = '退款总金额 ' + fmtNum(totalAmt) + ' | 退款单数 ' + totalCnt;
-  drawRefundPie(rows);
-  renderRefundTable(rows, totalAmt);
-  if (org === '__all__') drawRefundOrgBar(data.by_org);
+  var D = window._M.refund_reasons;
+  if (!D || !D.meta) return;
+  var m = D.meta;
+
+  // 核心指标
+  document.getElementById('refund_total_amt').textContent = '¥' + (m.total_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_total_cnt').textContent = m.total_cnt + '单';
+  document.getElementById('refund_online_amt').textContent = '¥' + (m.online_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_online_pct').textContent = (m.online_amt/m.total_amt*100).toFixed(1) + '% · ' + m.online_cnt + '单';
+  document.getElementById('refund_store_amt').textContent = '¥' + (m.store_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_store_pct').textContent = (m.store_amt/m.total_amt*100).toFixed(1) + '% · ' + m.store_cnt + '单';
+  document.getElementById('refund_intervenable').textContent = '¥' + (m.intervenable_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_intervenable_pct').textContent = m.intervenable_rate + '%';
+  document.getElementById('refund_no_attr').textContent = '¥' + (m.no_attr_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_no_attr_pct').textContent = m.no_attr_rate + '%';
+  document.getElementById('refund_large_amt').textContent = '¥' + (m.large_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_large_cnt').textContent = m.large_cnt + '单';
+
+  // 渠道占比饼图
+  drawRefundChannel(m);
+  // 退款原因饼图
+  drawRefundReasonPie(D.overall);
+  // 退款原因明细表
+  renderRefundReasonTable(D.overall, m.total_amt);
+  // 服务类型表
+  renderRefundServiceTable(D.by_service, m.total_amt);
+  // 线上销售排名表
+  renderRefundSellerTable(D.online_seller_top20);
+  // 省份表
+  renderRefundProvinceTable(D.by_province, m.total_amt);
+  // 组织对比图
+  renderRefundOrgChart();
 }
-function navigateToRefund(orgName) {
-  switchTab('refund_reason');
-  var sel = document.getElementById('refund-org-sel');
-  if (sel) { sel.value = orgName; }
-  renderRefundReason();
-}
-var _refundPieChart = null;
-function drawRefundPie(rows) {
-  var canvas = document.getElementById('chart_refund_pie');
+
+var _refundChannelChart = null;
+function drawRefundChannel(m) {
+  var canvas = document.getElementById('chart_refund_channel');
   if (!canvas || typeof Chart === 'undefined') return;
-  var sorted = rows.slice().sort(function(a,b){return b.amount-a.amount;});
-  var labels = sorted.map(function(r){return r.category;});
-  var values = sorted.map(function(r){return r.amount;});
-  var colors = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6',
-                '#06b6d4','#ec4899','#f97316','#84cc16','#14b8a6',
-                '#a855f7','#64748b','#e11d48','#0ea5e9','#d946ef'];
-  if (_refundPieChart) { _refundPieChart.destroy(); }
+  if (_refundChannelChart) { _refundChannelChart.destroy(); }
   var ctx = canvas.getContext('2d');
-  _refundPieChart = new Chart(ctx, {
-    type: 'doughnut',
+  _refundChannelChart = new Chart(ctx, {
+    type: 'pie',
     data: {
-      labels: labels,
+      labels: ['线上', '门店'],
       datasets: [{
-        data: values,
-        backgroundColor: colors.slice(0, labels.length),
+        data: [m.online_amt, m.store_amt],
+        backgroundColor: ['#3b82f6', '#10b981'],
         borderColor: '#fff',
-        borderWidth: 2,
-        hoverBorderWidth: 3
+        borderWidth: 2
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          position: 'right',
-          labels: {
-            padding: 12,
-            font: { size: 11 },
-            usePointStyle: true,
-            pointStyleWidth: 8
-          }
-        },
+        legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 10 } },
         tooltip: {
           callbacks: {
             label: function(ctx) {
               var total = ctx.dataset.data.reduce(function(a,b){return a+b;}, 0);
-              var pct = total > 0 ? (ctx.raw / total * 100).toFixed(1) : '0.0';
-              return ctx.label + ': ' + fmtNum(ctx.raw) + ' (' + pct + '%)';
+              var pct = (ctx.raw / total * 100).toFixed(1);
+              return ctx.label + ': ¥' + fmtNum(ctx.raw) + ' (' + pct + '%)';
             }
           }
         }
@@ -4320,37 +4401,137 @@ function drawRefundPie(rows) {
     }
   });
 }
-function renderRefundTable(rows, totalAmt) {
-  var tbody = document.querySelector('#refund-detail-table tbody');
+
+var _refundReasonPieChart = null;
+function drawRefundReasonPie(rows) {
+  var canvas = document.getElementById('chart_refund_reason_pie');
+  if (!canvas || typeof Chart === 'undefined') return;
+  var sorted = rows.slice().sort(function(a,b){return b.amount-a.amount;}).slice(0,8);
+  var labels = sorted.map(function(r){return r.category;});
+  var values = sorted.map(function(r){return r.amount;});
+  var colors = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#f97316'];
+  if (_refundReasonPieChart) { _refundReasonPieChart.destroy(); }
+  var ctx = canvas.getContext('2d');
+  _refundReasonPieChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        borderColor: '#fff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 11 }, usePointStyle: true, padding: 8 } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              var total = ctx.dataset.data.reduce(function(a,b){return a+b;}, 0);
+              var pct = (ctx.raw / total * 100).toFixed(1);
+              return ctx.label + ': ¥' + fmtNum(ctx.raw) + ' (' + pct + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderRefundReasonTable(rows, totalAmt) {
+  var tbody = document.querySelector('#refund_reason_table tbody');
   if (!tbody) return;
   var sorted = rows.slice().sort(function(a,b){return b.amount-a.amount;});
   var html = '';
   sorted.forEach(function(r) {
-    var pct = totalAmt > 0 ? (r.amount / totalAmt * 100) : 0;
+    var pct = (r.amount / totalAmt * 100).toFixed(1);
+    var cat = INTERVENABLE[r.category] ? '可干预' : (NO_ATTR[r.category] ? '无归因' : '其他');
+    var catColor = INTERVENABLE[r.category] ? '#f59e0b' : (NO_ATTR[r.category] ? '#94a3b8' : '#64748b');
     var barColor = pct > 20 ? '#6366f1' : pct > 10 ? '#8b5cf6' : '#c4b5fd';
     html += '<tr>' +
       '<td>' + r.category + '</td>' +
       '<td class="num">' + r.count + '</td>' +
-      '<td class="num">' + fmtNum(r.amount) + '</td>' +
-      '<td class="num">' + pct.toFixed(1) + '%</td>' +
-      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:' + barColor + ';border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:45px;text-align:right">' + pct.toFixed(1) + '%</span></div></td>' +
+      '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
+      '<td class="num">' + pct + '%</td>' +
+      '<td class="num">' + (r.large_count || 0) + '</td>' +
+      '<td class="num"><span style="color:' + catColor + ';font-weight:600">' + cat + '</span></td>' +
+      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:' + barColor + ';border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:45px;text-align:right">' + pct + '%</span></div></td>' +
       '</tr>';
   });
   tbody.innerHTML = html;
 }
+
+function renderRefundServiceTable(rows, totalAmt) {
+  var tbody = document.querySelector('#refund_service_table tbody');
+  if (!tbody) return;
+  var html = '';
+  rows.forEach(function(r) {
+    var pct = (r.amount / totalAmt * 100).toFixed(1);
+    var barColor = '#8b5cf6';
+    html += '<tr>' +
+      '<td>' + r.service + '</td>' +
+      '<td class="num">' + r.count + '</td>' +
+      '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
+      '<td class="num">' + pct + '%</td>' +
+      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:' + barColor + ';border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px">' + pct + '%</span></div></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+function renderRefundSellerTable(rows) {
+  var tbody = document.querySelector('#refund_seller_table tbody');
+  if (!tbody) return;
+  var html = '';
+  rows.forEach(function(r) {
+    var barColor = '#3b82f6';
+    html += '<tr>' +
+      '<td>' + r.name + '</td>' +
+      '<td>' + r.org + '</td>' +
+      '<td class="num">' + r.count + '</td>' +
+      '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
+      '<td class="num">' + r.rate + '%</td>' +
+      '<td class="num">' + r.large_count + '</td>' +
+      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:' + Math.min(r.rate, 100) + '%;height:100%;background:' + barColor + ';border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px">' + r.rate + '%</span></div></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+function renderRefundProvinceTable(rows, totalAmt) {
+  var tbody = document.querySelector('#refund_province_table tbody');
+  if (!tbody) return;
+  var html = '';
+  rows.forEach(function(r) {
+    var pct = (r.amount / totalAmt * 100).toFixed(1);
+    var barColor = '#10b981';
+    html += '<tr>' +
+      '<td>' + r.province + '</td>' +
+      '<td class="num">' + r.count + '</td>' +
+      '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
+      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:' + barColor + ';border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px">' + pct + '%</span></div></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
 var _refundOrgChart = null;
-function drawRefundOrgBar(byOrg) {
+function renderRefundOrgChart() {
   var canvas = document.getElementById('chart_refund_org');
   if (!canvas || typeof Chart === 'undefined') return;
-  var orgs = Object.keys(byOrg).sort();
+  var D = window._M.refund_reasons;
+  var byOrg = D.by_org;
+  var orgs = Object.keys(byOrg).sort().slice(0, 10);
   var catSet = {};
   orgs.forEach(function(org) {
     (byOrg[org] || []).forEach(function(r) { catSet[r.category] = true; });
   });
   var categories = Object.keys(catSet);
-  var palette = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6',
-                 '#06b6d4','#ec4899','#f97316','#84cc16','#14b8a6',
-                 '#a855f7','#64748b','#e11d48','#0ea5e9','#d946ef'];
+  var palette = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#f97316'];
   var datasets = categories.map(function(cat, i) {
     return {
       label: cat,
@@ -4359,8 +4540,7 @@ function drawRefundOrgBar(byOrg) {
         return found ? found.amount : 0;
       }),
       backgroundColor: palette[i % palette.length],
-      borderColor: '#fff',
-      borderWidth: 0.5
+      borderWidth: 0
     };
   });
   if (_refundOrgChart) { _refundOrgChart.destroy(); }
@@ -4372,19 +4552,19 @@ function drawRefundOrgBar(byOrg) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10 }, usePointStyle: true, padding: 8 } },
-        tooltip: {
-          callbacks: {
-            label: function(ctx) { return ctx.dataset.label + ': ' + fmtNum(ctx.raw); }
-          }
-        }
+        legend: { position: 'bottom', labels: { font: { size: 10 }, usePointStyle: true, padding: 6 } },
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ¥' + fmtNum(ctx.raw); } } }
       },
       scales: {
-        x: { stacked: true, ticks: { font: { size: 10 }, maxRotation: 45 } },
-        y: { stacked: true, ticks: { callback: function(v) { return (v/10000).toFixed(0)+'W'; }, font: { size: 10 } } }
+        x: { stacked: true, ticks: { font: { size: 10 }, maxRotation: 30 } },
+        y: { stacked: true, ticks: { callback: function(v) { return '¥' + (v/10000).toFixed(0)+'W'; }, font: { size: 10 } } }
       }
     }
   });
 }
+
+function navigateToRefund(orgName) {
+  switchTab('refund_reason');
+}
 </script>
-<script>var _v="20260722170545";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260722170907";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
