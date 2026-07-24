@@ -1247,7 +1247,7 @@ function renderMonthlyGroup(month) {
 }
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260724142810"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260724144334"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -4478,7 +4478,7 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'商家操作失误':1,'家人不支持':1,'时间/适配冲突':1,'价格问题':1,'教材问题':1,'效果不满意':1,'服务未交付/联系不上':1};
+var INTERVENABLE = {'商家操作失误':1,'服务未交付/联系不上':1,'时间/适配冲突':1,'价格问题':1,'家人不支持':1,'教材问题':1,'效果不满意':1};
 var NO_ATTR = {'其他/未说明':1,'主动放弃/拍错':1,'未填写原因':1};
 
 function toggleIntervenableHelp(e) {
@@ -4878,9 +4878,10 @@ document.addEventListener('click', function(e) {
 });
 
 function filterRefundByCategory(cat) {
-  // 筛选退款原因明细表，只显示该归因类型的行
-  var tbody = document.querySelector('#refund_reason_table tbody');
-  if (!tbody) return;
+  var table = document.querySelector('#refund_reason_table');
+  if (!table) return;
+  var tbody = table.querySelector('tbody');
+  if (!tbody || !tbody.rows.length) return;
   var rows = tbody.querySelectorAll('tr');
   var filtering = tbody.getAttribute('data-filter') !== cat;
   rows.forEach(function(tr) {
@@ -4893,12 +4894,14 @@ function filterRefundByCategory(cat) {
     }
   });
   tbody.setAttribute('data-filter', filtering ? cat : '');
-  // 更新标题提示
-  var h4 = document.querySelector('#refund_reason_table').closest('.refund-panel').querySelector('.refund-panel-title');
-  if (h4) {
-    h4.innerHTML = filtering
-      ? '退款原因明细 <span style="font-size:11px;color:#b45309;font-weight:400">— 筛选: ' + cat + ' <a href="#" onclick="filterRefundByCategory(\''+cat+'\');return false" style="color:#dc2626">✕ 清除</a></span>'
-      : '退款原因明细';
+  var panel = table.closest('.refund-panel');
+  if (panel) {
+    var h4 = panel.querySelector('.refund-panel-title');
+    if (h4) {
+      h4.innerHTML = filtering
+        ? '退款原因明细 <span style="font-size:11px;color:#b45309;font-weight:400">— 筛选: ' + cat + ' <a href="#" onclick="filterRefundByCategory(''+cat+'');return false" style="color:#dc2626">✕ 清除</a></span>'
+        : '退款原因明细';
+    }
   }
 }
 function navigateToRefund(orgName) {
@@ -4912,4 +4915,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260724142810";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260724144334";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
