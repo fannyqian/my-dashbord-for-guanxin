@@ -230,7 +230,8 @@ recalcAll = refreshAll;
 document.addEventListener("blur", function(e){var td=e.target.closest('td.num[contenteditable="true"]');if(!td)return;var raw=td.textContent.trim().replace(/[,，万]/g,"");if(raw.indexOf("亿")>=0)raw=raw.replace("亿","")*1e8;var v=parseFloat(raw);if(!isNaN(v)){td.setAttribute("data-val",v);td.textContent=fmtNum(v)}td.contentEditable="false";setTimeout(refreshAll,100)},true);
 
 // ====== TOP10 弹窗排行榜 (含日期筛选) ======
-function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup) {
+function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup, limit) {
+  limit = limit || 10;
   var personDone = {};
   Object.keys(pd).forEach(function(name) {
     var info = pd[name];
@@ -264,7 +265,7 @@ function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup) {
   }
   var data = Object.values(personDone).filter(function(d){ return d.done > 0; });
   data.sort(function(a,b){ return b.done - a.done; });
-  return data.slice(0, 10);
+  return data.slice(0, limit);
 }
 
 function renderRankList(data, crowns, colors) {
@@ -287,7 +288,7 @@ function showTop10(tabId, fromDay, toDay) {
   fromDay = fromDay || 1; toDay = toDay || 12;
   var tab = document.getElementById('tab-'+tabId);
   if(!tab) return;
-  var title = tabId === 'online_person' ? '线上销售 TOP10' : '线下个案 TOP10';
+  var title = tabId === 'online_person' ? '线上销售 TOP10' : '线下个案 TOP50';
   var isOnline = tabId === 'online_person';
   var M = window._M;
   var crowns = ['🥇','🥈','🥉'];
@@ -310,14 +311,10 @@ function showTop10(tabId, fromDay, toDay) {
     '</div>';
 
   if(!isOnline) {
-    var top10G1 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, '一组');
-    var top10G2 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, '二组');
-    var top10G3 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, '三组');
+    var top50 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, null, 50);
     var top10Jq = buildRanking(M, M.person_daily_junqun || {}, fromDay, toDay, isOnline, true);
     html += '<div style="display:flex;gap:10px">'+
-      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#6366f1;margin:0 0 6px">📊 一组 <span style="font-size:11px;color:#94a3b8">普陀·徐汇·南京·广州</span></h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10G1, crowns, colors)+'</div></div>'+
-      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#8b5cf6;margin:0 0 6px">📊 二组 <span style="font-size:11px;color:#94a3b8">深圳·杭州·武汉</span></h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10G2, crowns, colors)+'</div></div>'+
-      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#ec4899;margin:0 0 6px">📊 三组 <span style="font-size:11px;color:#94a3b8">昆明·珠海·成都·福州</span></h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10G3, crowns, colors)+'</div></div>'+
+      '<div style="flex:3;min-width:0"><h3 style="font-size:13px;color:#6366f1;margin:0 0 6px">🏥 线下个案 TOP50 <span style="font-size:11px;color:#94a3b8">全部11家门店</span></h3><div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">'+renderRankList(top50, crowns, colors)+'</div></div>'+
       '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#64748b;margin:0 0 6px">🧬 菌群业绩排名</h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10Jq, crowns, colors)+'</div></div>'+
       '</div>';
   } else {
@@ -1247,7 +1244,7 @@ function renderMonthlyGroup(month) {
 }
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260724145212"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260724145615"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -4478,8 +4475,8 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'教材问题':1,'时间/适配冲突':1,'价格问题':1,'效果不满意':1,'服务未交付/联系不上':1,'商家操作失误':1,'家人不支持':1};
-var NO_ATTR = {'其他/未说明':1,'主动放弃/拍错':1,'未填写原因':1};
+var INTERVENABLE = {'商家操作失误':1,'服务未交付/联系不上':1,'家人不支持':1,'价格问题':1,'教材问题':1,'效果不满意':1,'时间/适配冲突':1};
+var NO_ATTR = {'主动放弃/拍错':1,'其他/未说明':1,'未填写原因':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -4931,4 +4928,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260724145212";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260724145615";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
