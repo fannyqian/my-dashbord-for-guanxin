@@ -1247,7 +1247,7 @@ function renderMonthlyGroup(month) {
 }
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260724104601"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260724141233"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -4302,7 +4302,7 @@ function renderMonthlyGroup(month) {
       <div class="metric-sub" id="refund_store_pct">—</div>
     </div>
     <div class="metric-card" style="--accent:#f59e0b">
-      <div class="metric-label">🎯 可干预退款</div>
+      <div class="metric-label">🎯 可干预退款 <span style="cursor:help;font-size:11px;background:#fef3c7;color:#b45309;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-weight:700" onclick="toggleIntervenableHelp(event)" title="点击查看定义">?</span></div>
       <div class="metric-value" style="color:#f59e0b" id="refund_intervenable">—</div>
       <div class="metric-sub" id="refund_intervenable_pct">—</div>
     </div>
@@ -4336,6 +4336,64 @@ function renderMonthlyGroup(month) {
     <table id="refund_reason_table"><thead><tr>
       <th>退款原因</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">金额占比</th><th class="num">大额单数</th><th>归因类型</th><th style="min-width:150px">占比</th>
     </tr></thead><tbody></tbody></table>
+  </div>
+
+    <!-- 可干预原因 & 干预建议 -->
+  <div class="refund-panel" id="intervenable-help-panel" style="display:none;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="refund-panel-title" style="margin:0">🎯 可干预退款 — 定义与干预建议</div>
+      <button onclick="document.getElementById('intervenable-help-panel').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;color:#b45309;padding:0 4px">&times;</button>
+    </div>
+    <p style="font-size:13px;color:#78350f;margin:0 0 12px;line-height:1.7">
+      <b>可干预退款</b> = 通过销售/班主任跟进沟通<b>有可能挽回</b>的退款。以下7类原因被标记为「可干预」：
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;font-size:12px">
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">家人不支持</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：邀请家人参与评估/试听，用专业背书打消顾虑；短期课程先锁定</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">时间/适配冲突</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：灵活调整时段/频率；降档适配更短周期方案；转线上降低通勤成本</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">效果不满意</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：解释疗程规律（起效需周期），展示同类案例；邀医生复盘调整方案</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">服务未交付/联系不上</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：多渠道触达（微信+电话+短信），48h内至少3次；确认服务是否已排期</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">商家操作失误</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：第一时间道歉+补救（赠课/优惠券），修复信任；内部复盘流程漏洞</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">价格问题</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：提供分期/折扣/降档方案，强调性价比和长期价值；可申请特殊优惠</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">教材问题</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：确认教材具体问题（损坏/版本/内容），快速换发或退款换方案续报</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#92400e;margin:12px 0 0;line-height:1.6">
+      ⚠️ 以上退款原因合计 <b id="intervenable_total_amt">—</b>，占退款总额的 <b id="intervenable_total_pct">—</b>。点击下方表格中「可干预」标签可筛选查看对应明细。
+    </p>
   </div>
 
   <!-- 退款产品结构(服务类型) Top10 -->
@@ -4420,9 +4478,14 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'商家操作失误':1,'价格问题':1,'效果不满意':1,'服务未交付/联系不上':1,'时间/适配冲突':1,'教材问题':1,'家人不支持':1};
-var NO_ATTR = {'其他/未说明':1,'主动放弃/拍错':1,'未填写原因':1};
+var INTERVENABLE = {'家人不支持':1,'教材问题':1,'商家操作失误':1,'价格问题':1,'服务未交付/联系不上':1,'时间/适配冲突':1,'效果不满意':1};
+var NO_ATTR = {'主动放弃/拍错':1,'其他/未说明':1,'未填写原因':1};
 
+function toggleIntervenableHelp(e) {
+  e.stopPropagation();
+  var panel = document.getElementById('intervenable-help-panel');
+  if (panel) { panel.style.display = panel.style.display === 'none' ? 'block' : 'none'; }
+}
 function populateRefundDropdowns() {
   var D = window._M.refund_reasons;
   if (!D) return;
@@ -4454,6 +4517,8 @@ function renderRefundReason() {
   document.getElementById('refund_store_pct').textContent = (m.store_amt/m.total_amt*100).toFixed(1) + '% · ' + m.store_cnt + '单';
   document.getElementById('refund_intervenable').textContent = '¥' + (m.intervenable_amt/10000).toFixed(1) + '万';
   document.getElementById('refund_intervenable_pct').textContent = m.intervenable_rate + '%';
+  var ipct = document.getElementById('intervenable_total_pct'); if(ipct) ipct.textContent = m.intervenable_rate + '%';
+  var iamt = document.getElementById('intervenable_total_amt'); if(iamt) iamt.textContent = '¥' + (m.intervenable_amt/10000).toFixed(1) + '万';
   document.getElementById('refund_no_attr').textContent = '¥' + (m.no_attr_amt/10000).toFixed(1) + '万';
   document.getElementById('refund_no_attr_pct').textContent = m.no_attr_rate + '%';
   document.getElementById('refund_large_amt').textContent = '¥' + (m.large_amt/10000).toFixed(1) + '万';
@@ -4571,7 +4636,7 @@ function renderRefundReasonTable(rows, totalAmt) {
       '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
       '<td class="num">' + pct + '%</td>' +
       '<td class="num">' + (r.large_count || 0) + '</td>' +
-      '<td><span style="background:' + catBg + ';color:' + catColor + ';padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">' + cat + '</span></td>' +
+      '<td><span style="background:' + catBg + ';color:' + catColor + ';padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer" onclick="filterRefundByCategory(\'' + r.category + '\')" title="点击筛选该原因明细">' + cat + '</span></td>' +
       '<td><div style="display:flex;align-items:center"><div style="flex:1;height:16px;background:#f1f5f9;border-radius:8px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:linear-gradient(90deg,' + barColor + ',' + barColor + 'cc);border-radius:8px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:45px;text-align:right">' + pct + '%</span></div></td>' +
       '</tr>';
   });
@@ -4804,6 +4869,30 @@ document.addEventListener('click', function(e) {
   }
 });
 
+function filterRefundByCategory(cat) {
+  // 筛选退款原因明细表，只显示该归因类型的行
+  var tbody = document.querySelector('#refund_reason_table tbody');
+  if (!tbody) return;
+  var rows = tbody.querySelectorAll('tr');
+  var filtering = tbody.getAttribute('data-filter') !== cat;
+  rows.forEach(function(tr) {
+    var badge = tr.querySelector('td span');
+    if (!badge) return;
+    if (filtering && badge.textContent.trim() !== cat) {
+      tr.style.display = 'none';
+    } else {
+      tr.style.display = '';
+    }
+  });
+  tbody.setAttribute('data-filter', filtering ? cat : '');
+  // 更新标题提示
+  var h4 = document.querySelector('#refund_reason_table').closest('.refund-panel').querySelector('.refund-panel-title');
+  if (h4) {
+    h4.innerHTML = filtering
+      ? '退款原因明细 <span style="font-size:11px;color:#b45309;font-weight:400">— 筛选: ' + cat + ' <a href="#" onclick="filterRefundByCategory(\''+cat+'\');return false" style="color:#dc2626">✕ 清除</a></span>'
+      : '退款原因明细';
+  }
+}
 function navigateToRefund(orgName) {
   switchTab('refund_reason');
 }
@@ -4815,4 +4904,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260724104601";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260724141233";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
