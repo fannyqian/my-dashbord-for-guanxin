@@ -1247,7 +1247,7 @@ function renderMonthlyGroup(month) {
 }
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260724144334"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260724145212"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -4478,7 +4478,7 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'商家操作失误':1,'服务未交付/联系不上':1,'时间/适配冲突':1,'价格问题':1,'家人不支持':1,'教材问题':1,'效果不满意':1};
+var INTERVENABLE = {'教材问题':1,'时间/适配冲突':1,'价格问题':1,'效果不满意':1,'服务未交付/联系不上':1,'商家操作失误':1,'家人不支持':1};
 var NO_ATTR = {'其他/未说明':1,'主动放弃/拍错':1,'未填写原因':1};
 
 function toggleIntervenableHelp(e) {
@@ -4644,7 +4644,7 @@ function renderRefundReasonTable(rows, totalAmt) {
       '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
       '<td class="num">' + pct + '%</td>' +
       '<td class="num">' + (r.large_count || 0) + '</td>' +
-      '<td><span style="background:' + catBg + ';color:' + catColor + ';padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer" onclick="filterRefundByCategory(\'' + r.category + '\')" title="点击筛选该原因明细">' + cat + '</span></td>' +
+      '<td><span style="background:' + catBg + ';color:' + catColor + ';padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer" data-cat="' + cat + '" title="点击筛选该原因明细">' + cat + '</span></td>' +
       '<td><div style="display:flex;align-items:center"><div style="flex:1;height:16px;background:#f1f5f9;border-radius:8px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:linear-gradient(90deg,' + barColor + ',' + barColor + 'cc);border-radius:8px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:45px;text-align:right">' + pct + '%</span></div></td>' +
       '</tr>';
   });
@@ -4885,9 +4885,9 @@ function filterRefundByCategory(cat) {
   var rows = tbody.querySelectorAll('tr');
   var filtering = tbody.getAttribute('data-filter') !== cat;
   rows.forEach(function(tr) {
-    var badge = tr.querySelector('td span');
+    var badge = tr.querySelector('td span[data-cat]');
     if (!badge) return;
-    if (filtering && badge.textContent.trim() !== cat) {
+    if (filtering && badge.getAttribute('data-cat') !== cat) {
       tr.style.display = 'none';
     } else {
       tr.style.display = '';
@@ -4899,11 +4899,27 @@ function filterRefundByCategory(cat) {
     var h4 = panel.querySelector('.refund-panel-title');
     if (h4) {
       h4.innerHTML = filtering
-        ? '退款原因明细 <span style="font-size:11px;color:#b45309;font-weight:400">— 筛选: ' + cat + ' <a href="#" onclick="filterRefundByCategory(''+cat+'');return false" style="color:#dc2626">✕ 清除</a></span>'
+        ? '退款原因明细 <span style="font-size:11px;color:#b45309;font-weight:400">— 筛选: ' + cat + ' <a href="#" class="clear-refund-filter" data-cat="' + cat + '" style="color:#dc2626">✕ 清除</a></span>'
         : '退款原因明细';
     }
   }
 }
+
+// 事件委托：处理退款原因标签点击（无需inline onclick）
+document.addEventListener('click', function(e) {
+  var target = e.target;
+  // 点击归因类型标签 → 筛选
+  if (target.hasAttribute('data-cat') && target.closest('#refund_reason_table')) {
+    filterRefundByCategory(target.getAttribute('data-cat'));
+    return;
+  }
+  // 点击清除筛选链接
+  if (target.classList.contains('clear-refund-filter')) {
+    e.preventDefault();
+    filterRefundByCategory(target.getAttribute('data-cat'));
+    return;
+  }
+});
 function navigateToRefund(orgName) {
   switchTab('refund_reason');
 }
@@ -4915,4 +4931,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260724144334";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260724145212";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
