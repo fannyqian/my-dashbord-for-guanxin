@@ -1244,7 +1244,7 @@ function renderMonthlyGroup(month) {
 }
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260725224126"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260725224645"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -1941,14 +1941,14 @@ function renderMonthlyGroup(month) {
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('武汉')" title="点击查看退款原因分析">武汉</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="武汉" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">85.0万</td>
-  <td class="num"><b>91.0万</b><br><span style="font-size:10px;color:#6366f1;font-weight:700">TOC 46.0万  +  <span style="color:#8b5cf6">EAP 45.0万</span></span></td>
+  <td class="num"><b>91.0万</b><br><span style="font-size:10px;font-weight:700"><span style="color:#6366f1">TOC 46.0万</span>  +  <span style="color:#8b5cf6">EAP 45.0万</span></span></td>
   <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
-  <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
-    <div style="width:54.14156235294117%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
-    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b;text-shadow:0 0 4px rgba(255,255,255,0.8)">54.1%</div>
+  <div style="flex:1;height:20px;background:#f0fdf4;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
+    <div style="width:100%;height:100%;background:#22c55e;border-radius:10px;transition:width 0.3s"></div>
+    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b;text-shadow:0 0 4px rgba(255,255,255,0.8)">107.1%</div>
   </div>
-  <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
-</div></td>
+  
+</div><div style="font-size:10px;margin-top:2px;font-weight:700"><span style="color:#6366f1">TOC 54.1%</span>  +  <span style="color:#8b5cf6">EAP 52.9%</span></div></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↑156.0%</span></td>
   <td class="num">17.0万</td>
   <td class="num"><span data-refund-key="group:武汉" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:武汉')" title="点击查看退款原因">18.6%</span></td>
@@ -4475,8 +4475,8 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'效果不满意':1,'服务未交付/联系不上':1,'价格问题':1,'教材问题':1,'家人不支持':1,'时间/适配冲突':1,'商家操作失误':1};
-var NO_ATTR = {'主动放弃/拍错':1,'其他/未说明':1,'未填写原因':1};
+var INTERVENABLE = {'价格问题':1,'效果不满意':1,'时间/适配冲突':1,'服务未交付/联系不上':1,'家人不支持':1,'教材问题':1,'商家操作失误':1};
+var NO_ATTR = {'其他/未说明':1,'未填写原因':1,'主动放弃/拍错':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -4928,4 +4928,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260725224126";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260725224645";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
