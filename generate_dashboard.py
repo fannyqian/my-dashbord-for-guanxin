@@ -96,6 +96,18 @@ SELLER_ORG_OVERRIDE = {'余佼': '上海徐汇店'}
 for _nm, _org in SELLER_ORG_OVERRIDE.items():
     orders.loc[orders['seller_name'] == _nm, '组织'] = _org
 
+# === TOB/EAP 回款标记 ===
+# 特定日期+销售的订单标记为 TOB（企业项目回款），不计入 TOC 目标完成率
+TOB_RULES = [
+    {"seller": "朱锋剑", "date": "2026-07-23", "store": "武汉", "note": "黄陂残联EAP回款"},
+]
+orders['is_tob'] = False
+orders['tob_store'] = ''
+for _rule in TOB_RULES:
+    _tob_mask = (orders['seller_name'] == _rule['seller']) & (orders['pay_at'].astype(str).str.startswith(_rule['date']))
+    orders.loc[_tob_mask, 'is_tob'] = True
+    orders.loc[_tob_mask, 'tob_store'] = _rule['store']
+
 # ==================== 映射表 ====================
 # 参考7.9 sheet角色定义: 销售/班主任(含观心学院)/门店
 SALES_ORGS = ['课程销售1组','课程销售2组','课程销售3组','课程销售4组','课程销售5组','课程销售6组']
@@ -215,7 +227,7 @@ for _, row in target_online_person.iterrows():
     grp = str(row['分组']).strip()
     if grp in ('班主任2组', '班主任3组'):
         grp = '班主任'
-    online_person_target[(grp, row['销售'])] = float(row['目标'])
+    online_person_target[(grp, row['销售'])] = float(row['目标/万']) * 10000
 
 # 线下CM目标
 cm_list = []
@@ -357,10 +369,12 @@ if kbj_files:
     # 检测是否为原始交易数据（列数>10 = 原始明细，<=10 = 预汇总）
     if len(kbj_df.columns) > 10:
         # 原始交易数据：按所在诊所 + 客户经理分别汇总实际收入
-        kbj_time_col = kbj_df.columns[0]    # 收费时间
-        kbj_store_col = kbj_df.columns[47]  # 所在诊所
-        kbj_cm_col = kbj_df.columns[11]     # 客户经理
-        kbj_amt_col = kbj_df.columns[33]    # 实际收入
+        # 按列名查找（兼容列位变化），位置索引用作兜底
+        _kbj_cols = [str(c).strip() for c in kbj_df.columns]
+        kbj_time_col = kbj_df.columns[0]  # 收费时间，始终在第1列
+        kbj_store_col = next((c for c in _kbj_cols if '所在诊所' in c), kbj_df.columns[62] if len(kbj_df.columns) > 62 else kbj_df.columns[47])
+        kbj_cm_col = next((c for c in _kbj_cols if c == '客户经理'), next((c for c in _kbj_cols if '客户经理' in c), kbj_df.columns[14] if len(kbj_df.columns) > 14 else kbj_df.columns[11]))
+        kbj_amt_col = next((c for c in _kbj_cols if c == '实际收入'), next((c for c in _kbj_cols if '实际收入' in c), kbj_df.columns[25] if len(kbj_df.columns) > 25 else kbj_df.columns[33]))
         for _, row in kbj_df.iterrows():
             raw_store = str(row[kbj_store_col]).strip()
             # 只保留南区5家门店（广州/武汉/深圳/南京/杭州）
@@ -519,6 +533,16 @@ for store, extra in kangbojia_store_extra.items():
         gm['net'] = gm['done'] - gm['refund']
         gm['net_chg'] = safe_div(gm['net'] - gm['prev_net'], gm['prev_net'])
 
+# 计算各门店TOB金额（企业项目回款，不计入TOC目标完成率）
+tob_by_store = {}
+for _rule in TOB_RULES:
+    _tob_mask = (orders['seller_name'] == _rule['seller']) & (orders['pay_at'].astype(str).str.startswith(_rule['date']))
+    _tob_amt = orders.loc[_tob_mask, 'pay_amount'].sum()
+    tob_by_store[_rule['store']] = tob_by_store.get(_rule['store'], 0) + _tob_amt
+for _store, _tob in tob_by_store.items():
+    if _store in group_metrics:
+        group_metrics[_store]['tob_amount'] = _tob
+
 # 拆分线上组 / 线下门店
 ONLINE_GROUPS = ['课程1组','课程2组','课程3组','课程4组','课程5组','课程6组','班主任']
 OFFLINE_GROUPS = ['普陀','昆明','成都','广州','深圳','珠海','福州','杭州','南京','武汉','徐汇']
@@ -530,7 +554,6 @@ OFFLINE_ORDER = sorted([g for g in OFFLINE_GROUPS if g in group_metrics], key=la
 # ==================== Level 3a: 线上个人 ====================
 # ==================== 电话数据加载 (按销售姓名汇总通话人数) ====================
 phone_calls = {}  # name -> 通话人数
-PHONE_NAME_FIX = {'李钰坤': '李玉坤', '李家慧': '李家惠'}  # 错别字修正
 try:
     phone_files = [f for f in glob.glob(os.path.join(data_dir, '电话', '*.xlsx'))
                    if not os.path.basename(f).startswith('~$')]
@@ -538,7 +561,10 @@ try:
         phone_file = max(phone_files, key=os.path.getmtime)
         phone_df = pd.read_excel(phone_file)
         name_col = next((c for c in phone_df.columns if '姓名' in c or '销售' in c), phone_df.columns[0])
-        call_col = next((c for c in phone_df.columns if '通话人数' in c or '通话' in c), None)
+        call_col = next((c for c in phone_df.columns if '通话人数' in c or '通话' in c or '次数' in c), None)
+        if not call_col:
+            # 兜底：最后一列作为通话次数列（兼容列名缺失的格式）
+            call_col = phone_df.columns[-1]
         if call_col:
             # 去重：防止同名同次数重复行导致翻倍
             dedup_cols = [name_col, call_col]
@@ -552,8 +578,6 @@ try:
             for _, prow in phone_df.iterrows():
                 nm = str(prow[name_col]).strip()
                 if not nm or nm == 'nan': continue
-                # 错别字修正
-                nm = PHONE_NAME_FIX.get(nm, nm)
                 cv = prow[call_col]
                 cv = int(cv) if pd.notna(cv) else 0
                 phone_calls[nm] = phone_calls.get(nm, 0) + cv
@@ -647,6 +671,264 @@ for _, r in person_cm_df.iterrows():
 def avg_calls(total, cnt):
     return f'{total/cnt:.1f}' if cnt > 0 else '—'
 
+# ==================== 退款原因分类 ====================
+# 退款原因规则（同步 退款分析/config.py REASON_RULES，顺序匹配，命中即归类）
+REFUND_REASON_RULES = [
+    ("家人不支持",        ["家人不支持", "家人不配合", "家人未达成"]),
+    ("时间/适配冲突",      ["行程", "冲突", "难度不适合", "不适合", "时间"]),
+    ("协商一致",          ["协商", "商家代用户发起售后"]),
+    ("商家操作失误",       ["商家误订", "误订", "未按约定时间发货"]),
+    ("服务未交付/联系不上", ["未收到", "没人联系", "预约不上", "未联系", "联系不上", "未交付"]),
+    ("效果不满意",         ["效果不满意", "未达预期", "效果原因", "不满意"]),
+    ("价格问题",          ["价格", "买贵", "降价"]),
+    ("咨询结案/好转",      ["好转", "恢复", "结案", "动力不足", "来访者"]),
+    ("教材问题",          ["教材", "实体教材"]),
+    ("主动放弃/拍错",      ["不想要", "不需要了", "不喜欢", "买错", "多拍", "错拍", "拍错"]),
+    ("其他/未说明",        ["其他", "退款成功"]),
+]
+# 空原因 / 纯数字 → 未填写原因
+EMPTY_REASON_LABEL = "未填写原因"
+FALLBACK_REASON_LABEL = "其他/未说明"
+
+# 可干预原因（用于看板标记）
+INTERVENABLE_REASONS = {
+    '家人不支持', '时间/适配冲突', '商家操作失误',
+    '服务未交付/联系不上', '效果不满意', '价格问题', '教材问题',
+}
+NO_ATTRIBUTION_REASONS = {'未填写原因', '其他/未说明', '主动放弃/拍错'}
+
+def categorize_refund_message(msg):
+    """按 REFUND_REASON_RULES 顺序匹配退款原因关键词"""
+    if pd.isna(msg) or str(msg).strip() == '':
+        return EMPTY_REASON_LABEL
+    msg = str(msg).strip()
+    try:
+        float(msg)
+        return EMPTY_REASON_LABEL
+    except ValueError:
+        pass
+    for label, keywords in REFUND_REASON_RULES:
+        for kw in keywords:
+            if kw in msg:
+                return label
+    return FALLBACK_REASON_LABEL
+
+# 筛选7月退款订单并分类
+july_refunds = orders[(orders['back_dt'] >= JULY_START) & (orders['back_dt'] < JULY_END)].copy()
+july_refunds['refund_category'] = july_refunds['message'].apply(categorize_refund_message)
+
+# 判定线上/门店
+july_refunds['channel'] = july_refunds.apply(lambda r: '门店' if r['is_online'] == 'CM' or '门店' in str(r.get('source_title','')) else '线上', axis=1)
+# 大额标记
+july_refunds['is_large'] = july_refunds['refund_total'] >= 1000
+# 省份：空值归为「未属地」
+july_refunds['province_fill'] = july_refunds['province'].fillna('').replace('', '未属地')
+july_refunds.loc[july_refunds['province_fill'].str.strip()=='', 'province_fill'] = '未属地'
+
+# === 核心指标 ===
+total_refund_amt = float(july_refunds['refund_total'].sum())
+total_refund_cnt = len(july_refunds)
+online_refund = july_refunds[july_refunds['channel']=='线上']
+store_refund = july_refunds[july_refunds['channel']=='门店']
+online_amt = float(online_refund['refund_total'].sum())
+store_amt = float(store_refund['refund_total'].sum())
+large_refunds = july_refunds[july_refunds['is_large']]
+large_cnt = len(large_refunds)
+large_amt = float(large_refunds['refund_total'].sum())
+
+# 可干预/无归因
+intervenable_amt = float(july_refunds[july_refunds['refund_category'].isin(INTERVENABLE_REASONS)]['refund_total'].sum())
+no_attr_amt = float(july_refunds[july_refunds['refund_category'].isin(NO_ATTRIBUTION_REASONS)]['refund_total'].sum())
+
+# 整体分布（按金额降序）
+overall_refund = july_refunds.groupby('refund_category').agg(
+    count=('order_id', 'count'),
+    amount=('refund_total', 'sum'),
+    large_count=('is_large', 'sum')
+).reset_index().sort_values('amount', ascending=False)
+
+# 按target_group分组
+by_org_raw = july_refunds.groupby(['target_group', 'refund_category']).agg(
+    count=('order_id', 'count'),
+    amount=('refund_total', 'sum')
+).reset_index()
+
+# 按服务类型
+by_service_refund = july_refunds.groupby('service_type_name').agg(
+    count=('order_id', 'count'),
+    amount=('refund_total', 'sum')
+).reset_index().sort_values('amount', ascending=False).head(10)
+
+# 按省份（全量，含未属地）
+by_province_refund = july_refunds.groupby('province_fill').agg(
+    count=('order_id', 'count'),
+    amount=('refund_total', 'sum')
+).reset_index().sort_values('amount', ascending=False)
+
+# ---- 辅助：某销售的主要退款原因 + 退款产品Top3 ----
+def _seller_reason_top(sub):
+    """返回该销售的主要退款原因（按金额）"""
+    rc = sub.groupby('refund_category')['refund_total'].sum().sort_values(ascending=False)
+    return rc.index[0] if len(rc) else '—'
+
+def _seller_products_top3(sub):
+    """返回该销售退款金额最大的前3个产品"""
+    ps = sub.groupby('service_type_name')['refund_total'].sum().sort_values(ascending=False).head(3)
+    return [{'name': str(k), 'amount': float(round(v, 2))} for k, v in ps.items()]
+
+def _build_seller_rank(df_scope, scope_amt, topn=50):
+    """构建销售退款排名，含归属组织/原因/产品Top3"""
+    result = []
+    grouped = df_scope.groupby(['seller_name', 'target_group'])
+    agg = grouped.agg(count=('order_id','count'), amount=('refund_total','sum'),
+                      large_count=('is_large','sum')).reset_index().sort_values('amount', ascending=False).head(topn)
+    for _, r in agg.iterrows():
+        sub = df_scope[(df_scope['seller_name']==r['seller_name']) & (df_scope['target_group']==r['target_group'])]
+        result.append({
+            'name': str(r['seller_name']),
+            'org': str(r['target_group']) if pd.notna(r['target_group']) else '未映射',
+            'count': int(r['count']),
+            'amount': float(round(r['amount'], 2)),
+            'large_count': int(r['large_count']),
+            'rate': round(r['amount']/scope_amt*100, 1) if scope_amt > 0 else 0,
+            'reason': _seller_reason_top(sub),
+            'products': _seller_products_top3(sub),
+        })
+    return result
+
+# 线上销售退款排名 Top50
+online_seller_rank = _build_seller_rank(online_refund, online_amt, 50)
+# 线下门店CM退款排名 Top50
+store_cm_rank = _build_seller_rank(store_refund, store_amt, 50)
+
+# ---- 省份 × 退款原因 热力图数据 ----
+# 取金额Top12省份 × Top8原因
+top_provinces = list(by_province_refund.head(12)['province_fill'].values)
+top_reasons_heat = list(overall_refund.head(8)['refund_category'].values)
+heat_pivot = july_refunds[july_refunds['province_fill'].isin(top_provinces) &
+                          july_refunds['refund_category'].isin(top_reasons_heat)].groupby(
+    ['province_fill', 'refund_category'])['refund_total'].sum().reset_index()
+heat_data = []
+for _, r in heat_pivot.iterrows():
+    pi = top_provinces.index(r['province_fill'])
+    ri = top_reasons_heat.index(r['refund_category'])
+    heat_data.append([ri, pi, float(round(r['refund_total'], 2))])
+
+# 构建JS友好结构
+_refund_org_set = set(ONLINE_ORDER + OFFLINE_ORDER + ['班主任'])
+# 各组织退款原因：按组织总退款金额降序排列
+_org_total = july_refunds[july_refunds['target_group'].isin(_refund_org_set)].groupby('target_group')['refund_total'].sum().sort_values(ascending=False)
+_org_sorted = list(_org_total.index)
+
+refund_reason_data = {
+    'meta': {
+        'total_amt': round(total_refund_amt, 2),
+        'total_cnt': total_refund_cnt,
+        'online_amt': round(online_amt, 2),
+        'online_cnt': len(online_refund),
+        'store_amt': round(store_amt, 2),
+        'store_cnt': len(store_refund),
+        'large_cnt': large_cnt,
+        'large_amt': round(large_amt, 2),
+        'intervenable_amt': round(intervenable_amt, 2),
+        'intervenable_rate': round(intervenable_amt/total_refund_amt*100, 1) if total_refund_amt > 0 else 0,
+        'no_attr_amt': round(no_attr_amt, 2),
+        'no_attr_rate': round(no_attr_amt/total_refund_amt*100, 1) if total_refund_amt > 0 else 0,
+    },
+    'overall': [{'category': r['refund_category'], 'count': int(r['count']), 'amount': float(round(r['amount'], 2)), 'large_count': int(r['large_count'])}
+                for _, r in overall_refund.iterrows()],
+    'by_org': {},
+    'org_list': _org_sorted,
+    'by_service': [{'service': str(r['service_type_name']), 'count': int(r['count']), 'amount': float(round(r['amount'], 2))}
+                   for _, r in by_service_refund.iterrows()],
+    'by_province': [{'province': str(r['province_fill']), 'count': int(r['count']), 'amount': float(round(r['amount'], 2))}
+                    for _, r in by_province_refund.head(15).iterrows()],
+    'online_seller_rank': online_seller_rank,
+    'store_cm_rank': store_cm_rank,
+    'online_org_list': sorted(set(x['org'] for x in online_seller_rank)),
+    'store_org_list': sorted(set(x['org'] for x in store_cm_rank)),
+    'heatmap': {
+        'provinces': top_provinces,
+        'reasons': top_reasons_heat,
+        'data': heat_data,
+    },
+}
+for org in _org_sorted:
+    org_data = by_org_raw[by_org_raw['target_group'] == org].sort_values('amount', ascending=False)
+    refund_reason_data['by_org'][org] = [
+        {'category': r['refund_category'], 'count': int(r['count']), 'amount': float(round(r['amount'], 2))}
+        for _, r in org_data.iterrows()
+    ]
+
+# ==== 退费率悬浮卡片数据 ====
+# 为每个分组/个人准备退款原因明细，供前端 hover/click 弹出
+_ref_popup = {}  # key: "group:班主任" or "person:李钰坤" → {reasons, top_refunders, total, count}
+
+def _build_popup_entry(sub_df, total_ref_amt):
+    """为一个子集构建popup数据"""
+    rc = sub_df.groupby('refund_category').agg(
+        count=('order_id','count'),
+        amount=('refund_total','sum'),
+    ).sort_values('amount', ascending=False)
+    reasons = [{'category': c, 'count': int(r['count']), 'amount': float(round(r['amount'], 2)),
+                'pct': round(r['amount']/total_ref_amt*100, 1) if total_ref_amt > 0 else 0}
+               for c, r in rc.iterrows()]
+    return {'reasons': reasons, 'total': float(round(total_ref_amt, 2)), 'count': int(len(sub_df))}
+
+# ==== 角色级 popup ====
+SALES_ORDER = ['课程1组','课程2组','课程3组','课程4组','课程5组','课程6组']
+ADVISOR_ORDER_L = ['班主任']
+STORE_ORDER_L = ['普陀','徐汇','昆明','南京','广州','成都','杭州','武汉','深圳','珠海','福州']
+for role_name, role_groups in [('销售', SALES_ORDER), ('班主任', ADVISOR_ORDER_L), ('门店', STORE_ORDER_L)]:
+    role_refunds = july_refunds[july_refunds['target_group'].isin(role_groups)]
+    entry = _build_popup_entry(role_refunds, role_refunds['refund_total'].sum())
+    top_sellers = role_refunds.groupby('seller_name').agg(
+        count=('order_id','count'),
+        amount=('refund_total','sum'),
+        reason=('refund_category', lambda x: x.value_counts().index[0])
+    ).sort_values('amount', ascending=False).head(5)
+    entry['top_sellers'] = [{'name': str(n), 'count': int(r['count']), 'amount': float(round(r['amount'], 2)),
+                              'reason': str(r['reason'])}
+                             for n, r in top_sellers.iterrows()]
+    _ref_popup[f'group:{role_name}'] = entry  # 角色级也用group:前缀（与refund_td一致）
+
+# 合计级 popup
+sum_entry = _build_popup_entry(july_refunds, july_refunds['refund_total'].sum())
+sum_top = july_refunds.groupby('seller_name').agg(
+    count=('order_id','count'), amount=('refund_total','sum'),
+    reason=('refund_category', lambda x: x.value_counts().index[0])
+).sort_values('amount', ascending=False).head(5)
+sum_entry['top_sellers'] = [{'name':str(n),'count':int(r['count']),'amount':float(round(r['amount'],2)),
+                              'reason':str(r['reason'])} for n,r in sum_top.iterrows()]
+_ref_popup['total'] = sum_entry
+
+# 分组级
+for g in ONLINE_ORDER + OFFLINE_ORDER + ['班主任']:
+    g_orders = orders[orders['target_group'] == g]
+    g_refunds = july_refunds[july_refunds['target_group'] == g]
+    entry = _build_popup_entry(g_refunds, g_refunds['refund_total'].sum())
+    # 该组内退款Top5人
+    top_sellers = g_refunds.groupby('seller_name').agg(
+        count=('order_id','count'),
+        amount=('refund_total','sum'),
+        reason=('refund_category', lambda x: x.value_counts().index[0])
+    ).sort_values('amount', ascending=False).head(5)
+    entry['top_sellers'] = [{'name': str(n), 'count': int(r['count']), 'amount': float(round(r['amount'], 2)),
+                              'reason': str(r['reason'])}
+                             for n, r in top_sellers.iterrows()]
+    _ref_popup[f'group:{g}'] = entry
+
+# 个人级（线上+线下）
+_person_refunds = july_refunds[july_refunds['seller_name'].notna() & (july_refunds['seller_name'] != 'nan')]
+for name, sub in _person_refunds.groupby('seller_name'):
+    entry = _build_popup_entry(sub, sub['refund_total'].sum())
+    # 该人退款产品Top5
+    prods = sub.groupby('service_type_name')['refund_total'].sum().sort_values(ascending=False).head(5)
+    entry['products'] = [{'name': str(k), 'amount': float(round(v, 2))} for k, v in prods.items()]
+    _ref_popup[f'person:{name}'] = entry
+
+refund_reason_data['popup'] = _ref_popup
+
 # ==================== HTML 渲染 ====================
 def fmt(n):
     if abs(n) >= 1e8: return f'{n/1e8:.1f}亿'
@@ -702,21 +984,32 @@ def trend_label(val):
     else:
         return 'critical', '必定完不成'
 
-def refund_td(refund, done, person_type='group'):
-    """退费率单元格：纯百分比 + 条件标红
+def refund_td(refund, done, person_type='group', org_name='', seller_name=''):
+    """退费率单元格：百分比 + 可点击弹出退款原因悬浮卡
        - 销售/班主任个人: >30% 标红
        - 门店CM个人: >10% 标红
-       - 分组级: 不标红"""
+       - 分组级: 不标红
+       - 分组级或带org_name: 弹出分组明细
+       - 个人级或带seller_name: 弹出个人明细"""
     rate = safe_div(refund, done)
     pct_str = pct2(rate)
     if rate == 0 and done == 0:
         return '<td class="num">—</td>'
-    # 个人级条件标红
+    # 确定popup key
+    popup_key = ''
+    if seller_name:
+        popup_key = f'person:{seller_name}'
+    elif org_name:
+        popup_key = f'group:{org_name}'
+    # 样式
+    style = ''
     if person_type == 'sales_advisor' and rate > 0.3:
-        return f'<td class="num"><span style="color:#dc2626;font-weight:700">{pct_str}</span></td>'
-    if person_type == 'cm' and rate > 0.1:
-        return f'<td class="num"><span style="color:#dc2626;font-weight:700">{pct_str}</span></td>'
-    return f'<td class="num">{pct_str}</td>'
+        style = 'color:#dc2626;font-weight:700;'
+    elif person_type == 'cm' and rate > 0.1:
+        style = 'color:#dc2626;font-weight:700;'
+    if popup_key:
+        return f'<td class="num"><span data-refund-key="{popup_key}" style="{style}cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,\'{popup_key}\')" title="点击查看退款原因">{pct_str}</span></td>'
+    return f'<td class="num"><span data-refund-key="{popup_key}" style="{style}">{pct_str}</span></td>'
 
 def rate_bar_with_trend(val):
     """完成率进度条 + 趋势标记"""
@@ -761,7 +1054,7 @@ def role_row(role, m):
   <td class="num"><b>{fmt(m["done"])}</b></td>
   {rate_td(m["rate"])}
   <td class="num">{fmt(m["refund"])}</td>
-  {refund_td(m["refund"], m["done"])}
+  {refund_td(m["refund"], m["done"], org_name=role)}
   <td class="num"><b>{fmt(m["net"])}</b></td>
   <td class="num" style="color:#0891b2;font-weight:600">{role_calls.get(role, 0)}</td>
   <td class="num col-avgcall" style="color:#0e7490;font-weight:600">{avg_calls(role_calls.get(role,0), role_count.get(role,0))}</td>
@@ -776,6 +1069,7 @@ def role_row(role, m):
 # Build group-level rows (Level 2)
 def group_row(g, m, role):
     note = ' <span style="font-size:10px;color:#f59e0b">⚠锁定</span>' if g == '普陀' else ''
+    tob = m.get('tob_amount', 0)
     wt = _group_week_tgt.get(g, 0)
     wd = _group_week_done.get(g, 0)
     wpct = wd/wt*100 if wt > 0 else 0
@@ -783,15 +1077,27 @@ def group_row(g, m, role):
     _wd_fmt = fmt(wd)
     _wt_fmt = fmt(wt)
     _w_pct_str = f'{wpct:.1f}%'
+    # TOC/TOB 拆分显示
+    if tob > 0:
+        _toc_done = m['done'] - tob
+        _toc_rate = safe_div(_toc_done, m['target'])
+        _eap_rate = safe_div(tob, m['target'])
+        _done_cell = f'<td class="num"><b>{fmt(m["done"])}</b><br><span style="font-size:10px;font-weight:700"><span style="color:#6366f1">TOC {fmt(_toc_done)}</span>  +  <span style="color:#8b5cf6">EAP回款 {fmt(tob)}</span></span></td>'
+        # 主进度条=总完成率，下方拆TOC/EAP各占比
+        _rate_bar = rate_bar_with_trend(m['rate'])
+        _rate_cell = f'<td style="min-width:170px">{_rate_bar}<div style="font-size:10px;margin-top:2px;font-weight:700"><span style="color:#6366f1">TOC {pct2(_toc_rate)}</span>  +  <span style="color:#8b5cf6">EAP回款 {pct2(_eap_rate)}</span></div></td>'
+    else:
+        _done_cell = f'<td class="num"><b>{fmt(m["done"])}</b></td>'
+        _rate_cell = rate_td(m['rate'])
     return f'''<tr>
-  <td><b>{g}</b>{note}</td>
+  <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('{g}')" title="点击查看退款原因分析">{g}</b>{note}</td>
   <td><div style="display:flex;align-items:center;gap:8px">{role_badge(role)}<canvas class="spark" data-group="{g}" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">{fmt(m["target"])}</td>
-  <td class="num"><b>{fmt(m["done"])}</b></td>
-  {rate_td(m["rate"])}
+  {_done_cell}
+  {_rate_cell}
   <td class="num">{chg_html(m["done_chg"])}</td>
   <td class="num">{fmt(m["refund"])}</td>
-  {refund_td(m["refund"], m["done"])}
+  {refund_td(m["refund"], m["done"], org_name=g)}
   <td class="num">{refund_chg_html(m["refund_chg"])}</td>
   <td class="num"><b>{fmt(m["net"])}</b></td>
   <td class="num">{fmt(m["prev_net"])}</td>
@@ -818,7 +1124,7 @@ def person_row(name, group_label, tgt, m, person_type='sales_advisor'):
   {rate_td(m['rate'])}
   <td class="num">{chg_html(m['done_chg'])}</td>
   <td class="num">{fmt(m['refund'])}</td>
-  {refund_td(m['refund'], m['done'], person_type)}
+  {refund_td(m['refund'], m['done'], person_type, org_name=group_label, seller_name=name)}
   <td class="num">{refund_chg_html(m['refund_chg'])}</td>
   <td class="num"><b>{fmt(m['net'])}</b></td>
   <td class="num">{fmt(m['prev_net'])}</td>
@@ -922,6 +1228,36 @@ tr.section-header:hover td{{background:inherit!important}}
 .subtotal td{{background:#f8fafc!important;font-weight:700;border-top:1px solid #e2e8f0}}
 .footer{{text-align:center;color:#94a3b8;font-size:11px;margin-top:20px}}
 .section-title{{font-size:14px;font-weight:700;color:#1e293b;padding:12px 0 8px;border-bottom:1px solid #e2e8f0;margin-bottom:12px}}
+/* ===== 退款分析美化 ===== */
+.metric-card{{position:relative;background:linear-gradient(135deg,#ffffff 0%,#fafbff 100%);border-radius:16px;padding:18px 20px;box-shadow:0 2px 12px rgba(15,23,42,0.06);border:1px solid #eef2f7;overflow:hidden;transition:transform .2s,box-shadow .2s}}
+.metric-card:hover{{transform:translateY(-2px);box-shadow:0 8px 24px rgba(15,23,42,0.1)}}
+.metric-card::before{{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--accent,#6366f1)}}
+.metric-label{{font-size:12px;color:#64748b;margin-bottom:6px;font-weight:500}}
+.metric-value{{font-size:26px;font-weight:800;line-height:1.1;letter-spacing:-0.5px}}
+.metric-sub{{font-size:11px;color:#94a3b8;margin-top:4px}}
+.refund-panel{{background:#fff;border-radius:16px;padding:20px;border:1px solid #eef2f7;box-shadow:0 2px 8px rgba(15,23,42,0.04);margin-bottom:18px}}
+.refund-panel h4{{display:flex;align-items:center;gap:8px}}
+.refund-panel-title{{font-size:15px;font-weight:700;color:#0f172a;margin:0 0 16px;display:flex;align-items:center;gap:8px}}
+.refund-panel-title::before{{content:"";width:4px;height:16px;background:linear-gradient(180deg,#6366f1,#8b5cf6);border-radius:2px}}
+#tab-refund_reason table thead th{{background:#f8fafc;position:sticky;top:0}}
+#tab-refund_reason table tbody tr:hover td{{background:#f5f3ff}}
+.refund-sel{{padding:6px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:12px;color:#475569;background:#fff;cursor:pointer;transition:border-color .2s}}
+.refund-sel:hover{{border-color:#8b5cf6}}
+/* ===== 退款原因悬浮卡片 ===== */
+.refund-popover{{position:fixed;z-index:9999;background:#fff;border-radius:16px;box-shadow:0 16px 48px rgba(15,23,42,0.18),0 0 0 1px rgba(0,0,0,0.05);padding:0;min-width:320px;max-width:500px;display:none;overflow:hidden;animation:popIn .2s ease}}
+@keyframes popIn{{from{{opacity:0;transform:translateY(8px) scale(0.96)}}to{{opacity:1;transform:translateY(0) scale(1)}}}}
+.refund-popover.show{{display:block}}
+.refund-popover-head{{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:14px 18px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}}
+.refund-popover-close{{background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:18px;line-height:1;padding:0 0 2px 8px}}
+.refund-popover-close:hover{{color:#fff}}
+.refund-popover-body{{padding:14px 18px;max-height:500px;overflow-y:auto}}
+.refund-popover-body table{{font-size:12px}}
+.refund-popover-body th{{font-size:10px;padding:5px 6px}}
+.refund-popover-body td{{padding:4px 6px;font-size:12px}}
+.refund-popover-section{{margin-bottom:10px}}
+.refund-popover-section h5{{font-size:12px;color:#475569;margin:0 0 6px;font-weight:600}}
+.rank-badge{{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;font-size:11px;font-weight:700;margin-right:6px}}
+.prod-tag{{display:inline-block;background:#eef2ff;color:#4338ca;border-radius:6px;padding:2px 8px;margin:2px;font-size:11px;font-weight:500}}
 @media(max-width:768px){{.kpi-grid{{grid-template-columns:repeat(2,1fr)}}}}
 </style>
 </head>
@@ -1016,6 +1352,7 @@ tr.section-header:hover td{{background:inherit!important}}
 <button class="tab" data-tab="online_person" onclick="switchTab('online_person')">👤 线上销售</button>
 <button class="tab" data-tab="cm_person" onclick="switchTab('cm_person')">🏥 线下个案</button>
 <button class="tab" data-tab="channel" onclick="switchTab('channel');loadChannelData()">📢 渠道业绩</button>
+<button class="tab" data-tab="refund_reason" onclick="switchTab('refund_reason')">🔍 退款原因分析</button>
 </div>
 
 <!-- Tab 1: 按角色 -->
@@ -1033,7 +1370,7 @@ tr.section-header:hover td{{background:inherit!important}}
 {''.join(role_row(r, role_metrics[r]) for r in ['销售','班主任','门店'])}
 <tr class="subtotal"><td>南区合计</td>
   <td class="num">{fmt(total_metrics['target'])}</td><td class="num">{fmt(total_metrics['done'])}</td>{rate_td(total_metrics['rate'])}
-  <td class="num">{fmt(total_metrics['refund'])}</td>{refund_td(total_metrics['refund'], total_metrics['done'])}
+  <td class="num">{fmt(total_metrics['refund'])}</td><td class="num"><span data-refund-key="total" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'total')" title="点击查看退款原因">{pct2(safe_div(total_metrics['refund'], total_metrics['done']))}</span></td>
   <td class="num">{fmt(total_metrics['net'])}</td>
   <td class="num" style="color:#0891b2;font-weight:700">{sum(role_calls.values())}</td>
   <td class="num col-avgcall" style="color:#0e7490;font-weight:700">{avg_calls(sum(role_calls.values()), sum(role_count.values()))}</td>
@@ -1117,7 +1454,7 @@ for _, r in person_online_sorted.iterrows():
             html += f'''<tr class="subtotal"><td>{last_group}</td><td>小计</td>
   <td class="num">{fmt(group_sub['target'])}</td><td class="num">{fmt(sub_done)}</td>{rate_td(safe_div(sub_done,group_sub['target']))}
   <td class="num">{chg_html(safe_div(sub_done-group_sub['prev_done'],group_sub['prev_done']))}</td>
-  <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
+  <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done, org_name=last_group)}
   <td class="num">{refund_chg_html(safe_div(sub_ref-group_sub['prev_refund'],group_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
   <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td><td class="num" style="color:#0891b2;font-weight:700">{group_sub['calls']}</td></tr>'''
@@ -1139,7 +1476,7 @@ if last_group and group_sub['target'] > 0:
     html += f'''<tr class="subtotal"><td>{last_group}</td><td>小计</td>
   <td class="num">{fmt(group_sub['target'])}</td><td class="num">{fmt(sub_done)}</td>{rate_td(safe_div(sub_done,group_sub['target']))}</td>
   <td class="num">{chg_html(safe_div(sub_done-group_sub['prev_done'],group_sub['prev_done']))}</td>
-  <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
+  <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done, org_name=last_group)}
   <td class="num">{refund_chg_html(safe_div(sub_ref-group_sub['prev_refund'],group_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
   <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td><td class="num" style="color:#0891b2;font-weight:700">{group_sub['calls']}</td></tr>'''
@@ -1167,7 +1504,7 @@ for _, r in cm_sorted.iterrows():
             html += f'''<tr class="subtotal"><td><b>{last_store}</b></td><td>小计</td>
   <td class="num">{fmt(store_sub['target'])}</td><td class="num">{fmt(sub_done)}</td>{rate_td(safe_div(sub_done,store_sub['target']))}</td>
   <td class="num">{chg_html(safe_div(sub_done-store_sub['prev_done'],store_sub['prev_done']))}</td>
-  <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
+  <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done, org_name=last_store)}
   <td class="num">{refund_chg_html(safe_div(sub_ref-store_sub['prev_refund'],store_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
   <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td><td class="num" style="color:#0891b2;font-weight:700">{store_sub['calls']}</td></tr>'''
@@ -1189,7 +1526,7 @@ if last_store and store_sub['target'] > 0:
     html += f'''<tr class="subtotal"><td><b>{last_store}</b></td><td>小计</td>
   <td class="num">{fmt(store_sub['target'])}</td><td class="num">{fmt(sub_done)}</td>{rate_td(safe_div(sub_done,store_sub['target']))}</td>
   <td class="num">{chg_html(safe_div(sub_done-store_sub['prev_done'],store_sub['prev_done']))}</td>
-  <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done)}
+  <td class="num">{fmt(sub_ref)}</td>{refund_td(sub_ref, sub_done, org_name=last_store)}
   <td class="num">{refund_chg_html(safe_div(sub_ref-store_sub['prev_refund'],store_sub['prev_refund']))}</td>
   <td class="num">{fmt(sub_net)}</td><td class="num">{fmt(sub_prev_net)}</td>
   <td class="num">{chg_html(safe_div(sub_net-sub_prev_net,sub_prev_net))}</td><td class="num" style="color:#0891b2;font-weight:700">{store_sub['calls']}</td></tr>'''
@@ -1198,6 +1535,176 @@ html += '''</tbody></table></div>'''
 
 html += '''<div id="tab-channel" class="tab-content">
 <div style="text-align:center;padding:40px;color:#94a3b8">👆 点击「渠道业绩」标签加载本地生活数据</div>
+</div>'''
+
+html += '''<div id="tab-refund_reason" class="tab-content">
+  <!-- 核心指标卡片 -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px">
+    <div class="metric-card" style="--accent:#dc2626">
+      <div class="metric-label">💰 退款总额</div>
+      <div class="metric-value" style="color:#dc2626" id="refund_total_amt">—</div>
+      <div class="metric-sub" id="refund_total_cnt">—</div>
+    </div>
+    <div class="metric-card" style="--accent:#3b82f6">
+      <div class="metric-label">🌐 线上退款</div>
+      <div class="metric-value" style="color:#3b82f6" id="refund_online_amt">—</div>
+      <div class="metric-sub" id="refund_online_pct">—</div>
+    </div>
+    <div class="metric-card" style="--accent:#10b981">
+      <div class="metric-label">🏥 门店退款</div>
+      <div class="metric-value" style="color:#10b981" id="refund_store_amt">—</div>
+      <div class="metric-sub" id="refund_store_pct">—</div>
+    </div>
+    <div class="metric-card" style="--accent:#f59e0b">
+      <div class="metric-label">🎯 可干预退款 <span style="cursor:pointer;font-size:10px;background:#fef3c7;color:#b45309;border:1px solid #f59e0b;border-radius:10px;padding:1px 8px;font-weight:600;margin-left:6px" onclick="toggleIntervenableHelp(event)" title="点击展开/收起">📖 定义</span></div>
+      <div class="metric-value" style="color:#f59e0b" id="refund_intervenable">—</div>
+      <div class="metric-sub" id="refund_intervenable_pct">—</div>
+    </div>
+    <div class="metric-card" style="--accent:#94a3b8">
+      <div class="metric-label">❔ 无有效归因</div>
+      <div class="metric-value" style="color:#94a3b8" id="refund_no_attr">—</div>
+      <div class="metric-sub" id="refund_no_attr_pct">—</div>
+    </div>
+    <div class="metric-card" style="--accent:#7c3aed">
+      <div class="metric-label">🔺 大额退款(≥1000元)</div>
+      <div class="metric-value" style="color:#7c3aed" id="refund_large_amt">—</div>
+      <div class="metric-sub" id="refund_large_cnt">—</div>
+    </div>
+  </div>
+
+  <!-- 渠道占比 + 退款原因饼图 -->
+  <div style="display:flex;gap:18px;margin-bottom:18px;flex-wrap:wrap">
+    <div class="refund-panel" style="flex:1;min-width:300px;margin-bottom:0">
+      <div class="refund-panel-title">线上 / 门店退款占比</div>
+      <div style="height:280px"><canvas id="chart_refund_channel"></canvas></div>
+    </div>
+    <div class="refund-panel" style="flex:1.3;min-width:340px;margin-bottom:0">
+      <div class="refund-panel-title">退款原因分布（按金额）</div>
+      <div style="height:280px"><canvas id="chart_refund_reason_pie"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 退款原因明细表 -->
+  <div class="refund-panel">
+    <div class="refund-panel-title">退款原因明细</div>
+    <table id="refund_reason_table"><thead><tr>
+      <th>退款原因</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">金额占比</th><th class="num">大额单数</th><th>归因类型</th><th style="min-width:150px">占比</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+    <!-- 可干预原因 & 干预建议 -->
+  <div class="refund-panel" id="intervenable-help-panel" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="refund-panel-title" style="margin:0">🎯 可干预退款 — 定义与干预建议</div>
+      <button onclick="document.getElementById('intervenable-help-panel').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;color:#b45309;padding:0 4px">&times;</button>
+    </div>
+    <p style="font-size:13px;color:#78350f;margin:0 0 12px;line-height:1.7">
+      <b>可干预退款</b> = 通过销售/班主任跟进沟通<b>有可能挽回</b>的退款。以下7类原因被标记为「可干预」：
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;font-size:12px">
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">家人不支持</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：邀请家人参与评估/试听，用专业背书打消顾虑；短期课程先锁定</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">时间/适配冲突</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：灵活调整时段/频率；降档适配更短周期方案；转线上降低通勤成本</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">效果不满意</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：解释疗程规律（起效需周期），展示同类案例；邀医生复盘调整方案</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">服务未交付/联系不上</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：多渠道触达（微信+电话+短信），48h内至少3次；确认服务是否已排期</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">商家操作失误</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：第一时间道歉+补救（赠课/优惠券），修复信任；内部复盘流程漏洞</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">价格问题</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：提供分期/折扣/降档方案，强调性价比和长期价值；可申请特殊优惠</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">教材问题</span>
+        </div>
+        <div style="color:#64748b;line-height:1.6">💡 建议：确认教材具体问题（损坏/版本/内容），快速换发或退款换方案续报</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#92400e;margin:12px 0 0;line-height:1.6">
+      ⚠️ 以上退款原因合计 <b id="intervenable_total_amt">—</b>，占退款总额的 <b id="intervenable_total_pct">—</b>。点击下方表格中「可干预」标签可筛选查看对应明细。
+    </p>
+  </div>
+
+  <!-- 退款产品结构(服务类型) Top10 -->
+  <div class="refund-panel">
+    <div class="refund-panel-title">退款产品结构 Top10（按金额）</div>
+    <table id="refund_service_table"><thead><tr>
+      <th>服务类型/产品</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">占总退款</th><th style="min-width:150px">占比</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <!-- 线上销售退款 Top50 -->
+  <div class="refund-panel">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div class="refund-panel-title" style="margin:0">线上销售退款排名 Top50</div>
+      <select id="refund-online-org-sel" class="refund-sel" onchange="renderRefundSellerTable()">
+        <option value="__all__">全部组织</option>
+      </select>
+    </div>
+    <table id="refund_seller_table"><thead><tr>
+      <th>归属组织</th><th>销售姓名</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">占线上退款</th><th class="num">大额单数</th><th>主要退款原因</th><th>退款产品Top3（金额）</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <!-- 线下门店CM退款 Top50 -->
+  <div class="refund-panel">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div class="refund-panel-title" style="margin:0">线下门店 CM 退款排名 Top50</div>
+      <select id="refund-store-org-sel" class="refund-sel" onchange="renderRefundCMTable()">
+        <option value="__all__">全部门店</option>
+      </select>
+    </div>
+    <table id="refund_cm_table"><thead><tr>
+      <th>归属门店</th><th>CM姓名</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">占门店退款</th><th class="num">大额单数</th><th>主要退款原因</th><th>退款产品Top3（金额）</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <!-- 退款省份 Top15 + 省份×原因热力图 -->
+  <div style="display:flex;gap:18px;margin-bottom:18px;flex-wrap:wrap">
+    <div class="refund-panel" style="flex:1;min-width:320px;margin-bottom:0">
+      <div class="refund-panel-title">退款省份 Top15（含未属地）</div>
+      <div style="max-height:460px;overflow-y:auto">
+        <table id="refund_province_table"><thead><tr>
+          <th>省份/地区</th><th class="num">退款单数</th><th class="num">退款金额</th><th style="min-width:120px">占比</th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="refund-panel" style="flex:1.4;min-width:520px;margin-bottom:0">
+      <div class="refund-panel-title">省份 × 退款原因热力图（金额）</div>
+      <div style="overflow-x:auto"><div id="heatmap_container"></div></div>
+    </div>
+  </div>
+
+  <!-- 各组织退款对比 -->
+  <div class="refund-panel" style="margin-bottom:0">
+    <div class="refund-panel-title">各组织退款原因对比（按组织退款金额降序，堆叠）</div>
+    <div style="height:440px"><canvas id="chart_refund_org"></canvas></div>
+  </div>
 </div>'''
 
 html += f'''
@@ -1212,6 +1719,7 @@ function switchTab(name){{
   document.querySelector('.tab[data-tab="'+name+'"]').classList.add("active");
   document.getElementById("tab-"+name).classList.add("active");
   if(name === 'role') setTimeout(drawTrendChart, 100);
+  if(name === 'refund_reason') {{ populateRefundDropdowns(); setTimeout(renderRefundReason, 100); }}
 }}
 var _avgCallHidden = false;
 function toggleAvgCall(){{
@@ -1225,7 +1733,460 @@ function toggleAvgCall(){{
     }}
   }});
 }}
+// ====== 退款原因分析 ======
+var INTERVENABLE = {{{','.join(f"'{r}':1" for r in INTERVENABLE_REASONS)}}};
+var NO_ATTR = {{{','.join(f"'{r}':1" for r in NO_ATTRIBUTION_REASONS)}}};
+
+function toggleIntervenableHelp(e) {{
+  if (e) e.stopPropagation();
+  var panel = document.getElementById('intervenable-help-panel');
+  if (!panel) return;
+  var computed = window.getComputedStyle(panel).display;
+  var isHidden = (panel.style.display === 'none') || (computed === 'none');
+  if (isHidden) {{
+    panel.style.display = 'block';
+    panel.scrollIntoView({{behavior: 'smooth', block: 'nearest'}});
+  }} else {{
+    panel.style.display = 'none';
+  }}
+}}
+function populateRefundDropdowns() {{
+  var D = window._M.refund_reasons;
+  if (!D) return;
+  var onSel = document.getElementById('refund-online-org-sel');
+  if (onSel && onSel.options.length <= 1 && D.online_org_list) {{
+    D.online_org_list.forEach(function(org) {{
+      var opt = document.createElement('option'); opt.value = org; opt.textContent = org; onSel.appendChild(opt);
+    }});
+  }}
+  var stSel = document.getElementById('refund-store-org-sel');
+  if (stSel && stSel.options.length <= 1 && D.store_org_list) {{
+    D.store_org_list.forEach(function(org) {{
+      var opt = document.createElement('option'); opt.value = org; opt.textContent = org; stSel.appendChild(opt);
+    }});
+  }}
+}}
+
+function renderRefundReason() {{
+  var D = window._M.refund_reasons;
+  if (!D || !D.meta) return;
+  var m = D.meta;
+
+  // 核心指标
+  document.getElementById('refund_total_amt').textContent = '¥' + (m.total_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_total_cnt').textContent = m.total_cnt + '单';
+  document.getElementById('refund_online_amt').textContent = '¥' + (m.online_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_online_pct').textContent = (m.online_amt/m.total_amt*100).toFixed(1) + '% · ' + m.online_cnt + '单';
+  document.getElementById('refund_store_amt').textContent = '¥' + (m.store_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_store_pct').textContent = (m.store_amt/m.total_amt*100).toFixed(1) + '% · ' + m.store_cnt + '单';
+  document.getElementById('refund_intervenable').textContent = '¥' + (m.intervenable_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_intervenable_pct').textContent = m.intervenable_rate + '%';
+  var ipct = document.getElementById('intervenable_total_pct'); if(ipct) ipct.textContent = m.intervenable_rate + '%';
+  var iamt = document.getElementById('intervenable_total_amt'); if(iamt) iamt.textContent = '¥' + (m.intervenable_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_no_attr').textContent = '¥' + (m.no_attr_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_no_attr_pct').textContent = m.no_attr_rate + '%';
+  document.getElementById('refund_large_amt').textContent = '¥' + (m.large_amt/10000).toFixed(1) + '万';
+  document.getElementById('refund_large_cnt').textContent = m.large_cnt + '单';
+
+  // 渠道占比饼图
+  drawRefundChannel(m);
+  // 退款原因饼图
+  drawRefundReasonPie(D.overall);
+  // 退款原因明细表
+  renderRefundReasonTable(D.overall, m.total_amt);
+  // 服务类型表
+  renderRefundServiceTable(D.by_service, m.total_amt);
+  // 线上销售排名表 + 线下CM排名表
+  renderRefundSellerTable();
+  renderRefundCMTable();
+  // 省份表
+  renderRefundProvinceTable(D.by_province, m.total_amt);
+  // 省份×原因热力图
+  renderHeatmap(D.heatmap);
+  // 组织对比图
+  renderRefundOrgChart();
+}}
+
+var _refundChannelChart = null;
+function drawRefundChannel(m) {{
+  var canvas = document.getElementById('chart_refund_channel');
+  if (!canvas || typeof Chart === 'undefined') return;
+  if (_refundChannelChart) {{ _refundChannelChart.destroy(); }}
+  var ctx = canvas.getContext('2d');
+  _refundChannelChart = new Chart(ctx, {{
+    type: 'pie',
+    data: {{
+      labels: ['线上', '门店'],
+      datasets: [{{
+        data: [m.online_amt, m.store_amt],
+        backgroundColor: ['#3b82f6', '#10b981'],
+        borderColor: '#fff',
+        borderWidth: 2
+      }}]
+    }},
+    options: {{
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {{
+        legend: {{ position: 'bottom', labels: {{ font: {{ size: 12 }}, padding: 10 }} }},
+        tooltip: {{
+          callbacks: {{
+            label: function(ctx) {{
+              var total = ctx.dataset.data.reduce(function(a,b){{return a+b;}}, 0);
+              var pct = (ctx.raw / total * 100).toFixed(1);
+              return ctx.label + ': ¥' + fmtNum(ctx.raw) + ' (' + pct + '%)';
+            }}
+          }}
+        }}
+      }}
+    }}
+  }});
+}}
+
+var _refundReasonPieChart = null;
+function drawRefundReasonPie(rows) {{
+  var canvas = document.getElementById('chart_refund_reason_pie');
+  if (!canvas || typeof Chart === 'undefined') return;
+  var sorted = rows.slice().sort(function(a,b){{return b.amount-a.amount;}}).slice(0,8);
+  var labels = sorted.map(function(r){{return r.category;}});
+  var values = sorted.map(function(r){{return r.amount;}});
+  var colors = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#f97316'];
+  if (_refundReasonPieChart) {{ _refundReasonPieChart.destroy(); }}
+  var ctx = canvas.getContext('2d');
+  _refundReasonPieChart = new Chart(ctx, {{
+    type: 'doughnut',
+    data: {{
+      labels: labels,
+      datasets: [{{
+        data: values,
+        backgroundColor: colors,
+        borderColor: '#fff',
+        borderWidth: 2
+      }}]
+    }},
+    options: {{
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {{
+        legend: {{ position: 'right', labels: {{ font: {{ size: 11 }}, usePointStyle: true, padding: 8 }} }},
+        tooltip: {{
+          callbacks: {{
+            label: function(ctx) {{
+              var total = ctx.dataset.data.reduce(function(a,b){{return a+b;}}, 0);
+              var pct = (ctx.raw / total * 100).toFixed(1);
+              return ctx.label + ': ¥' + fmtNum(ctx.raw) + ' (' + pct + '%)';
+            }}
+          }}
+        }}
+      }}
+    }}
+  }});
+}}
+
+function renderRefundReasonTable(rows, totalAmt) {{
+  var tbody = document.querySelector('#refund_reason_table tbody');
+  if (!tbody) return;
+  var sorted = rows.slice().sort(function(a,b){{return b.amount-a.amount;}});
+  var html = '';
+  sorted.forEach(function(r) {{
+    var pct = (r.amount / totalAmt * 100).toFixed(1);
+    var cat = INTERVENABLE[r.category] ? '可干预' : (NO_ATTR[r.category] ? '无归因' : '其他');
+    var catBg = INTERVENABLE[r.category] ? '#fef3c7' : (NO_ATTR[r.category] ? '#f1f5f9' : '#e0e7ff');
+    var catColor = INTERVENABLE[r.category] ? '#b45309' : (NO_ATTR[r.category] ? '#64748b' : '#4338ca');
+    var barColor = pct > 20 ? '#6366f1' : pct > 10 ? '#8b5cf6' : '#c4b5fd';
+    html += '<tr>' +
+      '<td style="font-weight:600">' + r.category + '</td>' +
+      '<td class="num">' + r.count + '</td>' +
+      '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
+      '<td class="num">' + pct + '%</td>' +
+      '<td class="num">' + (r.large_count || 0) + '</td>' +
+      '<td><span style="background:' + catBg + ';color:' + catColor + ';padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer" data-cat="' + cat + '" title="点击筛选该原因明细">' + cat + '</span></td>' +
+      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:16px;background:#f1f5f9;border-radius:8px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:linear-gradient(90deg,' + barColor + ',' + barColor + 'cc);border-radius:8px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:45px;text-align:right">' + pct + '%</span></div></td>' +
+      '</tr>';
+  }});
+  tbody.innerHTML = html;
+}}
+
+function renderRefundServiceTable(rows, totalAmt) {{
+  var tbody = document.querySelector('#refund_service_table tbody');
+  if (!tbody) return;
+  var html = '';
+  rows.forEach(function(r) {{
+    var pct = (r.amount / totalAmt * 100).toFixed(1);
+    var barColor = '#8b5cf6';
+    html += '<tr>' +
+      '<td>' + r.service + '</td>' +
+      '<td class="num">' + r.count + '</td>' +
+      '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
+      '<td class="num">' + pct + '%</td>' +
+      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:' + barColor + ';border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px">' + pct + '%</span></div></td>' +
+      '</tr>';
+  }});
+  tbody.innerHTML = html;
+}}
+
+function _prodTop3Html(products) {{
+  if (!products || !products.length) return '—';
+  return products.map(function(p) {{
+    return '<span style="display:inline-block;background:#eef2ff;color:#4338ca;border-radius:5px;padding:1px 6px;margin:1px 2px;font-size:11px">' + p.name + ' ¥' + fmtNum(p.amount) + '</span>';
+  }}).join('');
+}}
+function _reasonTag(reason) {{
+  var bg = INTERVENABLE[reason] ? '#fef3c7' : (NO_ATTR[reason] ? '#f1f5f9' : '#e0e7ff');
+  var color = INTERVENABLE[reason] ? '#b45309' : (NO_ATTR[reason] ? '#64748b' : '#4338ca');
+  return '<span style="background:' + bg + ';color:' + color + ';padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap">' + reason + '</span>';
+}}
+function _rankBadge(i) {{
+  var colors = ['#f59e0b','#94a3b8','#d97706'];
+  if (i < 3) return '<span class="rank-badge" style="background:' + colors[i] + ';color:#fff">' + (i+1) + '</span>';
+  return '<span class="rank-badge" style="background:#f1f5f9;color:#94a3b8">' + (i+1) + '</span>';
+}}
+function _rankRowHtml(r, idx, orgColor) {{
+  return '<tr>' +
+    '<td>' + _rankBadge(idx) + '<b style="color:' + orgColor + '">' + r.org + '</b></td>' +
+    '<td style="font-weight:600">' + r.name + '</td>' +
+    '<td class="num">' + r.count + '</td>' +
+    '<td class="num" style="color:#dc2626">¥' + fmtNum(r.amount) + '</td>' +
+    '<td class="num">' + r.rate + '%</td>' +
+    '<td class="num">' + (r.large_count > 0 ? '<span style="color:#7c3aed;font-weight:600">' + r.large_count + '</span>' : '0') + '</td>' +
+    '<td>' + _reasonTag(r.reason) + '</td>' +
+    '<td>' + _prodTop3Html(r.products) + '</td>' +
+    '</tr>';
+}}
+function renderRefundSellerTable() {{
+  var D = window._M.refund_reasons;
+  var tbody = document.querySelector('#refund_seller_table tbody');
+  if (!tbody || !D.online_seller_rank) return;
+  var sel = document.getElementById('refund-online-org-sel');
+  var org = sel ? sel.value : '__all__';
+  var rows = D.online_seller_rank.filter(function(r) {{ return org === '__all__' || r.org === org; }});
+  tbody.innerHTML = rows.map(function(r, i) {{ return _rankRowHtml(r, i, '#3b82f6'); }}).join('');
+}}
+function renderRefundCMTable() {{
+  var D = window._M.refund_reasons;
+  var tbody = document.querySelector('#refund_cm_table tbody');
+  if (!tbody || !D.store_cm_rank) return;
+  var sel = document.getElementById('refund-store-org-sel');
+  var org = sel ? sel.value : '__all__';
+  var rows = D.store_cm_rank.filter(function(r) {{ return org === '__all__' || r.org === org; }});
+  tbody.innerHTML = rows.map(function(r, i) {{ return _rankRowHtml(r, i, '#10b981'); }}).join('');
+}}
+
+function renderRefundProvinceTable(rows, totalAmt) {{
+  var tbody = document.querySelector('#refund_province_table tbody');
+  if (!tbody) return;
+  var html = '';
+  rows.forEach(function(r) {{
+    var pct = (r.amount / totalAmt * 100).toFixed(1);
+    var barColor = r.province === '未属地' ? '#f59e0b' : '#10b981';
+    var nameHtml = r.province === '未属地' ? '<span style="color:#b45309">⚠ ' + r.province + '</span>' : r.province;
+    html += '<tr>' +
+      '<td style="font-weight:600">' + nameHtml + '</td>' +
+      '<td class="num">' + r.count + '</td>' +
+      '<td class="num">¥' + fmtNum(r.amount) + '</td>' +
+      '<td><div style="display:flex;align-items:center"><div style="flex:1;height:16px;background:#f1f5f9;border-radius:8px;overflow:hidden"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:linear-gradient(90deg,' + barColor + ',' + barColor + 'cc);border-radius:8px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px">' + pct + '%</span></div></td>' +
+      '</tr>';
+  }});
+  tbody.innerHTML = html;
+}}
+
+// 省份×原因 热力图（HTML表格 + 颜色深浅）
+function renderHeatmap(hm) {{
+  var container = document.getElementById('heatmap_container');
+  if (!container || !hm) return;
+  var provinces = hm.provinces, reasons = hm.reasons, data = hm.data;
+  // 构建矩阵
+  var matrix = {{}};
+  var maxVal = 0;
+  data.forEach(function(d) {{
+    var ri = d[0], pi = d[1], v = d[2];
+    matrix[pi + '_' + ri] = v;
+    if (v > maxVal) maxVal = v;
+  }});
+  function cellColor(v) {{
+    if (!v) return '#f8fafc';
+    var t = Math.pow(v / maxVal, 0.5); // 平方根增强低值可见度
+    var r = Math.round(239 - (239-99)*t);
+    var g = Math.round(246 - (246-102)*t);
+    var b = Math.round(255 - (255-241)*t);
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  }}
+  var html = '<table style="border-collapse:collapse;font-size:11px;min-width:100%"><thead><tr>';
+  html += '<th style="position:sticky;left:0;background:#f8fafc;padding:6px;text-align:left;border:1px solid #e2e8f0;z-index:1">省份\\\\原因</th>';
+  reasons.forEach(function(rn) {{
+    html += '<th style="padding:6px 4px;border:1px solid #e2e8f0;writing-mode:vertical-rl;text-orientation:mixed;white-space:nowrap;max-height:90px">' + rn + '</th>';
+  }});
+  html += '</tr></thead><tbody>';
+  provinces.forEach(function(pv, pi) {{
+    html += '<tr><td style="position:sticky;left:0;background:#fff;padding:5px 8px;border:1px solid #e2e8f0;font-weight:600;white-space:nowrap">' + pv + '</td>';
+    reasons.forEach(function(rn, ri) {{
+      var v = matrix[pi + '_' + ri] || 0;
+      var txt = v >= 10000 ? (v/10000).toFixed(1)+'万' : (v > 0 ? Math.round(v) : '');
+      var tc = (v/maxVal > 0.5) ? '#fff' : '#334155';
+      html += '<td title="' + pv + ' · ' + rn + ': ¥' + fmtNum(v) + '" style="padding:5px 4px;border:1px solid #eef2f7;text-align:center;background:' + cellColor(v) + ';color:' + tc + '">' + txt + '</td>';
+    }});
+    html += '</tr>';
+  }});
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}}
+
+var _refundOrgChart = null;
+function renderRefundOrgChart() {{
+  var canvas = document.getElementById('chart_refund_org');
+  if (!canvas || typeof Chart === 'undefined') return;
+  var D = window._M.refund_reasons;
+  var byOrg = D.by_org;
+  // 按 org_list 顺序（已按退款金额降序），全部展示
+  var orgs = (D.org_list || Object.keys(byOrg)).filter(function(o) {{ return byOrg[o]; }});
+  var catSet = {{}};
+  orgs.forEach(function(org) {{
+    (byOrg[org] || []).forEach(function(r) {{ catSet[r.category] = true; }});
+  }});
+  var categories = Object.keys(catSet);
+  var palette = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#f97316'];
+  var datasets = categories.map(function(cat, i) {{
+    return {{
+      label: cat,
+      data: orgs.map(function(org) {{
+        var found = (byOrg[org] || []).find(function(r) {{ return r.category === cat; }});
+        return found ? found.amount : 0;
+      }}),
+      backgroundColor: palette[i % palette.length],
+      borderWidth: 0
+    }};
+  }});
+  if (_refundOrgChart) {{ _refundOrgChart.destroy(); }}
+  var ctx = canvas.getContext('2d');
+  _refundOrgChart = new Chart(ctx, {{
+    type: 'bar',
+    data: {{ labels: orgs, datasets: datasets }},
+    options: {{
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {{
+        legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, usePointStyle: true, padding: 6 }} }},
+        tooltip: {{ callbacks: {{ label: function(ctx) {{ return ctx.dataset.label + ': ¥' + fmtNum(ctx.raw); }} }} }}
+      }},
+      scales: {{
+        x: {{ stacked: true, ticks: {{ font: {{ size: 10 }}, maxRotation: 30 }} }},
+        y: {{ stacked: true, ticks: {{ callback: function(v) {{ return '¥' + (v/10000).toFixed(0)+'W'; }}, font: {{ size: 10 }} }} }}
+      }}
+    }}
+  }});
+}}
+
+function showRefundPopup(e, key) {{
+  e.preventDefault(); e.stopPropagation();
+  var data = (window._M.refund_reasons && window._M.refund_reasons.popup) ? window._M.refund_reasons.popup[key] : null;
+  if (!data) return;
+  var pop = document.getElementById('refund-popover');
+  var titleEl = document.getElementById('refund-popover-title');
+  var body = document.getElementById('refund-popover-body');
+  if (key === 'total') titleEl.textContent = '南区合计 · 退款原因';
+  else titleEl.textContent = key.replace('group:','').replace('person:','') + ' · 退款原因';
+
+  var reasons = data.reasons || [];
+  var topSellers = data.top_sellers || [];
+  var html = '<div style="margin-bottom:8px;font-size:12px;color:#64748b">退款 ¥' + fmtNum(data.total) + ' · ' + data.count + '单</div>';
+
+  // 退款原因分布
+  html += '<div class="refund-popover-section"><h5>📊 退款原因</h5><table><thead><tr><th>原因</th><th class="num">单数</th><th class="num">金额</th><th class="num">占比</th></tr></thead><tbody>';
+  reasons.forEach(function(r) {{
+    html += '<tr><td>' + r.category + '</td><td class="num">' + r.count + '</td><td class="num">¥' + fmtNum(r.amount) + '</td><td class="num">' + r.pct + '%</td></tr>';
+  }});
+  html += '</tbody></table></div>';
+
+  // 退款产品 (仅个人维度显示)
+  if (data.products && data.products.length > 0) {{
+    html += '<div class="refund-popover-section"><h5>📦 退款产品 Top5（金额）</h5><table><thead><tr><th>产品</th><th class="num">金额</th></tr></thead><tbody>';
+    data.products.forEach(function(p) {{
+      html += '<tr><td>' + p.name + '</td><td class="num">¥' + fmtNum(p.amount) + '</td></tr>';
+    }});
+    html += '</tbody></table></div>';
+  }}
+
+  // Top退款人 (仅分组/角色维度显示)
+  if (topSellers.length > 0) {{
+    html += '<div class="refund-popover-section"><h5>👤 退款Top' + topSellers.length + '</h5><table><thead><tr><th>姓名</th><th class="num">单数</th><th class="num">金额</th><th>主要原因</th></tr></thead><tbody>';
+    topSellers.forEach(function(s) {{
+      html += '<tr><td>' + s.name + '</td><td class="num">' + s.count + '</td><td class="num">¥' + fmtNum(s.amount) + '</td><td>' + s.reason + '</td></tr>';
+    }});
+    html += '</tbody></table></div>';
+  }}
+
+  body.innerHTML = html;
+  // 定位
+  var x = e.clientX, y = e.clientY;
+  pop.style.left = Math.min(x, window.innerWidth - 520) + 'px';
+  pop.style.top = Math.min(y + 10, window.innerHeight - 500) + 'px';
+  pop.classList.add('show');
+}}
+function closeRefundPopup() {{
+  document.getElementById('refund-popover').classList.remove('show');
+}}
+// 点击其他地方关闭
+document.addEventListener('click', function(e) {{
+  var pop = document.getElementById('refund-popover');
+  if (pop && !pop.contains(e.target) && !e.target.hasAttribute('data-refund-key')) {{
+    pop.classList.remove('show');
+  }}
+}});
+
+function filterRefundByCategory(cat) {{
+  var table = document.querySelector('#refund_reason_table');
+  if (!table) return;
+  var tbody = table.querySelector('tbody');
+  if (!tbody || !tbody.rows.length) return;
+  var rows = tbody.querySelectorAll('tr');
+  var filtering = tbody.getAttribute('data-filter') !== cat;
+  rows.forEach(function(tr) {{
+    var badge = tr.querySelector('td span[data-cat]');
+    if (!badge) return;
+    if (filtering && badge.getAttribute('data-cat') !== cat) {{
+      tr.style.display = 'none';
+    }} else {{
+      tr.style.display = '';
+    }}
+  }});
+  tbody.setAttribute('data-filter', filtering ? cat : '');
+  var panel = table.closest('.refund-panel');
+  if (panel) {{
+    var h4 = panel.querySelector('.refund-panel-title');
+    if (h4) {{
+      h4.innerHTML = filtering
+        ? '退款原因明细 <span style="font-size:11px;color:#b45309;font-weight:400">— 筛选: ' + cat + ' <a href="#" class="clear-refund-filter" data-cat="' + cat + '" style="color:#dc2626">✕ 清除</a></span>'
+        : '退款原因明细';
+    }}
+  }}
+}}
+
+// 事件委托：处理退款原因标签点击（无需inline onclick）
+document.addEventListener('click', function(e) {{
+  var target = e.target;
+  // 点击归因类型标签 → 筛选
+  if (target.hasAttribute('data-cat') && target.closest('#refund_reason_table')) {{
+    filterRefundByCategory(target.getAttribute('data-cat'));
+    return;
+  }}
+  // 点击清除筛选链接
+  if (target.classList.contains('clear-refund-filter')) {{
+    e.preventDefault();
+    filterRefundByCategory(target.getAttribute('data-cat'));
+    return;
+  }}
+}});
+function navigateToRefund(orgName) {{
+  switchTab('refund_reason');
+}}
 </script>
+<div id="refund-popover" class="refund-popover">
+  <div class="refund-popover-head">
+    <span id="refund-popover-title">退款原因分析</span>
+    <button class="refund-popover-close" onclick="closeRefundPopup()">&times;</button>
+  </div>
+  <div class="refund-popover-body" id="refund-popover-body"></div>
+</div>
 </body></html>'''
 
 # ==================== 导出 Excel ====================
@@ -1312,6 +2273,23 @@ for _, row in july_orders.iterrows():
     person_daily[name]['_total'] = person_daily[name].get('_total', 0) + amt
     person_daily[name]['_org'] = row['组织']
 
+# 普陀明细叠加到 person_daily (用于TOP10日期筛选)
+if putuo_file and 'CM姓名' in putuo_df.columns and '收款金额' in putuo_df.columns:
+    for _, prow in putuo_df.iterrows():
+        name = prow['CM姓名']
+        if pd.isna(name) or not name: continue
+        try:
+            pd_day = pd.to_datetime(prow['日期']).day
+        except:
+            continue
+        amt = float(prow['收款金额']) if pd.notna(prow['收款金额']) else 0
+        if name not in person_daily: person_daily[name] = {}
+        person_daily[name][str(pd_day)] = person_daily[name].get(str(pd_day), 0) + amt
+        person_daily[name]['_total'] = person_daily[name].get('_total', 0) + amt
+        # 普陀CM统一归属上海普陀店（余佼底表订单已由SELLER_ORG_OVERRIDE→徐汇，
+        # 此处普陀明细收入归属普陀；person_daily只用于TOP10排名，不参与分组汇总）
+        person_daily[name]['_org'] = '上海普陀店'
+
 # 菌群业绩 person_daily (仅肠道菌群移植)
 jq_orders = july_orders[july_orders['service_type_name'].str.contains('菌群', na=False)]
 person_daily_junqun = {}
@@ -1352,7 +2330,9 @@ if trend_max_day >= _today.day:
 # 普陀明细每日叠加到门店和普陀分组（只到趋势截止日）
 if putuo_file and 'CM姓名' in putuo_df.columns and '收款金额' in putuo_df.columns:
     for _, prow in putuo_df.iterrows():
-        pd_day = pd.to_datetime(prow['日期']).day
+        pd_dt = pd.to_datetime(prow['日期'])
+        if pd.isna(pd_dt): continue
+        pd_day = pd_dt.day
         if pd_day > trend_max_day: continue
         d = str(pd_day)
         amt = float(prow['收款金额']) if pd.notna(prow['收款金额']) else 0
@@ -1368,8 +2348,8 @@ for store, dvals in kangbojia_store_daily.items():
 
 # 截断趋势图：排除 trend_max_day 之后的数据（当天数据不完整）
 for r in role_daily:
-    role_daily[r] = {d: v for d, v in role_daily[r].items() if int(d) <= trend_max_day}
-group_daily = {g: {d: v for d, v in dv.items() if int(d) <= trend_max_day} for g, dv in group_daily.items()}
+    role_daily[r] = {d: v for d, v in role_daily[r].items() if d.isdigit() and int(d) <= trend_max_day}
+group_daily = {g: {d: v for d, v in dv.items() if d.isdigit() and int(d) <= trend_max_day} for g, dv in group_daily.items()}
 
 # ====== 预加载电商本地生活数据 ======
 print('🔄 拉取本地生活数据...', end=' ')
@@ -1415,6 +2395,7 @@ mapping_json = json.dumps({
     'group_calls': group_calls,
     'group_count': group_count,
     'current_month': f'{_today.year}-{_today.month:02d}',
+    'refund_reasons': refund_reason_data,
 }, ensure_ascii=False)
 
 # ==================== 交互式 JS 工具条 ====================
@@ -1584,7 +2565,8 @@ recalcAll = refreshAll;
 document.addEventListener("blur", function(e){var td=e.target.closest('td.num[contenteditable="true"]');if(!td)return;var raw=td.textContent.trim().replace(/[,，万]/g,"");if(raw.indexOf("亿")>=0)raw=raw.replace("亿","")*1e8;var v=parseFloat(raw);if(!isNaN(v)){td.setAttribute("data-val",v);td.textContent=fmtNum(v)}td.contentEditable="false";setTimeout(refreshAll,100)},true);
 
 // ====== TOP10 弹窗排行榜 (含日期筛选) ======
-function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup) {
+function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup, limit) {
+  limit = limit || 10;
   var personDone = {};
   Object.keys(pd).forEach(function(name) {
     var info = pd[name];
@@ -1603,23 +2585,6 @@ function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup) {
     if(done <= 0) return;
     personDone[name] = {name: name, group: g, done: done, target: 0};
   });
-  // 普陀锁定数据（仅业绩排名，菌群不混入；三组模式下仅一组包含普陀）
-  if(!skipLocked && !isOnline && (!trioGroup || M.store_to_trio['普陀'] === trioGroup)) {
-    var cmTab = document.getElementById('tab-cm_person');
-    if(cmTab) {
-      cmTab.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
-        var tds = row.querySelectorAll('td');
-        if(tds.length < 4) return;
-        if(tds[0].textContent.trim() !== '普陀') return;
-        var nm = tds[1].textContent.replace('⚠锁定','').trim();
-        var tv = parseNum(tds[3]), tgt = parseNum(tds[2]);
-        if(tv > 0) {
-          if(!personDone[nm]) personDone[nm] = {name: nm, group: '普陀', done: 0, target: 0};
-          personDone[nm].done = tv; personDone[nm].target = tgt;
-        }
-      });
-    }
-  }
   // 目标匹配（仅业绩排名）
   if(!skipLocked) {
     if(isOnline) {
@@ -1635,7 +2600,7 @@ function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup) {
   }
   var data = Object.values(personDone).filter(function(d){ return d.done > 0; });
   data.sort(function(a,b){ return b.done - a.done; });
-  return data.slice(0, 10);
+  return data.slice(0, limit);
 }
 
 function renderRankList(data, crowns, colors) {
@@ -1658,7 +2623,7 @@ function showTop10(tabId, fromDay, toDay) {
   fromDay = fromDay || 1; toDay = toDay || 12;
   var tab = document.getElementById('tab-'+tabId);
   if(!tab) return;
-  var title = tabId === 'online_person' ? '线上销售 TOP10' : '线下个案 TOP10';
+  var title = tabId === 'online_person' ? '线上销售 TOP10' : '线下个案 TOP50';
   var isOnline = tabId === 'online_person';
   var M = window._M;
   var crowns = ['🥇','🥈','🥉'];
@@ -1681,14 +2646,10 @@ function showTop10(tabId, fromDay, toDay) {
     '</div>';
 
   if(!isOnline) {
-    var top10G1 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, '一组');
-    var top10G2 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, '二组');
-    var top10G3 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, '三组');
+    var top50 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline, false, null, 50);
     var top10Jq = buildRanking(M, M.person_daily_junqun || {}, fromDay, toDay, isOnline, true);
     html += '<div style="display:flex;gap:10px">'+
-      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#6366f1;margin:0 0 6px">📊 一组 <span style="font-size:11px;color:#94a3b8">普陀·徐汇·南京·广州</span></h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10G1, crowns, colors)+'</div></div>'+
-      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#8b5cf6;margin:0 0 6px">📊 二组 <span style="font-size:11px;color:#94a3b8">深圳·杭州·武汉</span></h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10G2, crowns, colors)+'</div></div>'+
-      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#ec4899;margin:0 0 6px">📊 三组 <span style="font-size:11px;color:#94a3b8">昆明·珠海·成都·福州</span></h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10G3, crowns, colors)+'</div></div>'+
+      '<div style="flex:3;min-width:0"><h3 style="font-size:13px;color:#6366f1;margin:0 0 6px">🏥 线下个案 TOP50 <span style="font-size:11px;color:#94a3b8">全部11家门店</span></h3><div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">'+renderRankList(top50, crowns, colors)+'</div></div>'+
       '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#64748b;margin:0 0 6px">🧬 菌群业绩排名</h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10Jq, crowns, colors)+'</div></div>'+
       '</div>';
   } else {
@@ -2093,7 +3054,7 @@ function detectFields(cols) {
 // ====== 底表导入 & 全量重算 ======
 function importBaseTable(input) {
   var file = input.files[0]; if(!file) return;
-  var isCsv = /\.csv$/i.test(file.name);
+  var isCsv = /\\.csv$/i.test(file.name);
   importProgress('导入底表：'+file.name+'（读取文件…）', 15);
   var reader = new FileReader();
   reader.onerror = function(){ importDone(false, '底表导入失败', '文件读取失败，请重试'); };
