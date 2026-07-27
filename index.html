@@ -1046,7 +1046,7 @@ function loadB2BData() {
       '<td>' + (r.owner || '') + '</td>' +
       '<td style="font-size:11px;color:#64748b">' + (r.note || '') + '</td>' +
       '<td style="text-align:center">' + (hasDetail
-        ? '<span onclick="var d=document.getElementById('' + rid + '');d.style.display=d.style.display==='none'?'':'none';this.textContent=d.style.display==='none'?'📋':'🔼'" style="cursor:pointer;font-size:14px" title="查看跟进明细">📋</span>'
+        ? '<span class="b2b-detail-toggle" data-rid="' + rid + '" style="cursor:pointer;font-size:14px" title="查看跟进明细">📋</span>'
         : '') +
       '</td>' +
       '</tr>';
@@ -1572,9 +1572,22 @@ function exportPersonTab(tabId) {
   var filename = label + '_7月' + fromDay + '-' + toDay + '日.xlsx';
   XLSX.writeFile(wb, filename);
 }
+
+// B2B detail toggle (delegated click handler)
+document.addEventListener('click', function(e) {
+  var target = e.target.closest('.b2b-detail-toggle');
+  if (!target) return;
+  var rid = target.getAttribute('data-rid');
+  var d = document.getElementById(rid);
+  if (d) {
+    d.style.display = d.style.display === 'none' ? '' : 'none';
+    target.textContent = d.style.display === 'none' ? '📋' : '🔼';
+  }
+});
+
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260727152702"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260727154351"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -4829,7 +4842,7 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'商家操作失误':1,'服务未交付/联系不上':1,'教材问题':1,'时间/适配冲突':1,'家人不支持':1,'效果不满意':1,'价格问题':1};
+var INTERVENABLE = {'教材问题':1,'家人不支持':1,'时间/适配冲突':1,'价格问题':1,'效果不满意':1,'商家操作失误':1,'服务未交付/联系不上':1};
 var NO_ATTR = {'未填写原因':1,'其他/未说明':1,'主动放弃/拍错':1};
 
 function toggleIntervenableHelp(e) {
@@ -5282,4 +5295,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260727152702";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260727154351";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
