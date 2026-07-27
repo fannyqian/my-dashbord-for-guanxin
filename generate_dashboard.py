@@ -96,6 +96,14 @@ SELLER_ORG_OVERRIDE = {'余佼': '上海徐汇店'}
 for _nm, _org in SELLER_ORG_OVERRIDE.items():
     orders.loc[orders['seller_name'] == _nm, '组织'] = _org
 
+# === 订单级归属覆盖：特定订单归入指定门店（覆盖SELLER_ORG_OVERRIDE） ===
+ORDER_ORG_OVERRIDE = {
+    '202607136741916425': '上海普陀店',
+    '202607121540372234': '上海普陀店',
+}
+for _oid, _oorg in ORDER_ORG_OVERRIDE.items():
+    orders.loc[orders['order_id'].astype(str) == _oid, '组织'] = _oorg
+
 # === TOB/EAP 回款标记 ===
 # 特定日期+销售的订单标记为 TOB（企业项目回款），不计入 TOC 目标完成率
 TOB_RULES = [
@@ -602,11 +610,21 @@ for _, cm in cm_df.iterrows():
     p_orders = orders[(orders['seller_name']==name)]
     # 特殊归属销售（如余佼）多店挂名时：底表订单归入 override 目标门店行，
     # 原门店行（普陀）只保留 HG0019 明细，不叠加底表订单
+    # 但 ORDER_ORG_OVERRIDE 中的订单例外，归入指定门店
     if name in SELLER_ORG_OVERRIDE:
         override_target = STORE_MAP.get(SELLER_ORG_OVERRIDE[name], '')
         if store != override_target:
-            # 非目标门店行（如余佼的普陀行）：只保留 HG0019 明细，排除底表订单
-            p_orders = p_orders.iloc[0:0]
+            # 非目标门店行（如余佼的普陀行）：只保留 ORDER_ORG_OVERRIDE 归入本店的订单 + HG0019 明细
+            keep_oids = [oid for oid, oorg in ORDER_ORG_OVERRIDE.items() if oorg == STORE_MAP.get(store, store)]
+            if keep_oids:
+                p_orders = p_orders[p_orders['order_id'].astype(str).isin(keep_oids)]
+            else:
+                p_orders = p_orders.iloc[0:0]
+        else:
+            # 目标门店行（如余佼的徐汇行）：排除被 ORDER_ORG_OVERRIDE 改派到其他门店的订单
+            exclude_oids = [oid for oid, oorg in ORDER_ORG_OVERRIDE.items() if oorg != store]
+            if exclude_oids:
+                p_orders = p_orders[~p_orders['order_id'].astype(str).isin(exclude_oids)]
     if is_putuo:
         # 普陀个案业绩 = 明细汇总 + 底表订单
         done = cm['done_locked'] + period_income(p_orders, JULY_START, JULY_END)
@@ -2368,6 +2386,7 @@ except Exception as e:
 mapping_json = json.dumps({
     'org_to_group': ORG_TO_GROUP,
     'seller_org_override': SELLER_ORG_OVERRIDE,
+    'order_org_override': ORDER_ORG_OVERRIDE,
     'store_to_group': STORE_MAP,
     'store_to_trio': STORE_TO_TRIO,
     'sales_orgs': SALES_ORGS,
@@ -3081,12 +3100,16 @@ function importBaseTable(input) {
 
     // 解析组织名：兼容 组织 和 beisen_org_full_name
     var sellerOvr = M.seller_org_override || {};
+    var orderOvr = M.order_org_override || {};
     data.forEach(function(row) {
       var rawOrg = row[F.org] || '';
       row._org = extractOrgFromBeisen(rawOrg);
       // 特殊归属规则（如余佼→徐汇）
       var snm = String(row[F.seller] || '').trim();
       if(sellerOvr[snm]) row._org = sellerOvr[snm];
+      // 订单级覆盖（覆盖 seller 级规则）
+      var oid = String(row[F.order_id] || '').trim();
+      if(orderOvr[oid]) row._org = orderOvr[oid];
     });
 
     // Store full raw orders for export
