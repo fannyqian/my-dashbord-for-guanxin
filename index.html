@@ -1381,7 +1381,7 @@ function renderMonthlyGroup(month) {
 })();
 
 // 工具函数：解析数字（支持带"万"和逗号）
-function parseNum(text) {
+function pfParseNum(text) {
   if (!text && text !== 0) return 0;
   var s = String(text).replace(/,/g, '').replace(/[^0-9.\-万]/g, '').trim();
   if (s === '' || s === '-') return 0;
@@ -1390,13 +1390,13 @@ function parseNum(text) {
 }
 
 // 格式化金额显示
-function fmtMoney(val) {
+function pfFmtMoney(val) {
   if (val >= 10000) return (val / 10000).toFixed(1) + '万';
   return val.toFixed(0);
 }
 
 // 生成完成率进度条HTML
-function buildRateBar(rate) {
+function pfBuildBar(rate) {
   var pct = (rate * 100).toFixed(1);
   var color = rate >= 0.8 ? '#22c55e' : rate >= 0.5 ? '#f59e0b' : '#ef4444';
   var bg = rate >= 0.8 ? '#f0fdf4' : rate >= 0.5 ? '#fffbeb' : '#fef2f2';
@@ -1407,11 +1407,11 @@ function buildRateBar(rate) {
 }
 
 // 生成退费率显示HTML
-function buildRefundDisplay(refund, done) {
+function pfBuildRefund(refund, done) {
   var rate = done > 0 ? refund / done : 0;
   var pct = (rate * 100).toFixed(1);
   var color = rate <= 0.05 ? '#22c55e' : rate <= 0.15 ? '#f59e0b' : '#ef4444';
-  return '<span style="font-weight:700;color:' + color + '">-' + fmtMoney(refund) + '</span>' +
+  return '<span style="font-weight:700;color:' + color + '">-' + pfFmtMoney(refund) + '</span>' +
     '<span style="font-size:11px;color:#94a3b8;margin-left:2px">(' + pct + '%)</span>';
 }
 
@@ -1437,7 +1437,7 @@ function applyPersonFilter(tabId) {
     var grp = tds[0].textContent.trim();
     var nameEl = tds[1];
     var name = nameEl.textContent.replace('⚠锁定', '').replace('⚠', '').trim();
-    var tgt = parseNum(tds[2].textContent);
+    var tgt = pfParseNum(tds[2].textContent);
 
     var done = 0, refund = 0;
     var dinfo = pd[name] || {};
@@ -1451,13 +1451,13 @@ function applyPersonFilter(tabId) {
     var rate = tgt > 0 ? done / tgt : 0;
 
     // 更新单元格
-    tds[3].innerHTML = '<b>' + fmtMoney(done) + '</b>';
-    tds[4].innerHTML = buildRateBar(rate);
+    tds[3].innerHTML = '<b>' + pfFmtMoney(done) + '</b>';
+    tds[4].innerHTML = pfBuildBar(rate);
     tds[5].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[6].innerHTML = buildRefundDisplay(refund, done);
+    tds[6].innerHTML = pfBuildRefund(refund, done);
     tds[7].innerHTML = '<span style="color:#94a3b8">—</span>';
     tds[8].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[9].innerHTML = '<b>' + fmtMoney(net) + '</b>';
+    tds[9].innerHTML = '<b>' + pfFmtMoney(net) + '</b>';
     tds[10].innerHTML = '<span style="color:#94a3b8">—</span>';
     tds[11].innerHTML = '<span style="color:#94a3b8">—</span>';
 
@@ -1475,14 +1475,14 @@ function applyPersonFilter(tabId) {
     var agg = grpAgg[g];
     if (!agg || tds.length < 10) return;
     var rate = agg.tgt > 0 ? agg.done / agg.tgt : 0;
-    tds[2].innerHTML = '<b>' + fmtMoney(agg.tgt) + '</b>';
-    tds[3].innerHTML = '<b>' + fmtMoney(agg.done) + '</b>';
-    tds[4].innerHTML = buildRateBar(rate);
+    tds[2].innerHTML = '<b>' + pfFmtMoney(agg.tgt) + '</b>';
+    tds[3].innerHTML = '<b>' + pfFmtMoney(agg.done) + '</b>';
+    tds[4].innerHTML = pfBuildBar(rate);
     tds[5].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[6].innerHTML = buildRefundDisplay(agg.refund, agg.done);
+    tds[6].innerHTML = pfBuildRefund(agg.refund, agg.done);
     tds[7].innerHTML = '<span style="color:#94a3b8">—</span>';
     tds[8].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[9].innerHTML = '<b>' + fmtMoney(agg.net) + '</b>';
+    tds[9].innerHTML = '<b>' + pfFmtMoney(agg.net) + '</b>';
     tds[10].innerHTML = '<span style="color:#94a3b8">—</span>';
     tds[11].innerHTML = '<span style="color:#94a3b8">—</span>';
   });
@@ -1574,7 +1574,7 @@ function exportPersonTab(tabId) {
 }
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260727151623"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260727152702"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -4829,8 +4829,8 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'时间/适配冲突':1,'教材问题':1,'价格问题':1,'商家操作失误':1,'效果不满意':1,'服务未交付/联系不上':1,'家人不支持':1};
-var NO_ATTR = {'其他/未说明':1,'未填写原因':1,'主动放弃/拍错':1};
+var INTERVENABLE = {'商家操作失误':1,'服务未交付/联系不上':1,'教材问题':1,'时间/适配冲突':1,'家人不支持':1,'效果不满意':1,'价格问题':1};
+var NO_ATTR = {'未填写原因':1,'其他/未说明':1,'主动放弃/拍错':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5282,4 +5282,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260727151623";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260727152702";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
