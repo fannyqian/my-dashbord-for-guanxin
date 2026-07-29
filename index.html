@@ -100,16 +100,16 @@ function recalcAll() {
     let cells = row.querySelectorAll('td.num');
     roleTotal.target += parseFloat(cells[0]?.textContent.replace(/,/g,'')) || 0;
     roleTotal.done += parseFloat(cells[1]?.textContent.replace(/,/g,'')) || 0;
-    roleTotal.refund += parseFloat(cells[3]?.textContent.replace(/,/g,'')) || 0;
-    roleTotal.net += parseFloat(cells[6]?.textContent.replace(/,/g,'')) || 0;
+    roleTotal.refund += parseFloat(cells[4]?.textContent.replace(/,/g,'')) || 0;
+    roleTotal.net += parseFloat(cells[7]?.textContent.replace(/,/g,'')) || 0;
   });
   // update role subtotal row
   let st = document.querySelector('#tab-role tr.subtotal');
   if(st) {
     st.cells[1].textContent = fmtNum(roleTotal.target);
     st.cells[2].textContent = fmtNum(roleTotal.done);
-    st.cells[5].textContent = fmtNum(roleTotal.refund);
-    st.cells[8].textContent = fmtNum(roleTotal.net);
+    st.cells[6].textContent = fmtNum(roleTotal.refund);
+    st.cells[9].textContent = fmtNum(roleTotal.net);
   }
 }
 
@@ -211,12 +211,12 @@ function refreshAll(){
   });
   var _rNames=["销售","班主任","门店"];
   document.querySelectorAll("#tab-role tbody tr:not(.subtotal)").forEach(function(row,i){
-    var a=_gAgg[_rNames[i]]; if(!a) return; var t=row.querySelectorAll("td"); if(t.length<11) return;
-    writeNum(t[2],a.done); writeNum(t[5],a.ref);
+    var a=_gAgg[_rNames[i]]; if(!a) return; var t=row.querySelectorAll("td"); if(t.length<12) return;
+    writeNum(t[2],a.done); writeNum(t[6],a.ref);
   });
   // role tab
-  document.querySelectorAll("#tab-role tbody tr:not(.subtotal)").forEach(function(row){tds=row.querySelectorAll("td");if(tds.length<11)return;var t=parseNum(tds[1]),d=parseNum(tds[2]),r=parseNum(tds[5]);rTotals.tgt+=t;rTotals.done+=d;rTotals.ref+=r;rTotals.net+=d-r;writeNum(tds[8],d-r);rebuildBar(tds[3],d/t);rebuildRefund(tds[5].nextElementSibling,r,d,"group")});
-  st=document.querySelector("#tab-role tr.subtotal");if(st){tds=st.querySelectorAll("td");writeNum(tds[1],rTotals.tgt);writeNum(tds[2],rTotals.done);rebuildBar(tds[3],rTotals.done/rTotals.tgt);writeNum(tds[5],rTotals.ref);writeNum(tds[8],rTotals.net);rebuildRefund(tds[5].nextElementSibling,rTotals.ref,rTotals.done,"group")}
+  document.querySelectorAll("#tab-role tbody tr:not(.subtotal)").forEach(function(row){tds=row.querySelectorAll("td");if(tds.length<12)return;var t=parseNum(tds[1]),d=parseNum(tds[2]),r=parseNum(tds[6]);rTotals.tgt+=t;rTotals.done+=d;rTotals.ref+=r;rTotals.net+=d-r;writeNum(tds[9],d-r);rebuildBar(tds[4],d/t);rebuildRefund(tds[6].nextElementSibling,r,d,"group")});
+  st=document.querySelector("#tab-role tr.subtotal");if(st){tds=st.querySelectorAll("td");writeNum(tds[1],rTotals.tgt);writeNum(tds[2],rTotals.done);rebuildBar(tds[4],rTotals.done/rTotals.tgt);writeNum(tds[6],rTotals.ref);writeNum(tds[9],rTotals.net);rebuildRefund(tds[6].nextElementSibling,rTotals.ref,rTotals.done,"group")}
   // group tab
   document.querySelectorAll("#tab-group tbody tr:not(.subtotal):not(.section-header)").forEach(function(row){tds=row.querySelectorAll("td");if(tds.length<12)return;var t=parseNum(tds[2]),d=parseNum(tds[3]),r=parseNum(tds[6]);writeNum(tds[9],d-r);rebuildBar(tds[4],d/t);rebuildRefund(tds[7],r,d,"group")});
   // person tabs
@@ -852,10 +852,10 @@ function importBaseTable(input) {
       var rc = roleCalc[rkey];
       writeNum(tds[1], rc.tgt);
       writeNum(tds[2], rc.done);
-      rebuildBar(tds[3], rc.done/rc.tgt);
-      writeNum(tds[5], rc.ref);
-      writeNum(tds[8], rc.net);
-      rebuildRefund(tds[5].nextElementSibling, rc.ref, rc.done, 'group');
+      rebuildBar(tds[4], rc.done/rc.tgt);
+      writeNum(tds[6], rc.ref);
+      writeNum(tds[9], rc.net);
+      rebuildRefund(tds[6].nextElementSibling, rc.ref, rc.done, 'group');
     });
 
     // 底表重算已重写门店行，清除康博嘉叠加基线（防止旧基线导致重复回退）
@@ -1587,7 +1587,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260729162744"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260729163633"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -1702,7 +1702,7 @@ document.addEventListener('click', function(e) {
 <div id="monthly-role-body">
 <table>
 <thead><tr>
-  <th>角色</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
+  <th>角色</th><th class="num">目标</th><th class="num">完成</th><th class="num">上月完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
   <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th class="num">本周目标</th><th style="min-width:130px">本周目标进展</th>
 </tr></thead><tbody>
@@ -1710,6 +1710,7 @@ document.addEventListener('click', function(e) {
   <td style="font-size:14px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span></td>
   <td class="num">470.0万</td>
   <td class="num"><b>358.8万</b></td>
+  <td class="num">311.2万</td>
   <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
   <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
     <div style="width:76.34172255319149%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
@@ -1736,6 +1737,7 @@ document.addEventListener('click', function(e) {
   <td style="font-size:14px"><span style="background:#fce7f3;color:#9d174d;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">班主任</span></td>
   <td class="num">200.0万</td>
   <td class="num"><b>119.9万</b></td>
+  <td class="num">117.6万</td>
   <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
   <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
     <div style="width:59.9266765%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
@@ -1762,6 +1764,7 @@ document.addEventListener('click', function(e) {
   <td style="font-size:14px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span></td>
   <td class="num">840.0万</td>
   <td class="num"><b>686.8万</b></td>
+  <td class="num">565.3万</td>
   <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
   <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
     <div style="width:81.76654642857143%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
@@ -1786,7 +1789,7 @@ document.addEventListener('click', function(e) {
   </div></div></td>
 </tr>
 <tr class="subtotal"><td>南区合计</td>
-  <td class="num">1510.0万</td><td class="num">1165.5万</td><td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
+  <td class="num">1510.0万</td><td class="num">1165.5万</td><td class="num">994.0万</td><td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
   <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
     <div style="width:77.18532708609271%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
     <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b;text-shadow:0 0 4px rgba(255,255,255,0.8)">77.2%</div>
@@ -4886,8 +4889,8 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'商家操作失误':1,'服务未交付/联系不上':1,'价格问题':1,'效果不满意':1,'家人不支持':1,'时间/适配冲突':1,'教材问题':1};
-var NO_ATTR = {'未填写原因':1,'主动放弃/拍错':1,'其他/未说明':1};
+var INTERVENABLE = {'教材问题':1,'服务未交付/联系不上':1,'时间/适配冲突':1,'价格问题':1,'效果不满意':1,'家人不支持':1,'商家操作失误':1};
+var NO_ATTR = {'其他/未说明':1,'主动放弃/拍错':1,'未填写原因':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5339,4 +5342,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260729162744";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260729163633";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
