@@ -101,15 +101,15 @@ function recalcAll() {
     roleTotal.target += parseFloat(cells[0]?.textContent.replace(/,/g,'')) || 0;
     roleTotal.done += parseFloat(cells[1]?.textContent.replace(/,/g,'')) || 0;
     roleTotal.refund += parseFloat(cells[3]?.textContent.replace(/,/g,'')) || 0;
-    roleTotal.net += parseFloat(cells[5]?.textContent.replace(/,/g,'')) || 0;
+    roleTotal.net += parseFloat(cells[6]?.textContent.replace(/,/g,'')) || 0;
   });
   // update role subtotal row
   let st = document.querySelector('#tab-role tr.subtotal');
   if(st) {
     st.cells[1].textContent = fmtNum(roleTotal.target);
     st.cells[2].textContent = fmtNum(roleTotal.done);
-    st.cells[3].textContent = fmtNum(roleTotal.refund);
-    st.cells[5].textContent = fmtNum(roleTotal.net);
+    st.cells[5].textContent = fmtNum(roleTotal.refund);
+    st.cells[8].textContent = fmtNum(roleTotal.net);
   }
 }
 
@@ -211,12 +211,12 @@ function refreshAll(){
   });
   var _rNames=["销售","班主任","门店"];
   document.querySelectorAll("#tab-role tbody tr:not(.subtotal)").forEach(function(row,i){
-    var a=_gAgg[_rNames[i]]; if(!a) return; var t=row.querySelectorAll("td"); if(t.length<7) return;
-    writeNum(t[2],a.done); writeNum(t[4],a.ref);
+    var a=_gAgg[_rNames[i]]; if(!a) return; var t=row.querySelectorAll("td"); if(t.length<11) return;
+    writeNum(t[2],a.done); writeNum(t[5],a.ref);
   });
   // role tab
-  document.querySelectorAll("#tab-role tbody tr:not(.subtotal)").forEach(function(row){tds=row.querySelectorAll("td");if(tds.length<7)return;var t=parseNum(tds[1]),d=parseNum(tds[2]),r=parseNum(tds[4]);rTotals.tgt+=t;rTotals.done+=d;rTotals.ref+=r;rTotals.net+=d-r;writeNum(tds[5],d-r);rebuildBar(tds[3],d/t);rebuildRefund(tds[4].nextElementSibling,r,d,"group")});
-  st=document.querySelector("#tab-role tr.subtotal");if(st){tds=st.querySelectorAll("td");writeNum(tds[1],rTotals.tgt);writeNum(tds[2],rTotals.done);rebuildBar(tds[3],rTotals.done/rTotals.tgt);writeNum(tds[4],rTotals.ref);writeNum(tds[5],rTotals.net);rebuildRefund(tds[4].nextElementSibling,rTotals.ref,rTotals.done,"group")}
+  document.querySelectorAll("#tab-role tbody tr:not(.subtotal)").forEach(function(row){tds=row.querySelectorAll("td");if(tds.length<11)return;var t=parseNum(tds[1]),d=parseNum(tds[2]),r=parseNum(tds[5]);rTotals.tgt+=t;rTotals.done+=d;rTotals.ref+=r;rTotals.net+=d-r;writeNum(tds[8],d-r);rebuildBar(tds[3],d/t);rebuildRefund(tds[5].nextElementSibling,r,d,"group")});
+  st=document.querySelector("#tab-role tr.subtotal");if(st){tds=st.querySelectorAll("td");writeNum(tds[1],rTotals.tgt);writeNum(tds[2],rTotals.done);rebuildBar(tds[3],rTotals.done/rTotals.tgt);writeNum(tds[5],rTotals.ref);writeNum(tds[8],rTotals.net);rebuildRefund(tds[5].nextElementSibling,rTotals.ref,rTotals.done,"group")}
   // group tab
   document.querySelectorAll("#tab-group tbody tr:not(.subtotal):not(.section-header)").forEach(function(row){tds=row.querySelectorAll("td");if(tds.length<12)return;var t=parseNum(tds[2]),d=parseNum(tds[3]),r=parseNum(tds[6]);writeNum(tds[9],d-r);rebuildBar(tds[4],d/t);rebuildRefund(tds[7],r,d,"group")});
   // person tabs
@@ -853,9 +853,9 @@ function importBaseTable(input) {
       writeNum(tds[1], rc.tgt);
       writeNum(tds[2], rc.done);
       rebuildBar(tds[3], rc.done/rc.tgt);
-      writeNum(tds[4], rc.ref);
-      writeNum(tds[5], rc.net);
-      rebuildRefund(tds[4].nextElementSibling, rc.ref, rc.done, 'group');
+      writeNum(tds[5], rc.ref);
+      writeNum(tds[8], rc.net);
+      rebuildRefund(tds[5].nextElementSibling, rc.ref, rc.done, 'group');
     });
 
     // 底表重算已重写门店行，清除康博嘉叠加基线（防止旧基线导致重复回退）
@@ -1587,7 +1587,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260729112014"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260729162744"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -1702,8 +1702,9 @@ document.addEventListener('click', function(e) {
 <div id="monthly-role-body">
 <table>
 <thead><tr>
-  <th>角色</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th>
-  <th class="num">本月退费</th><th class="num">退费率</th><th class="num">本月净流水</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th class="num">本周目标</th><th style="min-width:130px">本周目标进展</th>
+  <th>角色</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
+  <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
+  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th class="num">本周目标</th><th style="min-width:130px">本周目标进展</th>
 </tr></thead><tbody>
 <tr>
   <td style="font-size:14px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span></td>
@@ -1716,9 +1717,13 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↑15.3%</span></td>
   <td class="num">172.1万</td>
   <td class="num"><span data-refund-key="group:销售" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:销售')" title="点击查看退款原因">48.0%</span></td>
+  <td class="num"><span style="color:#ef4444;font-weight:600">↑20.4%</span></td>
   <td class="num"><b>186.7万</b></td>
+  <td class="num">168.3万</td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↑11.0%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">6618</td>
   <td class="num col-avgcall" style="color:#0e7490;font-weight:600">220.6</td>
   <td class="num" style="color:#64748b">88.0万</td>
@@ -1738,9 +1743,13 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↑2.0%</span></td>
   <td class="num">51.2万</td>
   <td class="num"><span data-refund-key="group:班主任" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:班主任')" title="点击查看退款原因">42.7%</span></td>
+  <td class="num"><span style="color:#ef4444;font-weight:600">↑12.9%</span></td>
   <td class="num"><b>68.6万</b></td>
+  <td class="num">72.2万</td>
+  <td class="num"><span style="color:#ef4444;font-weight:600">↓4.9%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">800</td>
   <td class="num col-avgcall" style="color:#0e7490;font-weight:600">50.0</td>
   <td class="num" style="color:#64748b">45.0万</td>
@@ -1760,9 +1769,13 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
+  <td class="num"><span style="color:#ef4444;font-weight:600">↓7.1%</span></td>
   <td class="num">106.9万</td>
   <td class="num"><span data-refund-key="group:门店" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:门店')" title="点击查看退款原因">15.6%</span></td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↓9.1%</span></td>
   <td class="num"><b>579.9万</b></td>
+  <td class="num">447.7万</td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↑29.5%</span></td>
   <td class="num" style="color:#0891b2;font-weight:600">9842</td>
   <td class="num col-avgcall" style="color:#0e7490;font-weight:600">169.7</td>
   <td class="num" style="color:#64748b">124.0万</td>
@@ -1780,8 +1793,12 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↑1.0%</span></td>
   <td class="num">330.2万</td><td class="num"><span data-refund-key="total" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'total')" title="点击查看退款原因">28.3%</span></td>
+  <td class="num"><span style="color:#ef4444;font-weight:600">↑8.0%</span></td>
   <td class="num">835.3万</td>
+  <td class="num">688.1万</td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↑21.4%</span></td>
   <td class="num" style="color:#0891b2;font-weight:700">17260</td>
   <td class="num col-avgcall" style="color:#0e7490;font-weight:700">166.0</td>
   <td class="num" style="color:#64748b">257.0万</td>
@@ -4869,8 +4886,8 @@ function toggleAvgCall(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'时间/适配冲突':1,'商家操作失误':1,'价格问题':1,'教材问题':1,'家人不支持':1,'效果不满意':1,'服务未交付/联系不上':1};
-var NO_ATTR = {'主动放弃/拍错':1,'其他/未说明':1,'未填写原因':1};
+var INTERVENABLE = {'商家操作失误':1,'服务未交付/联系不上':1,'价格问题':1,'效果不满意':1,'家人不支持':1,'时间/适配冲突':1,'教材问题':1};
+var NO_ATTR = {'未填写原因':1,'主动放弃/拍错':1,'其他/未说明':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5322,4 +5339,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260729112014";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260729162744";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
