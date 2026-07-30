@@ -1587,7 +1587,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260730103719"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260730104151"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -1702,7 +1702,7 @@ document.addEventListener('click', function(e) {
 <div id="monthly-role-body">
 <table>
 <thead><tr>
-  <th>角色</th><th class="num">目标</th><th class="num">完成</th><th class="num">上月完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
+  <th>角色</th><th class="num">目标</th><th class="num">完成</th><th class="num col-prevdone">上月完成 <span onclick="togglePrevDone()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
   <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th class="num">本周目标</th><th style="min-width:130px">本周目标进展</th>
 </tr></thead><tbody>
@@ -1710,7 +1710,7 @@ document.addEventListener('click', function(e) {
   <td style="font-size:14px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span></td>
   <td class="num">470.0万</td>
   <td class="num"><b>364.5万</b></td>
-  <td class="num">342.3万</td>
+  <td class="num col-prevdone">342.3万</td>
   <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
   <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
     <div style="width:77.56138%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
@@ -1737,7 +1737,7 @@ document.addEventListener('click', function(e) {
   <td style="font-size:14px"><span style="background:#fce7f3;color:#9d174d;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">班主任</span></td>
   <td class="num">200.0万</td>
   <td class="num"><b>126.0万</b></td>
-  <td class="num">148.9万</td>
+  <td class="num col-prevdone">148.9万</td>
   <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
   <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
     <div style="width:63.0226265%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
@@ -1764,7 +1764,7 @@ document.addEventListener('click', function(e) {
   <td style="font-size:14px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span></td>
   <td class="num">840.0万</td>
   <td class="num"><b>706.1万</b></td>
-  <td class="num">806.9万</td>
+  <td class="num col-prevdone">806.9万</td>
   <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
   <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
     <div style="width:84.05747714285714%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
@@ -1789,7 +1789,7 @@ document.addEventListener('click', function(e) {
   </div></div></td>
 </tr>
 <tr class="subtotal"><td>南区合计</td>
-  <td class="num">1510.0万</td><td class="num">1196.7万</td><td class="num">1298.1万</td><td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
+  <td class="num">1510.0万</td><td class="num">1196.7万</td><td class="num col-prevdone">1298.1万</td><td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
   <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
     <div style="width:79.2494401986755%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
     <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b;text-shadow:0 0 4px rgba(255,255,255,0.8)">79.2%</div>
@@ -4880,7 +4880,6 @@ var _avgCallHidden = false;
 function toggleAvgCall(){
   _avgCallHidden = !_avgCallHidden;
   document.querySelectorAll(".col-avgcall").forEach(function(el){
-    // 保留列头的眼睛可点，隐藏数值单元格；列头文字变淡
     if(el.tagName === 'TD'){ el.style.visibility = _avgCallHidden ? 'hidden' : ''; }
     else {
       var txt = el.childNodes[0];
@@ -4888,9 +4887,20 @@ function toggleAvgCall(){
     }
   });
 }
+var _prevDoneHidden = false;
+function togglePrevDone(){
+  _prevDoneHidden = !_prevDoneHidden;
+  document.querySelectorAll(".col-prevdone").forEach(function(el){
+    if(el.tagName === 'TD'){ el.style.visibility = _prevDoneHidden ? 'hidden' : ''; }
+    else {
+      var txt = el.childNodes[0];
+      if(txt) txt.textContent = _prevDoneHidden ? '' : '上月完成 ';
+    }
+  });
+}
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'服务未交付/联系不上':1,'时间/适配冲突':1,'商家操作失误':1,'效果不满意':1,'家人不支持':1,'教材问题':1,'价格问题':1};
-var NO_ATTR = {'主动放弃/拍错':1,'未填写原因':1,'其他/未说明':1};
+var INTERVENABLE = {'商家操作失误':1,'家人不支持':1,'时间/适配冲突':1,'价格问题':1,'教材问题':1,'服务未交付/联系不上':1,'效果不满意':1};
+var NO_ATTR = {'未填写原因':1,'主动放弃/拍错':1,'其他/未说明':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5342,4 +5352,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260730103719";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260730104151";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
