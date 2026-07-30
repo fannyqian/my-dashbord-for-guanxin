@@ -1587,7 +1587,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260730104151"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260730110222"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -1702,7 +1702,7 @@ document.addEventListener('click', function(e) {
 <div id="monthly-role-body">
 <table>
 <thead><tr>
-  <th>角色</th><th class="num">目标</th><th class="num">完成</th><th class="num col-prevdone">上月完成 <span onclick="togglePrevDone()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
+  <th>角色</th><th class="num">目标</th><th class="num">完成</th><th class="num col-prevdone">上月完成 <span onclick="togglePrevDone()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th style="min-width:170px">完成率</th><th class="num col-donechg">完成环比 <span onclick="toggleDoneChg()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
   <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th class="num">本周目标</th><th style="min-width:130px">本周目标进展</th>
 </tr></thead><tbody>
@@ -1718,7 +1718,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑6.5%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑6.5%</span></td>
   <td class="num">176.3万</td>
   <td class="num"><span data-refund-key="group:销售" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:销售')" title="点击查看退款原因">48.4%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑11.7%</span></td>
@@ -1745,7 +1745,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓15.3%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓15.3%</span></td>
   <td class="num">51.2万</td>
   <td class="num"><span data-refund-key="group:班主任" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:班主任')" title="点击查看退款原因">40.6%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑4.5%</span></td>
@@ -1772,7 +1772,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓12.5%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓12.5%</span></td>
   <td class="num">115.8万</td>
   <td class="num"><span data-refund-key="group:门店" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:门店')" title="点击查看退款原因">16.4%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓12.3%</span></td>
@@ -1796,7 +1796,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓7.8%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓7.8%</span></td>
   <td class="num">343.3万</td><td class="num"><span data-refund-key="total" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'total')" title="点击查看退款原因">28.7%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑1.3%</span></td>
   <td class="num">853.4万</td>
@@ -1837,7 +1837,7 @@ document.addEventListener('click', function(e) {
 <div id="monthly-group-body">
 <table>
 <thead><tr>
-  <th>分组</th><th>角色 <span style="font-weight:400;color:#94a3b8;font-size:10px">/趋势</span></th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
+  <th>分组</th><th>角色 <span style="font-weight:400;color:#94a3b8;font-size:10px">/趋势</span></th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num col-donechg">完成环比 <span onclick="toggleDoneChg()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
   <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th><th class="num col-avgcall">人均电话 <span onclick="toggleAvgCall()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th class="num">本周目标</th><th style="min-width:130px">本周目标进展</th>
 </tr></thead><tbody>
@@ -1853,7 +1853,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓72.4%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓72.4%</span></td>
   <td class="num">6.5万</td>
   <td class="num"><span data-refund-key="group:课程2组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程2组')" title="点击查看退款原因">95.4%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑0.9%</span></td>
@@ -1880,7 +1880,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑276.7%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑276.7%</span></td>
   <td class="num">5.5万</td>
   <td class="num"><span data-refund-key="group:课程5组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程5组')" title="点击查看退款原因">13.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓10.7%</span></td>
@@ -1907,7 +1907,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓15.3%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓15.3%</span></td>
   <td class="num">51.2万</td>
   <td class="num"><span data-refund-key="group:班主任" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:班主任')" title="点击查看退款原因">40.6%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑4.5%</span></td>
@@ -1934,7 +1934,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑1.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑1.0%</span></td>
   <td class="num">23.3万</td>
   <td class="num"><span data-refund-key="group:课程3组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程3组')" title="点击查看退款原因">35.1%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓13.2%</span></td>
@@ -1961,7 +1961,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓11.0%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓11.0%</span></td>
   <td class="num">44.4万</td>
   <td class="num"><span data-refund-key="group:课程4组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程4组')" title="点击查看退款原因">70.6%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓12.4%</span></td>
@@ -1988,7 +1988,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓13.7%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓13.7%</span></td>
   <td class="num">26.0万</td>
   <td class="num"><span data-refund-key="group:课程7组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程7组')" title="点击查看退款原因">54.2%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓16.3%</span></td>
@@ -2015,7 +2015,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓12.9%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓12.9%</span></td>
   <td class="num">50.1万</td>
   <td class="num"><span data-refund-key="group:课程1组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程1组')" title="点击查看退款原因">62.4%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑112.9%</span></td>
@@ -2042,7 +2042,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑157.5%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑157.5%</span></td>
   <td class="num">20.6万</td>
   <td class="num"><span data-refund-key="group:课程6组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程6组')" title="点击查看退款原因">35.6%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑55.2%</span></td>
@@ -2069,7 +2069,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓29.2%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓29.2%</span></td>
   <td class="num">6.8万</td>
   <td class="num"><span data-refund-key="group:福州" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:福州')" title="点击查看退款原因">31.8%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑18.3%</span></td>
@@ -2096,7 +2096,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑6.1%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑6.1%</span></td>
   <td class="num">8.2万</td>
   <td class="num"><span data-refund-key="group:杭州" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:杭州')" title="点击查看退款原因">17.9%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓33.8%</span></td>
@@ -2123,7 +2123,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓12.3%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓12.3%</span></td>
   <td class="num">6.4万</td>
   <td class="num"><span data-refund-key="group:昆明" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:昆明')" title="点击查看退款原因">17.2%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓33.2%</span></td>
@@ -2150,7 +2150,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓30.6%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓30.6%</span></td>
   <td class="num">25.9万</td>
   <td class="num"><span data-refund-key="group:南京" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:南京')" title="点击查看退款原因">39.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓13.4%</span></td>
@@ -2177,7 +2177,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓61.9%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓61.9%</span></td>
   <td class="num">9.3万</td>
   <td class="num"><span data-refund-key="group:广州" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:广州')" title="点击查看退款原因">14.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓8.0%</span></td>
@@ -2204,7 +2204,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑152.2%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑152.2%</span></td>
   <td class="num">5.5万</td>
   <td class="num"><span data-refund-key="group:普陀" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:普陀')" title="点击查看退款原因">3.3%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑12660.8%</span></td>
@@ -2231,7 +2231,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑12.6%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑12.6%</span></td>
   <td class="num">2.7万</td>
   <td class="num"><span data-refund-key="group:成都" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:成都')" title="点击查看退款原因">7.9%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑292.0%</span></td>
@@ -2258,7 +2258,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓38.6%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓38.6%</span></td>
   <td class="num">86.0</td>
   <td class="num"><span data-refund-key="group:珠海" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:珠海')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓99.0%</span></td>
@@ -2285,7 +2285,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑19.9%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑19.9%</span></td>
   <td class="num">16.8万</td>
   <td class="num"><span data-refund-key="group:深圳" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:深圳')" title="点击查看退款原因">22.4%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑122.5%</span></td>
@@ -2312,7 +2312,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓17.7%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓17.7%</span></td>
   <td class="num">12.4万</td>
   <td class="num"><span data-refund-key="group:徐汇" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:徐汇')" title="点击查看退款原因">15.5%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓41.8%</span></td>
@@ -2339,7 +2339,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div><div style="font-size:10px;margin-top:2px;font-weight:700"><span style="color:#6366f1">TOC 59.2%</span>  +  <span style="color:#8b5cf6">EAP回款 52.9%</span></div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑97.4%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑97.4%</span></td>
   <td class="num">21.8万</td>
   <td class="num"><span data-refund-key="group:武汉" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:武汉')" title="点击查看退款原因">22.9%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓35.6%</span></td>
@@ -2372,7 +2372,7 @@ document.addEventListener('click', function(e) {
 </div>
 <table>
 <thead><tr>
-  <th>分组</th><th>销售</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
+  <th>分组</th><th>销售</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num col-donechg">完成环比 <span onclick="toggleDoneChg()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
   <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th>
 </tr></thead><tbody>
@@ -2388,7 +2388,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓63.1%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓63.1%</span></td>
   <td class="num">2.7万</td>
   <td class="num"><span data-refund-key="person:刘恩石" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:刘恩石')" title="点击查看退款原因">211.5%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑34.8%</span></td>
@@ -2408,7 +2408,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓87.5%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓87.5%</span></td>
   <td class="num">4.7万</td>
   <td class="num"><span data-refund-key="person:龙少海" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:龙少海')" title="点击查看退款原因">291.6%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑21.1%</span></td>
@@ -2428,7 +2428,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑11.3%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑11.3%</span></td>
   <td class="num">4.5万</td>
   <td class="num"><span data-refund-key="person:郑鲁" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:郑鲁')" title="点击查看退款原因">68.9%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑44.5%</span></td>
@@ -2448,7 +2448,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓49.6%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓49.6%</span></td>
   <td class="num">2.0万</td>
   <td class="num"><span data-refund-key="person:姜人荷" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:姜人荷')" title="点击查看退款原因">28.9%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑163.2%</span></td>
@@ -2468,7 +2468,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">3.0万</td>
   <td class="num"><span data-refund-key="person:周玉枝" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:周玉枝')" title="点击查看退款原因">42.0%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑42.9%</span></td>
@@ -2488,7 +2488,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑41.1%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑41.1%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:李天阳" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李天阳')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -2508,7 +2508,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓14.3%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓14.3%</span></td>
   <td class="num">2.6万</td>
   <td class="num"><span data-refund-key="person:冯岚" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:冯岚')" title="点击查看退款原因">32.2%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑161.8%</span></td>
@@ -2528,7 +2528,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑236.4%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑236.4%</span></td>
   <td class="num">6,600.0</td>
   <td class="num"><span data-refund-key="person:张天昂" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:张天昂')" title="点击查看退款原因">7.4%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -2548,7 +2548,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑201.8%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑201.8%</span></td>
   <td class="num">5.5万</td>
   <td class="num"><span data-refund-key="person:郑美琦" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:郑美琦')" title="点击查看退款原因">49.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓13.1%</span></td>
@@ -2568,7 +2568,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓17.7%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓17.7%</span></td>
   <td class="num">3.8万</td>
   <td class="num"><span data-refund-key="person:王航" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:王航')" title="点击查看退款原因">32.6%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑475.8%</span></td>
@@ -2588,7 +2588,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑13.2%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑13.2%</span></td>
   <td class="num">6.1万</td>
   <td class="num"><span data-refund-key="person:高铭瑞" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:高铭瑞')" title="点击查看退款原因">67.1%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -2608,7 +2608,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓60.9%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓60.9%</span></td>
   <td class="num">4.4万</td>
   <td class="num"><span data-refund-key="person:武存英" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:武存英')" title="点击查看退款原因">38.5%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓62.0%</span></td>
@@ -2628,7 +2628,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑199.7%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑199.7%</span></td>
   <td class="num">4.4万</td>
   <td class="num"><span data-refund-key="person:车宏祥" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:车宏祥')" title="点击查看退款原因">26.8%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓27.7%</span></td>
@@ -2648,7 +2648,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑20.2%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑20.2%</span></td>
   <td class="num">4.3万</td>
   <td class="num"><span data-refund-key="person:江敏" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:江敏')" title="点击查看退款原因">25.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓42.1%</span></td>
@@ -2668,7 +2668,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑64.2%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑64.2%</span></td>
   <td class="num">4.3万</td>
   <td class="num"><span data-refund-key="person:张孟蝶" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:张孟蝶')" title="点击查看退款原因">17.7%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -2688,7 +2688,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑258.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑258.0%</span></td>
   <td class="num">10.0万</td>
   <td class="num"><span data-refund-key="person:岳跃峰" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:岳跃峰')" title="点击查看退款原因">31.7%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑42.6%</span></td>
@@ -2704,7 +2704,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑19.1%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑19.1%</span></td>
   <td class="num">63.1万</td><td class="num"><span data-refund-key="group:班主任" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:班主任')" title="点击查看退款原因">34.6%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑21.1%</span></td>
   <td class="num">119.4万</td><td class="num">101.1万</td>
@@ -2720,7 +2720,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓58.9%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓58.9%</span></td>
   <td class="num">8.1万</td>
   <td class="num"><span data-refund-key="person:唐歌" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:唐歌')" title="点击查看退款原因">102.7%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑443.9%</span></td>
@@ -2740,7 +2740,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑108.4%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑108.4%</span></td>
   <td class="num">8.5万</td>
   <td class="num"><span data-refund-key="person:闫丽东" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:闫丽东')" title="点击查看退款原因">81.4%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑66.5%</span></td>
@@ -2760,7 +2760,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓19.2%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓19.2%</span></td>
   <td class="num">1.5万</td>
   <td class="num"><span data-refund-key="person:于鹏飞" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:于鹏飞')" title="点击查看退款原因">13.6%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑200.2%</span></td>
@@ -2780,7 +2780,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑35.3%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑35.3%</span></td>
   <td class="num">5.0万</td>
   <td class="num"><span data-refund-key="person:何媛媛" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:何媛媛')" title="点击查看退款原因">34.8%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑232.9%</span></td>
@@ -2796,7 +2796,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓10.0%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓10.0%</span></td>
   <td class="num">23.1万</td><td class="num"><span data-refund-key="group:课程1组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程1组')" title="点击查看退款原因">52.9%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑169.0%</span></td>
   <td class="num">20.5万</td><td class="num">39.8万</td>
@@ -2812,7 +2812,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓71.4%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓71.4%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:李洋洋" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李洋洋')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
@@ -2832,7 +2832,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓79.3%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓79.3%</span></td>
   <td class="num">1.7万</td>
   <td class="num"><span data-refund-key="person:刘学锟" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:刘学锟')" title="点击查看退款原因">104.7%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓47.6%</span></td>
@@ -2852,7 +2852,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓71.7%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓71.7%</span></td>
   <td class="num">2.7万</td>
   <td class="num"><span data-refund-key="person:张露" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:张露')" title="点击查看退款原因">123.1%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑432.5%</span></td>
@@ -2868,7 +2868,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓74.8%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓74.8%</span></td>
   <td class="num">4.3万</td><td class="num"><span data-refund-key="group:课程2组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程2组')" title="点击查看退款原因">91.1%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓7.6%</span></td>
   <td class="num">4,240.0</td><td class="num">14.1万</td>
@@ -2884,7 +2884,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑61.2%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑61.2%</span></td>
   <td class="num">4,980.0</td>
   <td class="num"><span data-refund-key="person:黄梦妹" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:黄梦妹')" title="点击查看退款原因">11.7%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -2904,7 +2904,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑169.5%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑169.5%</span></td>
   <td class="num">2.0万</td>
   <td class="num"><span data-refund-key="person:刘孟杰" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:刘孟杰')" title="点击查看退款原因">23.4%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑270.4%</span></td>
@@ -2924,7 +2924,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑3.9%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑3.9%</span></td>
   <td class="num">2.0万</td>
   <td class="num"><span data-refund-key="person:高曌" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:高曌')" title="点击查看退款原因">18.9%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓20.0%</span></td>
@@ -2944,7 +2944,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓25.5%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓25.5%</span></td>
   <td class="num">2.0万</td>
   <td class="num"><span data-refund-key="person:王渊亮" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:王渊亮')" title="点击查看退款原因">23.9%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓37.4%</span></td>
@@ -2964,7 +2964,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓18.2%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓18.2%</span></td>
   <td class="num">3.0万</td>
   <td class="num"><span data-refund-key="person:司法" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:司法')" title="点击查看退款原因">30.1%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑18.1%</span></td>
@@ -2980,7 +2980,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑5.8%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑5.8%</span></td>
   <td class="num">9.5万</td><td class="num"><span data-refund-key="group:课程3组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程3组')" title="点击查看退款原因">22.7%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑8.3%</span></td>
   <td class="num">32.1万</td><td class="num">30.6万</td>
@@ -2996,7 +2996,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑126.4%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑126.4%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:周紫姻" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:周紫姻')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
@@ -3016,7 +3016,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓16.6%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓16.6%</span></td>
   <td class="num">28.9万</td>
   <td class="num"><span data-refund-key="person:梁志超" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:梁志超')" title="点击查看退款原因">139.8%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑143.6%</span></td>
@@ -3036,7 +3036,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓12.6%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓12.6%</span></td>
   <td class="num">13.0万</td>
   <td class="num"><span data-refund-key="person:丁蕾" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:丁蕾')" title="点击查看退款原因">35.2%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓19.9%</span></td>
@@ -3052,7 +3052,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓9.8%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓9.8%</span></td>
   <td class="num">42.0万</td><td class="num"><span data-refund-key="group:课程4组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程4组')" title="点击查看退款原因">67.2%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑28.7%</span></td>
   <td class="num">20.4万</td><td class="num">36.6万</td>
@@ -3068,7 +3068,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">0.0</td>
   <td class="num">—</td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3088,7 +3088,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:卢忠慧" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:卢忠慧')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
@@ -3108,7 +3108,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑1214.7%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑1214.7%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:陈斌斌" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:陈斌斌')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3128,7 +3128,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑2661.1%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑2661.1%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:严闽龙" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:严闽龙')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
@@ -3148,7 +3148,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">3,788.0</td>
   <td class="num"><span data-refund-key="person:樊帆" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:樊帆')" title="点击查看退款原因">6.3%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3168,7 +3168,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓13.1%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓13.1%</span></td>
   <td class="num">4.0万</td>
   <td class="num"><span data-refund-key="person:刘俊彤" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:刘俊彤')" title="点击查看退款原因">58.8%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑75.1%</span></td>
@@ -3184,7 +3184,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑205.6%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑205.6%</span></td>
   <td class="num">4.4万</td><td class="num"><span data-refund-key="group:课程5组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程5组')" title="点击查看退款原因">17.5%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑17.1%</span></td>
   <td class="num">20.7万</td><td class="num">4.5万</td>
@@ -3200,7 +3200,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑8.7%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑8.7%</span></td>
   <td class="num">12.6万</td>
   <td class="num"><span data-refund-key="person:李钰坤" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李钰坤')" title="点击查看退款原因">40.2%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑124.3%</span></td>
@@ -3220,7 +3220,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑349.9%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑349.9%</span></td>
   <td class="num">99.0</td>
   <td class="num"><span data-refund-key="person:段继宇" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:段继宇')" title="点击查看退款原因">0.3%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3240,7 +3240,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑557.3%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑557.3%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:王蓉" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:王蓉')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
@@ -3260,7 +3260,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">3,788.0</td>
   <td class="num"><span data-refund-key="person:闫文奇" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:闫文奇')" title="点击查看退款原因">7.8%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓9.5%</span></td>
@@ -3280,7 +3280,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑50.2%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑50.2%</span></td>
   <td class="num">3.6万</td>
   <td class="num"><span data-refund-key="person:陈志强" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:陈志强')" title="点击查看退款原因">96.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓37.2%</span></td>
@@ -3300,7 +3300,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑80.5%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑80.5%</span></td>
   <td class="num">1,280.0</td>
   <td class="num"><span data-refund-key="person:郑理" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:郑理')" title="点击查看退款原因">2.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓65.4%</span></td>
@@ -3320,7 +3320,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓19.8%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓19.8%</span></td>
   <td class="num">10.4万</td>
   <td class="num"><span data-refund-key="person:关万辉" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:关万辉')" title="点击查看退款原因">89.3%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑24.6%</span></td>
@@ -3340,7 +3340,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓16.4%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓16.4%</span></td>
   <td class="num">7.3万</td>
   <td class="num"><span data-refund-key="person:刘士明" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:刘士明')" title="点击查看退款原因">81.9%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓19.7%</span></td>
@@ -3360,7 +3360,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓19.5%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓19.5%</span></td>
   <td class="num">3.5万</td>
   <td class="num"><span data-refund-key="person:肖伟" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:肖伟')" title="点击查看退款原因">24.4%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓33.6%</span></td>
@@ -3376,7 +3376,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓8.9%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓8.9%</span></td>
   <td class="num">25.0万</td><td class="num"><span data-refund-key="group:课程7组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程7组')" title="点击查看退款原因">56.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓13.6%</span></td>
   <td class="num">19.5万</td><td class="num">19.9万</td>
@@ -3396,7 +3396,7 @@ document.addEventListener('click', function(e) {
 </div>
 <table>
 <thead><tr>
-  <th>分院</th><th>个案经理</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num">完成环比</th>
+  <th>分院</th><th>个案经理</th><th class="num">目标</th><th class="num">完成</th><th style="min-width:170px">完成率</th><th class="num col-donechg">完成环比 <span onclick="toggleDoneChg()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th>
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
   <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num">📞电话数</th>
 </tr></thead><tbody>
@@ -3412,7 +3412,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑2512.6%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑2512.6%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:余婉丽" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:余婉丽')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3432,7 +3432,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓53.6%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓53.6%</span></td>
   <td class="num">1.8万</td>
   <td class="num"><span data-refund-key="person:岳伟伟" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:岳伟伟')" title="点击查看退款原因">6.8%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓90.0%</span></td>
@@ -3452,7 +3452,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.8%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.8%</span></td>
   <td class="num">5.1万</td>
   <td class="num"><span data-refund-key="person:赵越" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:赵越')" title="点击查看退款原因">49.3%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑41.6%</span></td>
@@ -3472,7 +3472,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓29.4%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓29.4%</span></td>
   <td class="num">10.0万</td>
   <td class="num"><span data-refund-key="person:陶雯" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:陶雯')" title="点击查看退款原因">88.3%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑1904.0%</span></td>
@@ -3492,7 +3492,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑67.3%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑67.3%</span></td>
   <td class="num">8,000.0</td>
   <td class="num"><span data-refund-key="person:王秋" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:王秋')" title="点击查看退款原因">9.1%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓69.2%</span></td>
@@ -3512,7 +3512,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑13.5%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑13.5%</span></td>
   <td class="num">2.2万</td>
   <td class="num"><span data-refund-key="person:陈翔宇" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:陈翔宇')" title="点击查看退款原因">26.6%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3528,7 +3528,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓30.4%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓30.4%</span></td>
   <td class="num">19.9万</td><td class="num"><span data-refund-key="group:南京" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:南京')" title="点击查看退款原因">30.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓17.9%</span></td>
   <td class="num">45.7万</td><td class="num">69.9万</td>
@@ -3544,7 +3544,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:李家慧" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李家慧')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3564,7 +3564,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑30.6%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑30.6%</span></td>
   <td class="num">4,980.0</td>
   <td class="num"><span data-refund-key="person:姜玮" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:姜玮')" title="点击查看退款原因">9.2%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3584,7 +3584,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓77.2%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓77.2%</span></td>
   <td class="num">2.0万</td>
   <td class="num"><span data-refund-key="person:田奇" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:田奇')" title="点击查看退款原因">20.3%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3604,7 +3604,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓42.8%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓42.8%</span></td>
   <td class="num">7,500.0</td>
   <td class="num"><span data-refund-key="person:李明" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李明')" title="点击查看退款原因">8.3%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3624,7 +3624,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓73.6%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓73.6%</span></td>
   <td class="num">6.0万</td>
   <td class="num"><span data-refund-key="person:钟燕红" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:钟燕红')" title="点击查看退款原因">24.6%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓25.9%</span></td>
@@ -3644,7 +3644,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑1.5%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑1.5%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:苏怡意" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:苏怡意')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3660,7 +3660,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓60.0%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓60.0%</span></td>
   <td class="num">9.3万</td><td class="num"><span data-refund-key="group:广州" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:广州')" title="点击查看退款原因">14.3%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑4.7%</span></td>
   <td class="num">55.7万</td><td class="num">153.6万</td>
@@ -3676,7 +3676,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓1.8%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓1.8%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:白蕾" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:白蕾')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
@@ -3696,7 +3696,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓77.2%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓77.2%</span></td>
   <td class="num">4.2万</td>
   <td class="num"><span data-refund-key="person:余佼" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:余佼')" title="点击查看退款原因">76.4%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓33.6%</span></td>
@@ -3716,7 +3716,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑226.3%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑226.3%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:王芊雅" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:王芊雅')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3736,7 +3736,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑7.8%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑7.8%</span></td>
   <td class="num">4,980.0</td>
   <td class="num"><span data-refund-key="person:许冰" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:许冰')" title="点击查看退款原因">1.7%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓79.9%</span></td>
@@ -3756,7 +3756,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑218.1%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑218.1%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:刘沁" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:刘沁')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3772,7 +3772,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑3.4%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑3.4%</span></td>
   <td class="num">4.7万</td><td class="num"><span data-refund-key="group:徐汇" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:徐汇')" title="点击查看退款原因">6.8%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓52.1%</span></td>
   <td class="num">64.6万</td><td class="num">57.2万</td>
@@ -3788,7 +3788,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓29.2%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓29.2%</span></td>
   <td class="num">1.0万</td>
   <td class="num"><span data-refund-key="person:李颜君" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李颜君')" title="点击查看退款原因">54.8%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3808,7 +3808,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓21.3%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓21.3%</span></td>
   <td class="num">6,600.0</td>
   <td class="num"><span data-refund-key="person:谌黎平" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:谌黎平')" title="点击查看退款原因">17.6%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3828,7 +3828,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑178.5%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑178.5%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:蔡清霞" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:蔡清霞')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3848,7 +3848,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑23.9%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑23.9%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:马春兰" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:马春兰')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3868,7 +3868,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑15.3%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑15.3%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:陈静" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:陈静')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
@@ -3884,7 +3884,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑16.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑16.0%</span></td>
   <td class="num">1.7万</td><td class="num"><span data-refund-key="group:成都" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:成都')" title="点击查看退款原因">5.0%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑4070.9%</span></td>
   <td class="num">31.9万</td><td class="num">28.9万</td>
@@ -3900,7 +3900,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">0.0</td>
   <td class="num">—</td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3920,7 +3920,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓82.7%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓82.7%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:杨红瑞" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:杨红瑞')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -3940,7 +3940,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓21.5%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓21.5%</span></td>
   <td class="num">9,000.0</td>
   <td class="num"><span data-refund-key="person:陈月娇" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:陈月娇')" title="点击查看退款原因">11.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓66.4%</span></td>
@@ -3960,7 +3960,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑11.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑11.0%</span></td>
   <td class="num">3.5万</td>
   <td class="num"><span data-refund-key="person:刘玉静" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:刘玉静')" title="点击查看退款原因">13.2%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓20.5%</span></td>
@@ -3976,7 +3976,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓12.3%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓12.3%</span></td>
   <td class="num">4.4万</td><td class="num"><span data-refund-key="group:昆明" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:昆明')" title="点击查看退款原因">12.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓38.0%</span></td>
   <td class="num">31.3万</td><td class="num">33.7万</td>
@@ -3992,7 +3992,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">4,980.0</td>
   <td class="num">—</td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4012,7 +4012,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:唐晟" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:唐晟')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4032,7 +4032,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓41.3%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓41.3%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:李怡慧" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李怡慧')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4052,7 +4052,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑76.9%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑76.9%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:余佼" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:余佼')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
@@ -4072,7 +4072,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑96.4%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑96.4%</span></td>
   <td class="num">1.0万</td>
   <td class="num"><span data-refund-key="person:李浩然" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李浩然')" title="点击查看退款原因">5.2%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4092,7 +4092,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑299886.7%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑299886.7%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:韦微" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:韦微')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4112,7 +4112,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑82.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑82.0%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:陈洁" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:陈洁')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4132,7 +4132,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑315.5%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑315.5%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:李菲菲" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李菲菲')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4152,7 +4152,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:韩雪" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:韩雪')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4172,7 +4172,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑51.9%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑51.9%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:王倩雅" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:王倩雅')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4188,7 +4188,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑103.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑103.0%</span></td>
   <td class="num">1.5万</td><td class="num"><span data-refund-key="group:普陀" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:普陀')" title="点击查看退款原因">1.0%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑149.7%</span></td>
   <td class="num">148.1万</td><td class="num">73.1万</td>
@@ -4204,7 +4204,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑31.9%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑31.9%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:沈悦" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:沈悦')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4224,7 +4224,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑186.2%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑186.2%</span></td>
   <td class="num">6,180.0</td>
   <td class="num"><span data-refund-key="person:尹欢" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:尹欢')" title="点击查看退款原因">13.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4244,7 +4244,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓18.8%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓18.8%</span></td>
   <td class="num">3.5万</td>
   <td class="num"><span data-refund-key="person:郑巨光" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:郑巨光')" title="点击查看退款原因">42.9%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓20.0%</span></td>
@@ -4264,7 +4264,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓23.6%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓23.6%</span></td>
   <td class="num">2.0万</td>
   <td class="num"><span data-refund-key="person:高露雅" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:高露雅')" title="点击查看退款原因">23.1%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓28.6%</span></td>
@@ -4284,7 +4284,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑4.9%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑4.9%</span></td>
   <td class="num">2.0万</td>
   <td class="num"><span data-refund-key="person:黄雅晴" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:黄雅晴')" title="点击查看退款原因">17.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓57.3%</span></td>
@@ -4304,7 +4304,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑332.5%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑332.5%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:陈舒羽" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:陈舒羽')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4320,7 +4320,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑40.5%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑40.5%</span></td>
   <td class="num">8.1万</td><td class="num"><span data-refund-key="group:杭州" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:杭州')" title="点击查看退款原因">18.6%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓31.5%</span></td>
   <td class="num">35.5万</td><td class="num">19.2万</td>
@@ -4336,7 +4336,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓24.7%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓24.7%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:米兰兰" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:米兰兰')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4356,7 +4356,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓21.8%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓21.8%</span></td>
   <td class="num">3.0万</td>
   <td class="num"><span data-refund-key="person:李薇" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李薇')" title="点击查看退款原因">83.3%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑80.7%</span></td>
@@ -4376,7 +4376,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓9.0%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓9.0%</span></td>
   <td class="num">1.0万</td>
   <td class="num"><span data-refund-key="person:陈紫灵" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:陈紫灵')" title="点击查看退款原因">9.8%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓84.0%</span></td>
@@ -4396,7 +4396,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓22.3%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓22.3%</span></td>
   <td class="num">3.8万</td>
   <td class="num"><span data-refund-key="person:李雅玲" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:李雅玲')" title="点击查看退款原因">31.9%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓45.8%</span></td>
@@ -4416,7 +4416,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑595.4%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑595.4%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:孙君兰" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:孙君兰')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4436,7 +4436,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑888.8%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑888.8%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:朱锋剑" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:朱锋剑')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
@@ -4452,7 +4452,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑117.9%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑117.9%</span></td>
   <td class="num">7.8万</td><td class="num"><span data-refund-key="group:武汉" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:武汉')" title="点击查看退款原因">8.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓48.7%</span></td>
   <td class="num">87.0万</td><td class="num">28.3万</td>
@@ -4468,7 +4468,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓49.5%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓49.5%</span></td>
   <td class="num">3.4万</td>
   <td class="num"><span data-refund-key="person:周思若" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:周思若')" title="点击查看退款原因">22.3%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑68.6%</span></td>
@@ -4488,7 +4488,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑111.8%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑111.8%</span></td>
   <td class="num">6,600.0</td>
   <td class="num"><span data-refund-key="person:马雅丽" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:马雅丽')" title="点击查看退款原因">3.3%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑292.9%</span></td>
@@ -4508,7 +4508,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑394.8%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑394.8%</span></td>
   <td class="num">3.0万</td>
   <td class="num"><span data-refund-key="person:邓璐" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:邓璐')" title="点击查看退款原因">8.1%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4524,7 +4524,7 @@ document.addEventListener('click', function(e) {
   </div>
   
 </div></td></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑67.4%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑67.4%</span></td>
   <td class="num">7.1万</td><td class="num"><span data-refund-key="group:深圳" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:深圳')" title="点击查看退款原因">9.8%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑220.7%</span></td>
   <td class="num">65.0万</td><td class="num">40.8万</td>
@@ -4540,7 +4540,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:林峻民" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:林峻民')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4560,7 +4560,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓52.0%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓52.0%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:陈新星" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:陈新星')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
@@ -4580,7 +4580,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓35.4%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓35.4%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:田婉丽" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:田婉丽')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4600,7 +4600,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑0.0%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:罗晗" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:罗晗')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4616,7 +4616,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓38.1%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓38.1%</span></td>
   <td class="num">0.0</td><td class="num"><span data-refund-key="group:珠海" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:珠海')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓100.0%</span></td>
   <td class="num">22.0万</td><td class="num">34.8万</td>
@@ -4632,7 +4632,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓22.9%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓22.9%</span></td>
   <td class="num">0.0</td>
   <td class="num"><span data-refund-key="person:朱碧丹" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:朱碧丹')" title="点击查看退款原因">0.0%</span></td>
   <td class="num"><span style="color:#94a3b8;font-weight:600">→0.0%</span></td>
@@ -4652,7 +4652,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓46.7%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓46.7%</span></td>
   <td class="num">2.7万</td>
   <td class="num"><span data-refund-key="person:张虹" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:张虹')" title="点击查看退款原因">41.2%</span></td>
   <td class="num"><span style="color:#ef4444;font-weight:600">↑21.8%</span></td>
@@ -4672,7 +4672,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
 </div></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓19.0%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓19.0%</span></td>
   <td class="num">1.6万</td>
   <td class="num"><span data-refund-key="person:曾妍妍" style="color:#dc2626;font-weight:700;cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'person:曾妍妍')" title="点击查看退款原因">16.3%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓35.5%</span></td>
@@ -4688,7 +4688,7 @@ document.addEventListener('click', function(e) {
   </div>
   <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
 </div></td></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓31.0%</span></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓31.0%</span></td>
   <td class="num">4.3万</td><td class="num"><span data-refund-key="group:福州" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:福州')" title="点击查看退款原因">20.8%</span></td>
   <td class="num"><span style="color:#22c55e;font-weight:600">↓8.6%</span></td>
   <td class="num">16.3万</td><td class="num">25.2万</td>
@@ -4898,9 +4898,20 @@ function togglePrevDone(){
     }
   });
 }
+var _doneChgHidden = false;
+function toggleDoneChg(){
+  _doneChgHidden = !_doneChgHidden;
+  document.querySelectorAll(".col-donechg").forEach(function(el){
+    if(el.tagName === 'TD'){ el.style.visibility = _doneChgHidden ? 'hidden' : ''; }
+    else {
+      var txt = el.childNodes[0];
+      if(txt) txt.textContent = _doneChgHidden ? '' : '完成环比 ';
+    }
+  });
+}
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'商家操作失误':1,'家人不支持':1,'时间/适配冲突':1,'价格问题':1,'教材问题':1,'服务未交付/联系不上':1,'效果不满意':1};
-var NO_ATTR = {'未填写原因':1,'主动放弃/拍错':1,'其他/未说明':1};
+var INTERVENABLE = {'价格问题':1,'时间/适配冲突':1,'教材问题':1,'效果不满意':1,'商家操作失误':1,'家人不支持':1,'服务未交付/联系不上':1};
+var NO_ATTR = {'其他/未说明':1,'未填写原因':1,'主动放弃/拍错':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5352,4 +5363,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260730104151";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260730110222";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
