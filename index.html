@@ -1104,10 +1104,30 @@ function drawOneChart(canvasId, roleData, rgb) {
   var labels = [], vals = [];
   for(var d=1; d<=maxDay; d++) { labels.push(d+'日'); vals.push(Math.round((roleData||{})[String(d)]||0)); }
 
+  // 计算均值与异常阈值
+  var posVals = vals.filter(function(v){ return v>0; });
+  var avg = posVals.length ? posVals.reduce(function(a,b){ return a+b; },0) / posVals.length : 0;
+  var hiTh = avg * 1.5, loTh = avg * 0.5;
+
+  // 逐柱颜色：偏高绿、偏低红、正常原色
+  var barColors = vals.map(function(v){
+    if(v > hiTh) return 'rgba(34,197,94,0.72)';
+    if(v > 0 && v < loTh) return 'rgba(239,68,68,0.72)';
+    return 'rgba('+rgb+',0.55)';
+  });
+  var pointColors = vals.map(function(v){
+    if(v > hiTh) return '#22c55e';
+    if(v > 0 && v < loTh) return '#ef4444';
+    return 'rgb('+rgb+')';
+  });
+  var pointSizes = vals.map(function(v){
+    return (v > hiTh || (v > 0 && v < loTh)) ? 6 : 3;
+  });
+
   if(_charts[canvasId]) { _charts[canvasId].destroy(); }
   var ctx = canvas.getContext('2d');
 
-  // 柱顶数值标签插件（快照可见）
+  // 柱顶数值标签插件（快照可见，异常色跟随柱色）
   var labelPlugin = {
     id: 'barLabels',
     afterDatasetsDraw: function(chart) {
@@ -1116,11 +1136,11 @@ function drawOneChart(canvasId, roleData, rgb) {
       if(!meta || meta.hidden) return;
       c.save();
       c.font = 'bold 9px sans-serif';
-      c.fillStyle = 'rgb('+rgb+')';
       c.textAlign = 'center';
       meta.data.forEach(function(bar, i) {
         var v = vals[i];
         if(v <= 0) return;
+        c.fillStyle = pointColors[i];
         c.fillText((v/10000).toFixed(1), bar.x, bar.y - 6);
       });
       c.restore();
@@ -1147,10 +1167,10 @@ function drawOneChart(canvasId, roleData, rgb) {
           borderWidth: 2.5,
           fill: true,
           tension: 0.4,
-          pointRadius: 3,
+          pointRadius: pointSizes,
           pointHoverRadius: 7,
-          pointBackgroundColor: '#fff',
-          pointBorderColor: 'rgb('+rgb+')',
+          pointBackgroundColor: pointColors,
+          pointBorderColor: pointColors,
           pointBorderWidth: 2,
           order: 0
         },
@@ -1158,7 +1178,7 @@ function drawOneChart(canvasId, roleData, rgb) {
           type: 'bar',
           label: '日业绩',
           data: vals,
-          backgroundColor: 'rgba('+rgb+',0.55)',
+          backgroundColor: barColors,
           hoverBackgroundColor: 'rgb('+rgb+')',
           borderRadius: 6,
           barPercentage: 0.55,
@@ -1273,15 +1293,21 @@ function showSparkPopup(g, data, maxDay, e) {
 
   var labels = [], vals = [];
   for(var d=1; d<=maxDay; d++){ labels.push(d+'日'); vals.push(Math.round(data[String(d)]||0)); }
+  // 异常色计算
+  var pv = vals.filter(function(v){return v>0;});
+  var pavg = pv.length ? pv.reduce(function(a,b){return a+b;},0)/pv.length : 0;
+  var phi = pavg*1.5, plo = pavg*0.5;
+  var sBarC = vals.map(function(v){return v>phi?'rgba(34,197,94,0.72)':(v>0&&v<plo)?'rgba(239,68,68,0.72)':'rgba(99,102,241,0.5)';});
+  var sPtC = vals.map(function(v){return v>phi?'#22c55e':(v>0&&v<plo)?'#ef4444':'rgb(99,102,241)';});
   var ctx = document.getElementById('_sparkBig').getContext('2d');
   var grad = ctx.createLinearGradient(0,0,0,180);
   grad.addColorStop(0,'rgba(99,102,241,0.35)'); grad.addColorStop(1,'rgba(99,102,241,0.02)');
   _sparkChart = new Chart(ctx, {
     type:'bar',
-    plugins:[{id:'bl',afterDatasetsDraw:function(c){var cc=c.ctx,m=c.getDatasetMeta(1);if(!m)return;cc.save();cc.font='bold 9px sans-serif';cc.fillStyle='#6366f1';cc.textAlign='center';m.data.forEach(function(b,i){if(vals[i]>0)cc.fillText((vals[i]/10000).toFixed(1),b.x,b.y-5)});cc.restore();}}],
+    plugins:[{id:'bl',afterDatasetsDraw:function(c){var cc=c.ctx,m=c.getDatasetMeta(1);if(!m)return;cc.save();cc.font='bold 9px sans-serif';cc.textAlign='center';m.data.forEach(function(b,i){if(vals[i]>0){cc.fillStyle=sPtC[i];cc.fillText((vals[i]/10000).toFixed(1),b.x,b.y-5);}});cc.restore();}}],
     data:{labels:labels,datasets:[
-      {type:'line',data:vals,borderColor:'rgb(99,102,241)',backgroundColor:grad,borderWidth:2.5,fill:true,tension:0.4,pointRadius:2,order:0},
-      {type:'bar',data:vals,backgroundColor:'rgba(99,102,241,0.5)',borderRadius:5,barPercentage:0.55,order:1}
+      {type:'line',data:vals,borderColor:'rgb(99,102,241)',backgroundColor:grad,borderWidth:2.5,fill:true,tension:0.4,pointRadius:2,pointBackgroundColor:sPtC,pointBorderColor:sPtC,order:0},
+      {type:'bar',data:vals,backgroundColor:sBarC,borderRadius:5,barPercentage:0.55,order:1}
     ]},
     options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},
       plugins:{legend:{display:false},tooltip:{enabled:false}},
@@ -1587,7 +1613,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260801170743"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260801171234"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -1810,7 +1836,7 @@ document.addEventListener('click', function(e) {
 </tbody></table>
 </div><!-- end monthly-role-body -->
 <div style="margin-top:20px">
-  <h4 style="margin:0 0 14px;font-size:15px;color:#1e293b;font-weight:700">📈 每日业绩趋势 <span style="font-size:12px;color:#94a3b8;font-weight:400">· 悬停查看详情</span></h4>
+  <h4 style="margin:0 0 14px;font-size:15px;color:#1e293b;font-weight:700">📈 每日业绩趋势 <span style="font-size:12px;color:#94a3b8;font-weight:400">· 悬停查看详情</span> <span style="font-size:11px;margin-left:12px"><span style="display:inline-block;width:10px;height:10px;background:#22c55e;border-radius:2px;vertical-align:middle;margin-right:3px"></span> 异常偏高 &ge;1.5x均值 <span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:2px;vertical-align:middle;margin-left:8px;margin-right:3px"></span> 异常偏低 &le;0.5x均值</span></h4>
   <div style="display:grid;grid-template-columns:1fr;gap:16px">
     <div style="background:linear-gradient(135deg,#eef2ff,#fff);padding:18px 20px;border-radius:14px;box-shadow:0 2px 12px rgba(99,102,241,0.08);border:1px solid #e0e7ff">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="width:10px;height:10px;background:#6366f1;border-radius:3px"></span><span style="font-size:13px;color:#4338ca;font-weight:700">销售</span></div>
@@ -4910,8 +4936,8 @@ function toggleDoneChg(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'时间/适配冲突':1,'效果不满意':1,'价格问题':1,'商家操作失误':1,'家人不支持':1,'教材问题':1,'服务未交付/联系不上':1};
-var NO_ATTR = {'主动放弃/拍错':1,'未填写原因':1,'其他/未说明':1};
+var INTERVENABLE = {'效果不满意':1,'商家操作失误':1,'服务未交付/联系不上':1,'家人不支持':1,'教材问题':1,'时间/适配冲突':1,'价格问题':1};
+var NO_ATTR = {'其他/未说明':1,'主动放弃/拍错':1,'未填写原因':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5363,4 +5389,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260801170743";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260801171234";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
