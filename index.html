@@ -1613,7 +1613,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260802132019"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260802132325"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区7月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -4874,8 +4874,8 @@ function toggleDoneChg(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'家人不支持':1,'效果不满意':1,'服务未交付/联系不上':1,'价格问题':1,'商家操作失误':1,'教材问题':1,'时间/适配冲突':1};
-var NO_ATTR = {'其他/未说明':1,'主动放弃/拍错':1,'未填写原因':1};
+var INTERVENABLE = {'服务未交付/联系不上':1,'家人不支持':1,'时间/适配冲突':1,'商家操作失误':1,'效果不满意':1,'价格问题':1,'教材问题':1};
+var NO_ATTR = {'主动放弃/拍错':1,'未填写原因':1,'其他/未说明':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -4940,8 +4940,8 @@ function renderRefundReason() {
   // 当月退 vs 历年退 饼图
   drawRefundTypePie(D);
   // 历年退：按支付月份（线上/门店分开柱状图）
-  drawPayMonthBar('chart_pay_month_online', D.pay_month_online, D.meta.online_amt, '线上');
-  drawPayMonthBar('chart_pay_month_store', D.pay_month_store, D.meta.store_amt, '门店');
+  drawPayMonthPie('chart_pay_month_online', D.pay_month_online, D.meta.online_amt);
+  drawPayMonthPie('chart_pay_month_store', D.pay_month_store, D.meta.store_amt);
 
   // 渠道占比饼图
   drawRefundChannel(m);
@@ -5078,53 +5078,55 @@ function drawRefundTypePie(D) {
 }
 
 var _payMonthCharts = {};
-function drawPayMonthBar(canvasId, months, totalAmt, channel) {
+function drawPayMonthPie(canvasId, months, totalAmt) {
   var canvas = document.getElementById(canvasId);
   if (!canvas || typeof Chart === 'undefined' || !months || months.length === 0) return;
-  // 只显示Top10 + 其他
-  var top = months.slice(0, 10);
-  var otherAmt = 0, otherCnt = 0;
-  for (var i = 10; i < months.length; i++) { otherAmt += months[i].amount; otherCnt += months[i].count; }
-  if (otherAmt > 0) top.push({month: '其他月份', count: otherCnt, amount: otherAmt});
-  var labels = top.map(function(m) { return m.month; });
-  var values = top.map(function(m) { return m.amount; });
-  var counts = top.map(function(m) { return m.count; });
-  var colors = top.map(function(m) {
-    return m.month === '2026-07' ? '#6366f1' : '#94a3b8';
+  var threshold = totalAmt * 0.02;
+  var main = [], otherAmt = 0, otherCnt = 0;
+  months.forEach(function(m) {
+    if (m.amount >= threshold || m.month === '2026-07') {
+      main.push(m);
+    } else {
+      otherAmt += m.amount;
+      otherCnt += m.count;
+    }
+  });
+  if (otherAmt > 0) main.push({month: '其他月份', count: otherCnt, amount: otherAmt});
+  var labels = main.map(function(m) {
+    var tag = m.month === '2026-07' ? ' [当月退]' : '';
+    return m.month + tag;
+  });
+  var values = main.map(function(m) { return m.amount; });
+  var colors = main.map(function(m) {
+    return m.month === '2026-07' ? '#6366f1' :
+           m.month === '其他月份' ? '#e2e8f0' :
+           ['#f59e0b','#ef4444','#10b981','#8b5cf6','#06b6d4','#ec4899','#f97316','#84cc16'][main.indexOf(m) % 8];
   });
   if (_payMonthCharts[canvasId]) { _payMonthCharts[canvasId].destroy(); }
   var ctx = canvas.getContext('2d');
   _payMonthCharts[canvasId] = new Chart(ctx, {
-    type: 'bar',
+    type: 'doughnut',
     data: {
       labels: labels,
       datasets: [{
         data: values,
         backgroundColor: colors,
-        borderRadius: 4
+        borderColor: '#fff',
+        borderWidth: 2
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
+        legend: { position: 'right', labels: { font: { size: 11 }, usePointStyle: true, padding: 6 } },
         tooltip: {
           callbacks: {
             label: function(ctx) {
-              var v = ctx.raw;
-              var pct = (v / totalAmt * 100).toFixed(1);
-              return channel + ': ¥' + fmtNum(v) + ' (' + pct + '%) · ' + counts[ctx.dataIndex] + '笔';
+              var m = main[ctx.dataIndex];
+              var pct = (m.amount / totalAmt * 100).toFixed(1);
+              return m.month + ': ¥' + fmtNum(m.amount) + ' (' + pct + '%) · ' + m.count + '笔';
             }
-          }
-        }
-      },
-      scales: {
-        x: { ticks: { font: { size: 10 } } },
-        y: {
-          ticks: {
-            font: { size: 10 },
-            callback: function(v) { return (v/10000).toFixed(0) + '万'; }
           }
         }
       }
@@ -5436,4 +5438,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260802132019";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260802132325";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
