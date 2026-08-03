@@ -1613,7 +1613,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260803170452"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260803170950"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区8月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -1622,8 +1622,8 @@ document.addEventListener('click', function(e) {
 
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
-<div><h1>📊 南区8月目标进展看板</h1>
-<p class="subtitle">数据截止：2026年8月2日 | 环比基期：6月1-2日同口径 | 普陀业绩从明细自动汇总</p></div>
+<div><h1>📊 南区8月目标进展看板 <select id="monthSwitcher" onchange="switchMonth()" style="font-size:14px;padding:4px 12px;border:2px solid #6366f1;border-radius:8px;background:#fff;color:#1e293b;font-weight:700;cursor:pointer;margin-left:12px;vertical-align:middle"><option value="8" selected>8月</option><option value="7">7月</option></select></h1>
+<p class="subtitle">数据截止：2026年8月2日 | 环比基期：7月1-2日同口径 | 普陀业绩从明细自动汇总</p></div>
 <div class="top-btns" style="display:flex;gap:8px;align-items:center;margin-top:4px">
 <button onclick="exportBaseTable()" style="padding:8px 18px;background:#fff;color:#1e293b;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📥 导出底表</button>
 <button onclick="snapshot()" style="padding:8px 18px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📸 快照</button>
@@ -1642,7 +1642,7 @@ document.addEventListener('click', function(e) {
 <!-- Timeline Progress Bar -->
 <div style="margin-bottom:16px;padding:14px 20px;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-    <span style="font-size:13px;font-weight:700;color:#1e293b">📅 7月进度</span>
+    <span style="font-size:13px;font-weight:700;color:#1e293b">📅 8月进度</span>
     <span style="font-size:13px;color:#64748b">已过 <b style="color:#1e293b">31</b>/31 天 · <b style="color:#6366f1">100.0%</b></span>
   </div>
   <div style="position:relative;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden">
@@ -1675,7 +1675,7 @@ document.addEventListener('click', function(e) {
 <div class="kpi-card">
   <div class="label">📅 剩余天数</div>
   <div class="value">0 天</div>
-  <div class="sub">7月32日 - 7月31日</div>
+  <div class="sub">8月32日 - 8月31日</div>
 </div>
 <div class="kpi-card">
   <div class="label">🎯 日均冲刺</div>
@@ -5001,7 +5001,7 @@ document.addEventListener('click', function(e) {
   </div>
 </div>
 <div class="footer">
-  南区8月目标进展看板 | 底表数据截止 2026.08.02 | 环比 = 7月1-2日 vs 6月1-2日同口径 | 普陀业绩从明细自动汇总
+  南区8月目标进展看板 | 底表数据截止 2026.08.02 | 环比 = 8月1-2日 vs 7月1-2日同口径 | 普陀业绩从明细自动汇总
 </div>
 </div>
 <script>
@@ -5047,8 +5047,8 @@ function toggleDoneChg(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'教材问题':1,'商家操作失误':1,'效果不满意':1,'家人不支持':1,'时间/适配冲突':1,'价格问题':1,'服务未交付/联系不上':1};
-var NO_ATTR = {'其他/未说明':1,'未填写原因':1,'主动放弃/拍错':1};
+var INTERVENABLE = {'时间/适配冲突':1,'效果不满意':1,'家人不支持':1,'教材问题':1,'服务未交付/联系不上':1,'商家操作失误':1,'价格问题':1};
+var NO_ATTR = {'未填写原因':1,'其他/未说明':1,'主动放弃/拍错':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5618,6 +5618,11 @@ document.addEventListener('click', function(e) {
 function navigateToRefund(orgName) {
   switchTab('refund_reason');
 }
+function switchMonth(){
+  var m = document.getElementById('monthSwitcher').value;
+  if(m === '7'){ window.location.href = '南区7月目标看板.html'; }
+  else { window.location.href = '南区8月目标看板.html'; }
+}
 </script>
 <div id="refund-popover" class="refund-popover">
   <div class="refund-popover-head">
@@ -5626,4 +5631,4 @@ function navigateToRefund(orgName) {
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260803170452";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260803170950";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
