@@ -9,23 +9,23 @@
 <title>南区8月目标进展看板</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f1f5f9;color:#1e293b;padding:12px}
-.container{max-width:100%;margin:0 auto;padding:0 4px}
-h1{font-size:18px;margin-bottom:2px}
-.subtitle{color:#64748b;font-size:11px;margin-bottom:12px}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px}
-.kpi-card{background:#fff;border-radius:10px;padding:10px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-.kpi-card .label{font-size:10px;color:#64748b;margin-bottom:2px}
-.kpi-card .value{font-size:20px;font-weight:700}
-.kpi-card .sub{font-size:10px;color:#94a3b8;margin-top:2px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f1f5f9;color:#1e293b;padding:16px}
+.container{max-width:1800px;margin:0 auto}
+h1{font-size:20px;margin-bottom:4px}
+.subtitle{color:#64748b;font-size:12px;margin-bottom:16px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:18px}
+.kpi-card{background:#fff;border-radius:12px;padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.kpi-card .label{font-size:11px;color:#64748b;margin-bottom:2px}
+.kpi-card .value{font-size:22px;font-weight:700}
+.kpi-card .sub{font-size:11px;color:#94a3b8;margin-top:2px}
 .tabs{display:flex;gap:4px;margin-bottom:0}
-.tab{padding:5px 12px;border-radius:6px 6px 0 0;font-size:11px;font-weight:600;cursor:pointer;border:none;background:#e2e8f0;color:#64748b}
+.tab{padding:7px 16px;border-radius:8px 8px 0 0;font-size:12px;font-weight:600;cursor:pointer;border:none;background:#e2e8f0;color:#64748b}
 .tab.active{background:#fff;color:#1e293b}
-.tab-content{display:none;background:#fff;border-radius:0 10px 10px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow-x:auto}
+.tab-content{display:none;background:#fff;border-radius:0 12px 12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow-x:auto}
 .tab-content.active{display:block}
-table{width:100%;border-collapse:collapse;font-size:11px}
-th{text-align:left;padding:5px 6px;border-bottom:1px solid #e2e8f0;color:#64748b;font-weight:600;font-size:10px;white-space:nowrap}
-td{padding:3px 6px;border-bottom:1px solid #f1f5f9}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 10px;border-bottom:2px solid #e2e8f0;color:#64748b;font-weight:600;font-size:11px;white-space:nowrap}
+td{padding:5px 10px;border-bottom:1px solid #f1f5f9}
 tr:hover td{background:#f8fafc}
 tr.section-header:hover td{background:inherit!important}
 .num{text-align:right;font-variant-numeric:tabular-nums}
@@ -1613,7 +1613,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260803180233"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260803180449"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区8月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -5379,8 +5379,8 @@ function toggleDoneChg(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'效果不满意':1,'商家操作失误':1,'价格问题':1,'家人不支持':1,'服务未交付/联系不上':1,'时间/适配冲突':1,'教材问题':1};
-var NO_ATTR = {'未填写原因':1,'主动放弃/拍错':1,'其他/未说明':1};
+var INTERVENABLE = {'价格问题':1,'家人不支持':1,'时间/适配冲突':1,'服务未交付/联系不上':1,'商家操作失误':1,'效果不满意':1,'教材问题':1};
+var NO_ATTR = {'未填写原因':1,'其他/未说明':1,'主动放弃/拍错':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5973,4 +5973,4 @@ function switchMonth(){
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260803180233";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260803180449";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
