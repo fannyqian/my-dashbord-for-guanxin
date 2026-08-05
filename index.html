@@ -1613,7 +1613,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260805112556"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260805153741"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区8月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -1716,7 +1716,7 @@ document.addEventListener('click', function(e) {
 <button class="tab" data-tab="online_person" onclick="switchTab('online_person')">👤 线上销售</button>
 <button class="tab" data-tab="cm_person" onclick="switchTab('cm_person')">🏥 线下个案</button>
 <button class="tab" data-tab="channel" onclick="switchTab('channel');loadChannelData()">📢 渠道业绩</button>
-<button class="tab" data-tab="refund_reason" onclick="switchTab('refund_reason')">🔍 退款原因分析</button>
+<button class="tab" data-tab="refund_reason" onclick="switchTab('refund_reason')">💰 退款分析</button>
 </div>
 
 <!-- Tab 1: 按角色 -->
@@ -5163,8 +5163,8 @@ document.addEventListener('click', function(e) {
 </tr></tbody></table></div><div id="tab-channel" class="tab-content">
 <div style="text-align:center;padding:40px;color:#94a3b8">👆 点击「渠道业绩」标签加载本地生活 & B端渠道数据</div>
 </div><div id="tab-refund_reason" class="tab-content">
-  <!-- 核心指标卡片 -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px">
+  <!-- 总退费 -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px">
     <div class="metric-card" style="--accent:#dc2626">
       <div class="metric-label">💰 退款总额</div>
       <div class="metric-value" style="color:#dc2626" id="refund_total_amt">—</div>
@@ -5185,20 +5185,13 @@ document.addEventListener('click', function(e) {
       <div class="metric-value" style="color:#f59e0b" id="refund_intervenable">—</div>
       <div class="metric-sub" id="refund_intervenable_pct">—</div>
     </div>
-    <div class="metric-card" style="--accent:#94a3b8">
-      <div class="metric-label">❔ 无有效归因</div>
-      <div class="metric-value" style="color:#94a3b8" id="refund_no_attr">—</div>
-      <div class="metric-sub" id="refund_no_attr_pct">—</div>
-    </div>
     <div class="metric-card" style="--accent:#7c3aed">
       <div class="metric-label">🔺 大额退款(≥1000元)</div>
       <div class="metric-value" style="color:#7c3aed" id="refund_large_amt">—</div>
       <div class="metric-sub" id="refund_large_cnt">—</div>
     </div>
   </div>
-
-  <!-- 当月退 vs 历年退 指标卡片 -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px">
     <div class="metric-card" style="--accent:#6366f1">
       <div class="metric-label">📅 当月退费 (8月付8月退)</div>
       <div class="metric-value" style="color:#6366f1" id="refund_same_amt">—</div>
@@ -5230,53 +5223,33 @@ document.addEventListener('click', function(e) {
       <div class="metric-sub">门店历年退</div>
     </div>
   </div>
-
-  <!-- 当月退 vs 历年退 饼图 -->
-  <div class="refund-panel" style="margin-bottom:18px">
-    <div class="refund-panel-title">📅 当月退 vs 历年退</div>
-    <div style="height:280px"><canvas id="chart_refund_type_pie"></canvas></div>
-  </div>
-
-  <!-- 历年退：按支付月份（线上/门店分开） -->
   <div style="display:flex;gap:18px;margin-bottom:18px;flex-wrap:wrap">
-    <div class="refund-panel" style="flex:1;min-width:420px;margin-bottom:0">
-      <div class="refund-panel-title">🌐 线上退款 — 按原始支付月份</div>
-      <div style="display:flex;gap:0">
-        <div style="flex:1;height:300px"><canvas id="chart_pay_month_online"></canvas></div>
-        <div style="flex:0 0 200px;max-height:300px;overflow-y:auto;font-size:11px" id="pay_month_online_table"></div>
-      </div>
+    <div class="refund-panel" style="flex:1;min-width:320px;margin-bottom:0">
+      <div class="refund-panel-title">📅 当月退 vs 历年退</div>
+      <div style="height:260px"><canvas id="chart_refund_type_pie"></canvas></div>
     </div>
-    <div class="refund-panel" style="flex:1;min-width:420px;margin-bottom:0">
-      <div class="refund-panel-title">🏥 门店退款 — 按原始支付月份</div>
-      <div style="display:flex;gap:0">
-        <div style="flex:1;height:300px"><canvas id="chart_pay_month_store"></canvas></div>
-        <div style="flex:0 0 200px;max-height:300px;overflow-y:auto;font-size:11px" id="pay_month_store_table"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 渠道占比 + 退款原因饼图 -->
-  <div style="display:flex;gap:18px;margin-bottom:18px;flex-wrap:wrap">
     <div class="refund-panel" style="flex:1;min-width:300px;margin-bottom:0">
       <div class="refund-panel-title">线上 / 门店退款占比</div>
-      <div style="height:280px"><canvas id="chart_refund_channel"></canvas></div>
-    </div>
-    <div class="refund-panel" style="flex:1.3;min-width:340px;margin-bottom:0">
-      <div class="refund-panel-title">退款原因分布（按金额）</div>
-      <div style="height:280px"><canvas id="chart_refund_reason_pie"></canvas></div>
+      <div style="height:260px"><canvas id="chart_refund_channel"></canvas></div>
     </div>
   </div>
-
-  <!-- 退款原因明细表 -->
-  <div class="refund-panel">
-    <div class="refund-panel-title">退款原因明细</div>
-    <table id="refund_reason_table"><thead><tr>
-      <th>退款原因</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">金额占比</th><th class="num">大额单数</th><th>归因类型</th><th style="min-width:150px">占比</th>
-    </tr></thead><tbody></tbody></table>
+<div class="section-title">🚨 风险预警</div>  <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap"><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fef2f2,#fff);border:1px solid #fca5a5;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🔴 退费率偏高 32.5%</div><div style="font-size:12px;color:#475569;line-height:1.6">本月退费 ¥31.9万，占完成额 <b>32.5%</b>，超过25%警戒线，需重点控制退费节奏</div></div><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fef2f2,#fff);border:1px solid #fca5a5;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🔴 大额退款集中（98%）</div><div style="font-size:12px;color:#475569;line-height:1.6">≥1000元大额退款 ¥31.2万，占退费总额 <b>98%</b>，单笔流失风险大</div></div><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fef2f2,#fff);border:1px solid #fca5a5;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🔴 历史订单退费占 99%</div><div style="font-size:12px;color:#475569;line-height:1.6">本月退费中 <b>99%</b>（¥31.5万）来自本月前成交订单，存量客户服务需加强</div></div></div>  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px">
+    <div class="refund-panel" style="flex:1;min-width:340px;margin-bottom:0">
+      <div class="refund-panel-title" style="color:#3b82f6">🌐 线上预警（Top3）</div>
+      <div style="display:flex;flex-direction:column;gap:10px"><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fef2f2,#fff);border:1px solid #fca5a5;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🔴 线上首要原因占比 32%</div><div style="font-size:12px;color:#475569;line-height:1.6">「未填写原因」退费 ¥5.6万，占线上退费 <b>32%</b>，原因高度集中，建议针对性干预</div></div><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fffbeb,#fff);border:1px solid #fcd34d;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🟠 线上退费集中度高</div><div style="font-size:12px;color:#475569;line-height:1.6">Top1 梁志超 占 <b>38%</b>，Top5合计占 68%，建议1v1复盘</div></div><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fffbeb,#fff);border:1px solid #fcd34d;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🟠 线上历史订单退费 98%</div><div style="font-size:12px;color:#475569;line-height:1.6">线上退费中 <b>98%</b> 来自历史月份订单，存量客户服务需关注</div></div></div>
+    </div>
+    <div class="refund-panel" style="flex:1;min-width:340px;margin-bottom:0">
+      <div class="refund-panel-title" style="color:#10b981">🏥 门店预警（Top3）</div>
+      <div style="display:flex;flex-direction:column;gap:10px"><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fef2f2,#fff);border:1px solid #fca5a5;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🔴 门店首要原因占比 98%</div><div style="font-size:12px;color:#475569;line-height:1.6">「未填写原因」退费 ¥14.3万，占门店退费 <b>98%</b>，原因高度集中，建议针对性干预</div></div><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fffbeb,#fff);border:1px solid #fcd34d;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🟠 门店退费集中度高</div><div style="font-size:12px;color:#475569;line-height:1.6">Top1 陈紫灵 占 <b>96%</b>，Top5合计占 99%，建议1v1复盘</div></div><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fffbeb,#fff);border:1px solid #fcd34d;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🟠 门店历史订单退费 100%</div><div style="font-size:12px;color:#475569;line-height:1.6">门店退费中 <b>100%</b> 来自历史月份订单，存量客户服务需关注</div></div></div>
+    </div>
   </div>
-
-    <!-- 可干预原因 & 干预建议 -->
-  <div class="refund-panel" id="intervenable-help-panel" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d">
+<div class="section-title">🌐 线上退费分析</div>  <div style="display:flex;align-items:center;gap:10px;margin:0 0 12px 2px;font-size:12.5px;color:#475569">
+    退费 ¥17.3万 · 153笔 · 占全区退费 54.2%
+  </div><div class="refund-panel"><div class="refund-panel-title">📅 历年N月订单在当月退分析</div><div style="display:flex;gap:0"><div style="flex:1;height:260px"><canvas id="chart_pay_month_online"></canvas></div><div style="flex:0 0 200px;max-height:260px;overflow-y:auto;font-size:11px" id="pay_month_online_table"></div></div><div style="margin-top:12px;background:#f0fdf4;border-left:4px solid #10b981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;color:#1e293b;line-height:1.7"><b style="color:#059669">💡 结论：</b><b>线上</b>退费<b>98%</b>来自历史月份订单（¥17.0万），存量客户退费压力大于当月新单；其中 <b>2026-06</b> 成交订单退费最高（¥4.9万，占线上退费 <b>28%</b>），建议回溯该月成交客户的服务与交付</div></div><div class="refund-panel"><div class="refund-panel-title">📦 退费产品分析</div><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th>服务类型/产品</th><th class="num">单数</th><th class="num">金额</th><th class="num">占比</th><th style="min-width:130px">占比</th></tr></thead><tbody><tr><td style="font-weight:600">心灯—长程课</td><td class="num">3</td><td class="num" style="color:#dc2626;font-weight:600">¥6.7万</td><td class="num">38.8%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:39%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">38.8%</span></div></td></tr><tr><td style="font-weight:600">青少年家庭同行者计划</td><td class="num">7</td><td class="num" style="color:#dc2626;font-weight:600">¥3.1万</td><td class="num">18.0%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:18%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">18.0%</span></div></td></tr><tr><td style="font-weight:600">分享咨询</td><td class="num">4</td><td class="num" style="color:#dc2626;font-weight:600">¥2.5万</td><td class="num">14.6%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:15%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">14.6%</span></div></td></tr><tr><td style="font-weight:600">肠道菌群移植</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥2.5万</td><td class="num">14.4%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:14%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">14.4%</span></div></td></tr><tr><td style="font-weight:600">少年说倾听计划</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥6,600.0</td><td class="num">3.8%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:4%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">3.8%</span></div></td></tr><tr><td style="font-weight:600">心理咨询师基础应用培训</td><td class="num">2</td><td class="num" style="color:#dc2626;font-weight:600">¥5,753.3</td><td class="num">3.3%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:3%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">3.3%</span></div></td></tr><tr><td style="font-weight:600">认知9周+年卡</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥2,600.0</td><td class="num">1.5%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:2%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">1.5%</span></div></td></tr><tr><td style="font-weight:600">1280智慧父母成长营年卡</td><td class="num">2</td><td class="num" style="color:#dc2626;font-weight:600">¥2,560.0</td><td class="num">1.5%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:1%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">1.5%</span></div></td></tr><tr><td style="font-weight:600">观心少年（线下体验课）</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥1,980.0</td><td class="num">1.1%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:1%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">1.1%</span></div></td></tr><tr><td style="font-weight:600">19元青少年（体验课）</td><td class="num">109</td><td class="num" style="color:#dc2626;font-weight:600">¥1,759.0</td><td class="num">1.0%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:1%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">1.0%</span></div></td></tr><tr><td style="font-weight:600">299元青春期家庭21天陪跑</td><td class="num">4</td><td class="num" style="color:#dc2626;font-weight:600">¥1,196.0</td><td class="num">0.7%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:1%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.7%</span></div></td></tr><tr><td style="font-weight:600">【千金方】</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥1,000.0</td><td class="num">0.6%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:1%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.6%</span></div></td></tr><tr><td style="font-weight:600">【A】青少年同行者计划：家庭调整规划营</td><td class="num">12</td><td class="num" style="color:#dc2626;font-weight:600">¥808.0</td><td class="num">0.5%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.5%</span></div></td></tr><tr><td style="font-weight:600">56睡眠基础营</td><td class="num">3</td><td class="num" style="color:#dc2626;font-weight:600">¥141.0</td><td class="num">0.1%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.1%</span></div></td></tr><tr><td style="font-weight:600">59元青少年体验课（韩小冰版）</td><td class="num">2</td><td class="num" style="color:#dc2626;font-weight:600">¥118.0</td><td class="num">0.1%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.1%</span></div></td></tr></tbody></table><div style="margin-top:12px;background:#f0fdf4;border-left:4px solid #10b981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;color:#1e293b;line-height:1.7"><b style="color:#059669">💡 结论：</b><b>线上</b>退费最高产品为 <b>心灯—长程课</b>（¥6.7万，占 <b>39%</b>）；Top3产品合计占 <b>71%</b>，退费高度集中，建议重点复盘该产品交付与客诉处理</div></div><div class="refund-panel"><div class="refund-panel-title">🧾 退费原因分析</div><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th>退款原因</th><th class="num">单数</th><th class="num">金额</th><th class="num">占比</th><th class="num">大额单数</th><th>归因</th><th style="min-width:130px">占比</th></tr></thead><tbody><tr><td style="font-weight:600">未填写原因</td><td class="num">28</td><td class="num" style="color:#dc2626;font-weight:600">¥5.6万</td><td class="num">32.1%</td><td class="num">4</td><td><span style="background:#f1f5f9;color:#64748b;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">无归因</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:32%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">32.1%</span></div></td></tr><tr><td style="font-weight:600">主动放弃/拍错</td><td class="num">74</td><td class="num" style="color:#dc2626;font-weight:600">¥5.0万</td><td class="num">28.7%</td><td class="num">5</td><td><span style="background:#f1f5f9;color:#64748b;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">无归因</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:29%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">28.7%</span></div></td></tr><tr><td style="font-weight:600">其他/未说明</td><td class="num">13</td><td class="num" style="color:#dc2626;font-weight:600">¥4.2万</td><td class="num">24.5%</td><td class="num">6</td><td><span style="background:#f1f5f9;color:#64748b;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">无归因</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:25%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">24.5%</span></div></td></tr><tr><td style="font-weight:600">时间/适配冲突</td><td class="num">7</td><td class="num" style="color:#dc2626;font-weight:600">¥1.7万</td><td class="num">10.1%</td><td class="num">3</td><td><span style="background:#fef3c7;color:#b45309;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">可干预</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:10%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">10.1%</span></div></td></tr><tr><td style="font-weight:600">家人不支持</td><td class="num">2</td><td class="num" style="color:#dc2626;font-weight:600">¥4,209.0</td><td class="num">2.4%</td><td class="num">1</td><td><span style="background:#fef3c7;color:#b45309;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">可干预</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:2%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">2.4%</span></div></td></tr><tr><td style="font-weight:600">协商一致</td><td class="num">19</td><td class="num" style="color:#dc2626;font-weight:600">¥3,168.0</td><td class="num">1.8%</td><td class="num">2</td><td><span style="background:#e0e7ff;color:#4338ca;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">其他</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:2%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">1.8%</span></div></td></tr><tr><td style="font-weight:600">服务未交付/联系不上</td><td class="num">6</td><td class="num" style="color:#dc2626;font-weight:600">¥376.0</td><td class="num">0.2%</td><td class="num">0</td><td><span style="background:#fef3c7;color:#b45309;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">可干预</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.2%</span></div></td></tr><tr><td style="font-weight:600">商家操作失误</td><td class="num">2</td><td class="num" style="color:#dc2626;font-weight:600">¥38.0</td><td class="num">0.0%</td><td class="num">0</td><td><span style="background:#fef3c7;color:#b45309;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">可干预</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.0%</span></div></td></tr><tr><td style="font-weight:600">效果不满意</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥19.0</td><td class="num">0.0%</td><td class="num">0</td><td><span style="background:#fef3c7;color:#b45309;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">可干预</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.0%</span></div></td></tr><tr><td style="font-weight:600">教材问题</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥19.0</td><td class="num">0.0%</td><td class="num">0</td><td><span style="background:#fef3c7;color:#b45309;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">可干预</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.0%</span></div></td></tr></tbody></table><div style="margin-top:12px;background:#f0fdf4;border-left:4px solid #10b981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;color:#1e293b;line-height:1.7"><b style="color:#059669">💡 结论：</b><b>线上</b>首要退费原因是 <b>未填写原因</b>（¥5.6万，占 <b>32%</b>）</div></div><div class="refund-panel"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap"><div class="refund-panel-title" style="margin:0">🏆 退费销售排名</div><select id="refund-online-org-sel" class="refund-sel" onchange="renderRefundSellerTable()"><option value="__all__">全部组织</option></select></div><div style="max-height:440px;overflow-y:auto"><table id="refund_seller_table"><thead><tr><th>归属组织</th><th>姓名</th><th class="num">单数</th><th class="num">金额</th><th class="num">占渠道退费</th><th class="num">大额</th><th>主要原因</th><th>产品Top3</th></tr></thead><tbody></tbody></table></div><div style="margin-top:12px;background:#f0fdf4;border-left:4px solid #10b981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;color:#1e293b;line-height:1.7"><b style="color:#059669">💡 结论：</b><b>线上</b>退费最多的是 <b>梁志超</b>（¥6.6万，占 <b>38%</b>）；Top5合计占 <b>68%</b>，退费集中在少数人，建议1v1复盘话术与跟进质量</div></div>
+<div class="section-title">🏥 线下退费分析</div>  <div style="display:flex;align-items:center;gap:10px;margin:0 0 12px 2px;font-size:12.5px;color:#475569">
+    退费 ¥14.6万 · 13笔 · 占全区退费 45.8%
+  </div><div class="refund-panel"><div class="refund-panel-title">📅 历年N月订单在当月退分析</div><div style="display:flex;gap:0"><div style="flex:1;height:260px"><canvas id="chart_pay_month_store"></canvas></div><div style="flex:0 0 200px;max-height:260px;overflow-y:auto;font-size:11px" id="pay_month_store_table"></div></div><div style="margin-top:12px;background:#f0fdf4;border-left:4px solid #10b981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;color:#1e293b;line-height:1.7"><b style="color:#059669">💡 结论：</b><b>门店</b>退费<b>100%</b>来自历史月份订单（¥14.5万），存量客户退费压力大于当月新单；其中 <b>2026-03</b> 成交订单退费最高（¥9.4万，占门店退费 <b>64%</b>），建议回溯该月成交客户的服务与交付</div></div><div class="refund-panel"><div class="refund-panel-title">📦 退费产品分析</div><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th>服务类型/产品</th><th class="num">单数</th><th class="num">金额</th><th class="num">占比</th><th style="min-width:130px">占比</th></tr></thead><tbody><tr><td style="font-weight:600">夏令营</td><td class="num">3</td><td class="num" style="color:#dc2626;font-weight:600">¥14.0万</td><td class="num">96.3%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:96%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">96.3%</span></div></td></tr><tr><td style="font-weight:600">分享咨询</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥2,700.0</td><td class="num">1.9%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:2%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">1.9%</span></div></td></tr><tr><td style="font-weight:600">299元青春期家庭21天陪跑</td><td class="num">2</td><td class="num" style="color:#dc2626;font-weight:600">¥598.0</td><td class="num">0.4%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.4%</span></div></td></tr><tr><td style="font-weight:600">【A】青少年同行者计划：家庭调整规划营</td><td class="num">3</td><td class="num" style="color:#dc2626;font-weight:600">¥177.0</td><td class="num">0.1%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.1%</span></div></td></tr><tr><td style="font-weight:600">59元青少年体验课（韩小冰版）</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥59.0</td><td class="num">0.0%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.0%</span></div></td></tr><tr><td style="font-weight:600">56睡眠基础营</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥56.0</td><td class="num">0.0%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.0%</span></div></td></tr><tr><td style="font-weight:600">19元青少年（体验课）</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥19.0</td><td class="num">0.0%</td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#8b5cf6;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.0%</span></div></td></tr></tbody></table><div style="margin-top:12px;background:#f0fdf4;border-left:4px solid #10b981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;color:#1e293b;line-height:1.7"><b style="color:#059669">💡 结论：</b><b>门店</b>退费最高产品为 <b>夏令营</b>（¥14.0万，占 <b>96%</b>）；Top3产品合计占 <b>99%</b>，退费高度集中，建议重点复盘该产品交付与客诉处理</div></div><div class="refund-panel"><div class="refund-panel-title">🧾 退费原因分析</div><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th>退款原因</th><th class="num">单数</th><th class="num">金额</th><th class="num">占比</th><th class="num">大额单数</th><th>归因</th><th style="min-width:130px">占比</th></tr></thead><tbody><tr><td style="font-weight:600">未填写原因</td><td class="num">5</td><td class="num" style="color:#dc2626;font-weight:600">¥14.3万</td><td class="num">98.2%</td><td class="num">4</td><td><span style="background:#f1f5f9;color:#64748b;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">无归因</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:98%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">98.2%</span></div></td></tr><tr><td style="font-weight:600">其他/未说明</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥1,800.0</td><td class="num">1.2%</td><td class="num">1</td><td><span style="background:#f1f5f9;color:#64748b;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">无归因</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:1%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">1.2%</span></div></td></tr><tr><td style="font-weight:600">主动放弃/拍错</td><td class="num">4</td><td class="num" style="color:#dc2626;font-weight:600">¥716.0</td><td class="num">0.5%</td><td class="num">0</td><td><span style="background:#f1f5f9;color:#64748b;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">无归因</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.5%</span></div></td></tr><tr><td style="font-weight:600">协商一致</td><td class="num">2</td><td class="num" style="color:#dc2626;font-weight:600">¥115.0</td><td class="num">0.1%</td><td class="num">0</td><td><span style="background:#e0e7ff;color:#4338ca;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">其他</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.1%</span></div></td></tr><tr><td style="font-weight:600">价格问题</td><td class="num">1</td><td class="num" style="color:#dc2626;font-weight:600">¥59.0</td><td class="num">0.0%</td><td class="num">0</td><td><span style="background:#fef3c7;color:#b45309;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600">可干预</span></td><td style="min-width:130px"><div style="display:flex;align-items:center"><div style="flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden"><div style="width:0%;height:100%;background:#6366f1;border-radius:7px"></div></div><span style="font-size:11px;color:#64748b;margin-left:6px;min-width:42px;text-align:right">0.0%</span></div></td></tr></tbody></table><div style="margin-top:12px;background:#f0fdf4;border-left:4px solid #10b981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;color:#1e293b;line-height:1.7"><b style="color:#059669">💡 结论：</b><b>门店</b>首要退费原因是 <b>未填写原因</b>（¥14.3万，占 <b>98%</b>）</div></div><div class="refund-panel"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap"><div class="refund-panel-title" style="margin:0">🏆 退费销售排名</div><select id="refund-store-org-sel" class="refund-sel" onchange="renderRefundCMTable()"><option value="__all__">全部组织</option></select></div><div style="max-height:440px;overflow-y:auto"><table id="refund_cm_table"><thead><tr><th>归属组织</th><th>姓名</th><th class="num">单数</th><th class="num">金额</th><th class="num">占渠道退费</th><th class="num">大额</th><th>主要原因</th><th>产品Top3</th></tr></thead><tbody></tbody></table></div><div style="margin-top:12px;background:#f0fdf4;border-left:4px solid #10b981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;color:#1e293b;line-height:1.7"><b style="color:#059669">💡 结论：</b><b>门店</b>退费最多的是 <b>陈紫灵</b>（¥14.0万，占 <b>96%</b>）；Top5合计占 <b>99%</b>，退费集中在少数人，建议1v1复盘话术与跟进质量</div></div>
+  <div class="refund-panel" id="intervenable-help-panel" style="display:none;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div class="refund-panel-title" style="margin:0">🎯 可干预退款 — 定义与干预建议</div>
       <button onclick="document.getElementById('intervenable-help-panel').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;color:#b45309;padding:0 4px">&times;</button>
@@ -5285,108 +5258,17 @@ document.addEventListener('click', function(e) {
       <b>可干预退款</b> = 通过销售/班主任跟进沟通<b>有可能挽回</b>的退款。以下7类原因被标记为「可干预」：
     </p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;font-size:12px">
-      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">家人不支持</span>
-        </div>
-        <div style="color:#64748b;line-height:1.6">💡 建议：邀请家人参与评估/试听，用专业背书打消顾虑；短期课程先锁定</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">时间/适配冲突</span>
-        </div>
-        <div style="color:#64748b;line-height:1.6">💡 建议：灵活调整时段/频率；降档适配更短周期方案；转线上降低通勤成本</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">效果不满意</span>
-        </div>
-        <div style="color:#64748b;line-height:1.6">💡 建议：解释疗程规律（起效需周期），展示同类案例；邀医生复盘调整方案</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">服务未交付/联系不上</span>
-        </div>
-        <div style="color:#64748b;line-height:1.6">💡 建议：多渠道触达（微信+电话+短信），48h内至少3次；确认服务是否已排期</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">商家操作失误</span>
-        </div>
-        <div style="color:#64748b;line-height:1.6">💡 建议：第一时间道歉+补救（赠课/优惠券），修复信任；内部复盘流程漏洞</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">价格问题</span>
-        </div>
-        <div style="color:#64748b;line-height:1.6">💡 建议：提供分期/折扣/降档方案，强调性价比和长期价值；可申请特殊优惠</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px">教材问题</span>
-        </div>
-        <div style="color:#64748b;line-height:1.6">💡 建议：确认教材具体问题（损坏/版本/内容），快速换发或退款换方案续报</div>
-      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a"><b style="color:#b45309">家人不支持</b><div style="color:#64748b;line-height:1.6;margin-top:4px">💡 建议：邀请家人参与评估/试听，用专业背书打消顾虑；短期课程先锁定</div></div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a"><b style="color:#b45309">时间/适配冲突</b><div style="color:#64748b;line-height:1.6;margin-top:4px">💡 建议：灵活调整时段/频率；降档适配更短周期方案；转线上降低通勤成本</div></div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a"><b style="color:#b45309">效果不满意</b><div style="color:#64748b;line-height:1.6;margin-top:4px">💡 建议：解释疗程规律（起效需周期），展示同类案例；邀医生复盘调整方案</div></div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a"><b style="color:#b45309">服务未交付/联系不上</b><div style="color:#64748b;line-height:1.6;margin-top:4px">💡 建议：多渠道触达（微信+电话+短信），48h内至少3次；确认服务是否已排期</div></div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a"><b style="color:#b45309">商家操作失误</b><div style="color:#64748b;line-height:1.6;margin-top:4px">💡 建议：第一时间道歉+补救（赠课/优惠券），修复信任；内部复盘流程漏洞</div></div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a"><b style="color:#b45309">价格问题</b><div style="color:#64748b;line-height:1.6;margin-top:4px">💡 建议：提供分期/折扣/降档方案，强调性价比和长期价值；可申请特殊优惠</div></div>
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #fde68a"><b style="color:#b45309">教材问题</b><div style="color:#64748b;line-height:1.6;margin-top:4px">💡 建议：确认教材具体问题（损坏/版本/内容），快速换发或退款换方案续报</div></div>
     </div>
     <p style="font-size:11px;color:#92400e;margin:12px 0 0;line-height:1.6">
-      ⚠️ 以上退款原因合计 <b id="intervenable_total_amt">—</b>，占退款总额的 <b id="intervenable_total_pct">—</b>。点击下方表格中「可干预」标签可筛选查看对应明细。
+      ⚠️ 以上退款原因合计 <b id="intervenable_total_amt">—</b>，占退款总额的 <b id="intervenable_total_pct">—</b>。
     </p>
-  </div>
-
-  <!-- 退款产品结构(服务类型) Top10 -->
-  <div class="refund-panel">
-    <div class="refund-panel-title">退款产品结构 Top10（按金额）</div>
-    <table id="refund_service_table"><thead><tr>
-      <th>服务类型/产品</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">占总退款</th><th style="min-width:150px">占比</th>
-    </tr></thead><tbody></tbody></table>
-  </div>
-
-  <!-- 线上销售退款 Top50 -->
-  <div class="refund-panel">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <div class="refund-panel-title" style="margin:0">线上销售退款排名 Top50</div>
-      <select id="refund-online-org-sel" class="refund-sel" onchange="renderRefundSellerTable()">
-        <option value="__all__">全部组织</option>
-      </select>
-    </div>
-    <table id="refund_seller_table"><thead><tr>
-      <th>归属组织</th><th>销售姓名</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">占线上退款</th><th class="num">大额单数</th><th>主要退款原因</th><th>退款产品Top3（金额）</th>
-    </tr></thead><tbody></tbody></table>
-  </div>
-
-  <!-- 线下门店CM退款 Top50 -->
-  <div class="refund-panel">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <div class="refund-panel-title" style="margin:0">线下门店 CM 退款排名 Top50</div>
-      <select id="refund-store-org-sel" class="refund-sel" onchange="renderRefundCMTable()">
-        <option value="__all__">全部门店</option>
-      </select>
-    </div>
-    <table id="refund_cm_table"><thead><tr>
-      <th>归属门店</th><th>CM姓名</th><th class="num">退款单数</th><th class="num">退款金额</th><th class="num">占门店退款</th><th class="num">大额单数</th><th>主要退款原因</th><th>退款产品Top3（金额）</th>
-    </tr></thead><tbody></tbody></table>
-  </div>
-
-  <!-- 退款省份 Top15 + 省份×原因热力图 -->
-  <div style="display:flex;gap:18px;margin-bottom:18px;flex-wrap:wrap">
-    <div class="refund-panel" style="flex:1;min-width:320px;margin-bottom:0">
-      <div class="refund-panel-title">退款省份 Top15（含未属地）</div>
-      <div style="max-height:460px;overflow-y:auto">
-        <table id="refund_province_table"><thead><tr>
-          <th>省份/地区</th><th class="num">退款单数</th><th class="num">退款金额</th><th style="min-width:120px">占比</th>
-        </tr></thead><tbody></tbody></table>
-      </div>
-    </div>
-    <div class="refund-panel" style="flex:1.4;min-width:520px;margin-bottom:0">
-      <div class="refund-panel-title">省份 × 退款原因热力图（金额）</div>
-      <div style="overflow-x:auto"><div id="heatmap_container"></div></div>
-    </div>
-  </div>
-
-  <!-- 各组织退款对比 -->
-  <div class="refund-panel" style="margin-bottom:0">
-    <div class="refund-panel-title">各组织退款原因对比（按组织退款金额降序，堆叠）</div>
-    <div style="height:440px"><canvas id="chart_refund_org"></canvas></div>
   </div>
 </div>
 <div class="footer">
@@ -5436,8 +5318,8 @@ function toggleDoneChg(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'效果不满意':1,'商家操作失误':1,'家人不支持':1,'服务未交付/联系不上':1,'时间/适配冲突':1,'价格问题':1,'教材问题':1};
-var NO_ATTR = {'未填写原因':1,'其他/未说明':1,'主动放弃/拍错':1};
+var INTERVENABLE = {'教材问题':1,'家人不支持':1,'效果不满意':1,'商家操作失误':1,'时间/适配冲突':1,'价格问题':1,'服务未交付/联系不上':1};
+var NO_ATTR = {'主动放弃/拍错':1,'未填写原因':1,'其他/未说明':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5507,21 +5389,9 @@ function renderRefundReason() {
 
   // 渠道占比饼图
   drawRefundChannel(m);
-  // 退款原因饼图
-  drawRefundReasonPie(D.overall);
-  // 退款原因明细表
-  renderRefundReasonTable(D.overall, m.total_amt);
-  // 服务类型表
-  renderRefundServiceTable(D.by_service, m.total_amt);
   // 线上销售排名表 + 线下CM排名表
   renderRefundSellerTable();
   renderRefundCMTable();
-  // 省份表
-  renderRefundProvinceTable(D.by_province, m.total_amt);
-  // 省份×原因热力图
-  renderHeatmap(D.heatmap);
-  // 组织对比图
-  renderRefundOrgChart();
 }
 
 var _refundChannelChart = null;
@@ -6045,4 +5915,4 @@ function switchMonth(){
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260805112556";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260805153741";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
