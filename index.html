@@ -1613,7 +1613,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260805153953"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260805155704"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区8月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -5192,46 +5192,14 @@ document.addEventListener('click', function(e) {
       <div class="metric-sub" id="refund_large_cnt">—</div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px">
-    <div class="metric-card" style="--accent:#6366f1">
-      <div class="metric-label">📅 当月退费 (8月付8月退)</div>
-      <div class="metric-value" style="color:#6366f1" id="refund_same_amt">—</div>
-      <div class="metric-sub" id="refund_same_pct">—</div>
-    </div>
-    <div class="metric-card" style="--accent:#64748b">
-      <div class="metric-label">📆 历年退费 (8月前付8月退)</div>
-      <div class="metric-value" style="color:#64748b" id="refund_cross_amt">—</div>
-      <div class="metric-sub" id="refund_cross_pct">—</div>
-    </div>
-    <div class="metric-card" style="--accent:#3b82f6">
-      <div class="metric-label">🌐 当月退-线上</div>
-      <div class="metric-value" style="color:#3b82f6" id="refund_same_online">—</div>
-      <div class="metric-sub">线上当月退</div>
-    </div>
-    <div class="metric-card" style="--accent:#10b981">
-      <div class="metric-label">🏥 当月退-门店</div>
-      <div class="metric-value" style="color:#10b981" id="refund_same_store">—</div>
-      <div class="metric-sub">门店当月退</div>
-    </div>
-    <div class="metric-card" style="--accent:#94a3b8">
-      <div class="metric-label">🌐 历年退-线上</div>
-      <div class="metric-value" style="color:#94a3b8" id="refund_cross_online">—</div>
-      <div class="metric-sub">线上历年退</div>
-    </div>
-    <div class="metric-card" style="--accent:#78716c">
-      <div class="metric-label">🏥 历年退-门店</div>
-      <div class="metric-value" style="color:#78716c" id="refund_cross_store">—</div>
-      <div class="metric-sub">门店历年退</div>
-    </div>
-  </div>
   <div style="display:flex;gap:18px;margin-bottom:18px;flex-wrap:wrap">
-    <div class="refund-panel" style="flex:1;min-width:320px;margin-bottom:0">
-      <div class="refund-panel-title">📅 当月退 vs 历年退</div>
-      <div style="height:260px"><canvas id="chart_refund_type_pie"></canvas></div>
+    <div class="refund-panel" style="flex:1.4;min-width:420px;margin-bottom:0">
+      <div class="refund-panel-title">📊 当月退 vs 历年退（按渠道）</div>
+      <div style="height:280px"><canvas id="chart_refund_type_bar"></canvas></div>
     </div>
     <div class="refund-panel" style="flex:1;min-width:300px;margin-bottom:0">
       <div class="refund-panel-title">线上 / 门店退款占比</div>
-      <div style="height:260px"><canvas id="chart_refund_channel"></canvas></div>
+      <div style="height:280px"><canvas id="chart_refund_channel"></canvas></div>
     </div>
   </div>
 <div class="section-title">🚨 风险预警</div>  <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap"><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fef2f2,#fff);border:1px solid #fca5a5;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🔴 退费率偏高 32.5%</div><div style="font-size:12px;color:#475569;line-height:1.6">本月退费 ¥31.9万，占完成额 <b>32.5%</b>，超过25%警戒线，需重点控制退费节奏</div></div><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fef2f2,#fff);border:1px solid #fca5a5;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🔴 大额退款集中（98%）</div><div style="font-size:12px;color:#475569;line-height:1.6">≥1000元大额退款 ¥31.2万，占退费总额 <b>98%</b>，单笔流失风险大</div></div><div style="flex:1;min-width:260px;background:linear-gradient(135deg,#fef2f2,#fff);border:1px solid #fca5a5;border-radius:12px;padding:12px 14px"><div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">🔴 历史订单退费占 99%</div><div style="font-size:12px;color:#475569;line-height:1.6">本月退费中 <b>99%</b>（¥31.5万）来自本月前成交订单，存量客户服务需加强</div></div></div>  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px">
@@ -5319,8 +5287,8 @@ function toggleDoneChg(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'时间/适配冲突':1,'商家操作失误':1,'价格问题':1,'服务未交付/联系不上':1,'家人不支持':1,'教材问题':1,'效果不满意':1};
-var NO_ATTR = {'其他/未说明':1,'未填写原因':1,'主动放弃/拍错':1};
+var INTERVENABLE = {'商家操作失误':1,'教材问题':1,'时间/适配冲突':1,'家人不支持':1,'效果不满意':1,'价格问题':1,'服务未交付/联系不上':1};
+var NO_ATTR = {'主动放弃/拍错':1,'其他/未说明':1,'未填写原因':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5373,18 +5341,9 @@ function renderRefundReason() {
   document.getElementById('refund_large_amt').textContent = '¥' + (m.large_amt/10000).toFixed(1) + '万';
   document.getElementById('refund_large_cnt').textContent = m.large_cnt + '单';
 
-  // 当月退 vs 历年退 指标卡片
-  document.getElementById('refund_same_amt').textContent = '¥' + (m.same_month_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_same_pct').textContent = m.same_month_rate + '% · ' + m.same_month_cnt + '单';
-  document.getElementById('refund_cross_amt').textContent = '¥' + (m.cross_month_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_cross_pct').textContent = m.cross_month_rate + '% · ' + m.cross_month_cnt + '单';
-  document.getElementById('refund_same_online').textContent = '¥' + (m.same_online_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_same_store').textContent = '¥' + (m.same_store_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_cross_online').textContent = '¥' + (m.cross_online_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_cross_store').textContent = '¥' + (m.cross_store_amt/10000).toFixed(1) + '万';
-  // 当月退 vs 历年退 饼图
-  drawRefundTypePie(D);
-  // 历年退：按支付月份（线上/门店分开柱状图）
+  // 当月退 vs 历年退（按渠道）柱状图
+  drawRefundTypeBar(D);
+  // 历年退：按支付月份（线上/门店分开饼图）
   drawPayMonthPie('chart_pay_month_online', D.pay_month_online, D.meta.online_amt, 'pay_month_online_table');
   drawPayMonthPie('chart_pay_month_store', D.pay_month_store, D.meta.store_amt, 'pay_month_store_table');
 
@@ -5471,37 +5430,37 @@ function drawRefundReasonPie(rows) {
   });
 }
 
-var _refundTypePieChart = null;
-function drawRefundTypePie(D) {
-  var canvas = document.getElementById('chart_refund_type_pie');
+var _refundTypeBarChart = null;
+function drawRefundTypeBar(D) {
+  var canvas = document.getElementById('chart_refund_type_bar');
   if (!canvas || typeof Chart === 'undefined') return;
   var m = D.meta;
-  if (_refundTypePieChart) { _refundTypePieChart.destroy(); }
+  if (_refundTypeBarChart) { _refundTypeBarChart.destroy(); }
   var ctx = canvas.getContext('2d');
-  _refundTypePieChart = new Chart(ctx, {
-    type: 'doughnut',
+  _refundTypeBarChart = new Chart(ctx, {
+    type: 'bar',
     data: {
       labels: ['当月退 (8月付8月退)', '历年退 (8月前付8月退)'],
-      datasets: [{
-        data: [m.same_month_amt, m.cross_month_amt],
-        backgroundColor: ['#6366f1', '#cbd5e1'],
-        borderColor: '#fff',
-        borderWidth: 2
-      }]
+      datasets: [
+        { label: '线上', data: [m.same_online_amt, m.cross_online_amt], backgroundColor: '#3b82f6', borderRadius: 6 },
+        { label: '门店', data: [m.same_store_amt, m.cross_store_amt], backgroundColor: '#10b981', borderRadius: 6 }
+      ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      scales: {
+        x: { stacked: false, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { callback: function(v) { return fmtNum(v); } } }
+      },
       plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 12 }, usePointStyle: true, padding: 16 } },
+        legend: { position: 'bottom', labels: { font: { size: 12 }, usePointStyle: true, padding: 12 } },
         tooltip: {
           callbacks: {
             label: function(ctx) {
-              var label = ctx.label;
-              var amt = ctx.raw;
-              var pct = (amt / m.total_amt * 100).toFixed(1);
-              var cnt = ctx.dataIndex === 0 ? m.same_month_cnt : m.cross_month_cnt;
-              return label + ': ¥' + fmtNum(amt) + ' (' + pct + '%) · ' + cnt + '单';
+              var total = ctx.chart.data.datasets[0].data[ctx.dataIndex] + ctx.chart.data.datasets[1].data[ctx.dataIndex];
+              var pct = total > 0 ? (ctx.raw / total * 100).toFixed(1) : 0;
+              return ctx.dataset.label + ': ¥' + fmtNum(ctx.raw) + ' (' + pct + '%)';
             }
           }
         }
@@ -5916,4 +5875,4 @@ function switchMonth(){
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260805153953";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260805155704";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
