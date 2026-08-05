@@ -1613,7 +1613,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260805160121"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260805161007"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区8月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -5287,8 +5287,8 @@ function toggleDoneChg(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'效果不满意':1,'价格问题':1,'商家操作失误':1,'时间/适配冲突':1,'家人不支持':1,'教材问题':1,'服务未交付/联系不上':1};
-var NO_ATTR = {'主动放弃/拍错':1,'其他/未说明':1,'未填写原因':1};
+var INTERVENABLE = {'效果不满意':1,'时间/适配冲突':1,'价格问题':1,'服务未交付/联系不上':1,'家人不支持':1,'商家操作失误':1,'教材问题':1};
+var NO_ATTR = {'其他/未说明':1,'未填写原因':1,'主动放弃/拍错':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -5325,21 +5325,22 @@ function renderRefundReason() {
   if (!D || !D.meta) return;
   var m = D.meta;
 
-  // 核心指标
-  document.getElementById('refund_total_amt').textContent = '¥' + (m.total_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_total_cnt').textContent = m.total_cnt + '单';
-  document.getElementById('refund_online_amt').textContent = '¥' + (m.online_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_online_pct').textContent = (m.online_amt/m.total_amt*100).toFixed(1) + '% · ' + m.online_cnt + '单';
-  document.getElementById('refund_store_amt').textContent = '¥' + (m.store_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_store_pct').textContent = (m.store_amt/m.total_amt*100).toFixed(1) + '% · ' + m.store_cnt + '单';
-  document.getElementById('refund_intervenable').textContent = '¥' + (m.intervenable_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_intervenable_pct').textContent = m.intervenable_rate + '%';
-  var ipct = document.getElementById('intervenable_total_pct'); if(ipct) ipct.textContent = m.intervenable_rate + '%';
-  var iamt = document.getElementById('intervenable_total_amt'); if(iamt) iamt.textContent = '¥' + (m.intervenable_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_no_attr').textContent = '¥' + (m.no_attr_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_no_attr_pct').textContent = m.no_attr_rate + '%';
-  document.getElementById('refund_large_amt').textContent = '¥' + (m.large_amt/10000).toFixed(1) + '万';
-  document.getElementById('refund_large_cnt').textContent = m.large_cnt + '单';
+  // 核心指标（缺失元素跳过，避免中断后续图表渲染）
+  var setTxt = function(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; };
+  setTxt('refund_total_amt', '¥' + (m.total_amt/10000).toFixed(1) + '万');
+  setTxt('refund_total_cnt', m.total_cnt + '单');
+  setTxt('refund_online_amt', '¥' + (m.online_amt/10000).toFixed(1) + '万');
+  setTxt('refund_online_pct', (m.online_amt/m.total_amt*100).toFixed(1) + '% · ' + m.online_cnt + '单');
+  setTxt('refund_store_amt', '¥' + (m.store_amt/10000).toFixed(1) + '万');
+  setTxt('refund_store_pct', (m.store_amt/m.total_amt*100).toFixed(1) + '% · ' + m.store_cnt + '单');
+  setTxt('refund_intervenable', '¥' + (m.intervenable_amt/10000).toFixed(1) + '万');
+  setTxt('refund_intervenable_pct', m.intervenable_rate + '%');
+  setTxt('intervenable_total_pct', m.intervenable_rate + '%');
+  setTxt('intervenable_total_amt', '¥' + (m.intervenable_amt/10000).toFixed(1) + '万');
+  setTxt('refund_no_attr', '¥' + (m.no_attr_amt/10000).toFixed(1) + '万');
+  setTxt('refund_no_attr_pct', m.no_attr_rate + '%');
+  setTxt('refund_large_amt', '¥' + (m.large_amt/10000).toFixed(1) + '万');
+  setTxt('refund_large_cnt', m.large_cnt + '单');
 
   // 当月退 vs 历年退（按渠道）柱状图
   drawRefundTypeBar(D);
@@ -5875,4 +5876,4 @@ function switchMonth(){
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260805160121";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260805161007";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
