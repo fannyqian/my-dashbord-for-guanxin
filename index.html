@@ -1456,7 +1456,7 @@ function applyPersonFilter(tabId) {
   var tab = document.getElementById('tab-' + tabId);
   if (!tab) return;
 
-  // 聚合每人的区间业绩 + 电话
+  // 只更新时段业绩 + 电话数据（月度累计不变）
   var grpAgg = {};
   tab.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row) {
     var tds = row.querySelectorAll('td');
@@ -1464,47 +1464,23 @@ function applyPersonFilter(tabId) {
     var grp = tds[0].textContent.trim();
     var nameEl = tds[1];
     var name = nameEl.textContent.replace('⚠锁定', '').replace('⚠', '').trim();
-    var tgt = pfParseNum(tds[2].textContent);
 
-    var done = 0, refund = 0, period_done = 0, calls = 0, s90 = 0, wxm = 0;
+    var period_done = 0, calls = 0, s90 = 0, wxm = 0;
     var duration = 0;
     var dinfo = pd[name] || {};
-    var rinfo = pdr[name] || {};
     var pinfo = ppd[name] || {};
-    for (var d = 1; d <= toDay; d++) {
-      var dk = String(d);
-      var dayDone = (dinfo[dk] || 0);
-      done += dayDone;
-      refund += (rinfo[dk] || 0);
-      if (d >= fromDay) {
-        period_done += dayDone;
-      }
-    }
     for (var d = fromDay; d <= toDay; d++) {
-      var dk2 = String(d);
-      var pday = pinfo[dk2] || {};
+      var dk = String(d);
+      period_done += (dinfo[dk] || 0);
+      var pday = pinfo[dk] || {};
       calls += (pday.calls || 0);
       s90 += (pday.s90 || 0);
       duration += (pday.duration || 0);
       wxm += (pday.wxm || 0);
     }
 
-    var net = done - refund;
-    var rate = tgt > 0 ? done / tgt : 0;
-
-    // 更新业绩单元格
-    tds[3].innerHTML = '<b>' + pfFmtMoney(done) + '</b>';
-    tds[4].innerHTML = pfBuildBar(rate);
-    tds[5].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[6].innerHTML = pfBuildRefund(refund, done);
-    tds[7].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[8].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[9].innerHTML = '<b>' + pfFmtMoney(net) + '</b>';
-    tds[10].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[11].innerHTML = '<span style="color:#94a3b8">—</span>';
-    // 时段业绩 (index 12)
+    // 只更新时段业绩和电话（其他列保持月累计原值不变）
     tds[12].innerHTML = '<b style="color:#6366f1">' + pfFmtMoney(period_done) + '</b>';
-    // 更新电话单元格 (index 13-16)
     if (tds.length >= 17) {
       tds[13].innerHTML = '<b style="color:#0891b2">' + calls + '</b>';
       tds[14].innerHTML = '<b style="color:#0891b2">' + s90 + '</b>';
@@ -1512,11 +1488,7 @@ function applyPersonFilter(tabId) {
       tds[16].innerHTML = '<b style="color:#10b981">' + wxm + '</b>';
     }
 
-    if (!grpAgg[grp]) grpAgg[grp] = {tgt: 0, done: 0, refund: 0, net: 0, period_done: 0, calls: 0, s90: 0, duration: 0, wxm: 0};
-    grpAgg[grp].tgt += tgt;
-    grpAgg[grp].done += done;
-    grpAgg[grp].refund += refund;
-    grpAgg[grp].net += net;
+    if (!grpAgg[grp]) grpAgg[grp] = {period_done: 0, calls: 0, s90: 0, duration: 0, wxm: 0};
     grpAgg[grp].period_done += period_done;
     grpAgg[grp].calls += calls;
     grpAgg[grp].s90 += s90;
@@ -1524,24 +1496,12 @@ function applyPersonFilter(tabId) {
     grpAgg[grp].wxm += wxm;
   });
 
-  // 更新小计行
+  // 更新小计行 — 只更新时段业绩和电话
   tab.querySelectorAll('tbody tr.subtotal').forEach(function(st) {
     var tds = st.querySelectorAll('td');
     var g = tds[0].textContent.trim();
     var agg = grpAgg[g];
     if (!agg || tds.length < 10) return;
-    var rate = agg.tgt > 0 ? agg.done / agg.tgt : 0;
-    tds[2].innerHTML = '<b>' + pfFmtMoney(agg.tgt) + '</b>';
-    tds[3].innerHTML = '<b>' + pfFmtMoney(agg.done) + '</b>';
-    tds[4].innerHTML = pfBuildBar(rate);
-    tds[5].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[6].innerHTML = pfBuildRefund(agg.refund, agg.done);
-    tds[7].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[8].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[9].innerHTML = '<b>' + pfFmtMoney(agg.net) + '</b>';
-    tds[10].innerHTML = '<span style="color:#94a3b8">—</span>';
-    tds[11].innerHTML = '<span style="color:#94a3b8">—</span>';
-    // 更新小计行时段业绩 + 电话列
     tds[12].innerHTML = '<b style="color:#6366f1;font-weight:700">' + pfFmtMoney(agg.period_done) + '</b>';
     if (tds.length >= 17) {
       tds[13].innerHTML = '<b style="color:#0891b2;font-weight:700">' + agg.calls + '</b>';
@@ -1561,7 +1521,7 @@ function applyPersonFilter(tabId) {
     if (table) tab.insertBefore(indicator, table);
     else tab.insertBefore(indicator, tab.firstChild);
   }
-  indicator.textContent = '📅 当前显示: 8月' + fromDay + '日 - 8月' + toDay + '日（环比/上月数据不适用于自定义区间，显示"—"）';
+  indicator.textContent = '📅 当前显示: 8月' + fromDay + '日 - 8月' + toDay + '日（时段业绩+电话为区间汇总，其他为月累计不变，显示"—"）';
 }
 
 // 重置函数
@@ -1651,7 +1611,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260806112730"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260806114239"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区8月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -5537,7 +5497,7 @@ function toggleDoneChg(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'商家操作失误':1,'教材问题':1,'效果不满意':1,'家人不支持':1,'价格问题':1,'服务未交付/联系不上':1,'时间/适配冲突':1};
+var INTERVENABLE = {'时间/适配冲突':1,'教材问题':1,'服务未交付/联系不上':1,'效果不满意':1,'商家操作失误':1,'价格问题':1,'家人不支持':1};
 var NO_ATTR = {'未填写原因':1,'其他/未说明':1,'主动放弃/拍错':1};
 
 function toggleIntervenableHelp(e) {
@@ -6118,4 +6078,4 @@ function switchMonth(){
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260806112730";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260806114239";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
