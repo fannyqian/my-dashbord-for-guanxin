@@ -403,6 +403,36 @@ function exportBaseTable() {
   }
 }
 
+// ====== 导出总表（fetch + blob 避免中文文件名编码问题）======
+function downloadTotalTable() {
+  var url = '导出_总表.xlsx';
+  var btn = event.target;
+  btn.textContent = '⏳ 下载中…';
+  btn.style.opacity = '0.7';
+  fetch(url)
+    .then(function(r) {
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.blob();
+    })
+    .then(function(blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '南区8月总表_截止'+new Date().toISOString().slice(0,10)+'.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+      btn.textContent = '📊 导出总表';
+      btn.style.opacity = '1';
+    })
+    .catch(function(err) {
+      // 回退: 直接打开链接
+      window.open(url, '_blank');
+      btn.textContent = '📊 导出总表';
+      btn.style.opacity = '1';
+    });
+}
+
 // ====== 普陀模板导出 ======
 // ====== 康博嘉云数据导入 ======
 // ====== 导入进度条（成功绿/失败红） ======
@@ -1631,7 +1661,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260810110933"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260810111343"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000">
 <h1 style="font-size:16px;font-weight:600;margin:0">📊 南区8月目标进展看板</h1>
 <div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div>
@@ -1644,7 +1674,7 @@ document.addEventListener('click', function(e) {
 <p class="subtitle">数据截止：2026年8月9日 | 环比基期：7月1-9日同口径 | 普陀业绩从明细自动汇总</p></div>
 <div class="top-btns" style="display:flex;gap:8px;align-items:center;margin-top:4px">
 <button onclick="exportBaseTable()" style="padding:8px 18px;background:#fff;color:#1e293b;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📥 导出底表</button>
-<a href="导出_总表.xlsx" download style="padding:8px 18px;background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block">📊 导出总表</a>
+<button onclick="downloadTotalTable()" style="padding:8px 18px;background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📊 导出总表</button>
 <button onclick="snapshot()" style="padding:8px 18px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📸 快照</button>
 <label style="padding:8px 18px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
   📤 导入底表 <input type="file" onchange="importBaseTable(this)" accept=".xlsx,.xls,.csv" style="display:none">
@@ -5629,8 +5659,8 @@ function toggleDoneChg(){
   });
 }
 // ====== 退款原因分析 ======
-var INTERVENABLE = {'家人不支持':1,'价格问题':1,'商家操作失误':1,'时间/适配冲突':1,'服务未交付/联系不上':1,'效果不满意':1,'教材问题':1};
-var NO_ATTR = {'其他/未说明':1,'主动放弃/拍错':1,'未填写原因':1};
+var INTERVENABLE = {'价格问题':1,'家人不支持':1,'时间/适配冲突':1,'效果不满意':1,'教材问题':1,'商家操作失误':1,'服务未交付/联系不上':1};
+var NO_ATTR = {'主动放弃/拍错':1,'未填写原因':1,'其他/未说明':1};
 
 function toggleIntervenableHelp(e) {
   if (e) e.stopPropagation();
@@ -6210,4 +6240,4 @@ function switchMonth(){
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260810110933";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260810111343";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
