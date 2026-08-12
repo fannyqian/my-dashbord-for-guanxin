@@ -1661,7 +1661,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260812192349"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260812192636"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000"><h1 style="font-size:16px;font-weight:600;margin:0">南区8月目标进展看板</h1><div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div></div><style>.deploy-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -1905,33 +1905,8 @@ document.addEventListener('click', function(e) {
   <th>分组</th><th>角色 <span style="font-weight:400;color:#94a3b8;font-size:10px">/趋势</span></th><th class="num">目标</th><th class="num">完成</th><th class="num col-collab" style="color:#7c3aed">协同双计 <span onclick="toggleCollab()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th style="min-width:170px">完成率</th><th class="num col-donechg">完成环比 <span onclick="toggleDoneChg()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th>
   
   <th class="num">本月退费</th><th class="num">退费率</th><th class="num">退费环比</th>
-  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num" style="color:#6366f1">📅昨日业绩</th><th class="num">📞通话次数</th><th class="num col-s90">90S+通话 <span onclick="toggleS90()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th class="num">通话时长<br>(min)</th><th class="num">✉️发微信<br>条数</th></tr></thead><tbody>
-<tr class="section-header"><td colspan="19" style="background:#dbeafe;color:#1e40af;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #93c5fd">📡 线上组</td></tr><tr>
-  <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('课程4组')" title="点击查看退款原因分析">课程4组</b></td>
-  <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程4组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
-  <td class="num">65.0万</td>
-  <td class="num"><b>2.3万</b></td>
-  <td class="num col-collab" style="color:#7c3aed;font-weight:600">4.0万</td>
-  <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
-  <div style="flex:1;height:20px;background:#fef2f2;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
-    <div style="width:9.68234769230769%;height:100%;background:#dc2626;border-radius:10px;transition:width 0.3s"></div>
-    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b;text-shadow:0 0 4px rgba(255,255,255,0.8)">9.7%</div>
-  </div>
-  <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
-</div></td>
-  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓91.8%</span></td>
-  <td class="num">6.9万</td>
-  <td class="num"><span data-refund-key="group:课程4组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程4组')" title="点击查看退款原因">296.4%</span></td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↑260.3%</span></td>
-  <td class="num"><b>-4.6万</b></td>
-  <td class="num">26.5万</td>
-  <td class="num"><span style="color:#ef4444;font-weight:600">↓117.3%</span></td>
-  <td class="num" style="color:#6366f1;font-weight:600">38.0</td>
-  <td class="num" style="color:#0891b2;font-weight:600">1</td>
-  <td class="num col-s90" style="color:#0891b2;font-weight:600">0</td>
-  <td class="num" style="color:#0891b2;font-weight:600">0.2</td>
-  <td class="num" style="color:#10b981;font-weight:600">36073</td>
-  </tr><tr>
+  <th class="num">本月净流水</th><th class="num">上月同期净流水</th><th class="num">净流水环比</th><th class="num" style="color:#6366f1">📅昨日业绩</th><th class="num">📞通话次数</th><th class="num col-s90">90S+通话 <span onclick="toggleS90()" style="cursor:pointer;user-select:none" title="点击隐藏/显示">👁️</span></th><th class="num">通话时长<br>(min)</th><th class="num">✉️发微信<br>条数</th></tr></thead><tbody><tr class="section-header"><td colspan="19" style="background:#dbeafe;color:#1e40af;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #93c5fd">📡 线上组</td></tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('课程1组')" title="点击查看退款原因分析">课程1组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程1组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">100.0万</td>
@@ -1956,7 +1931,34 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">17</td>
   <td class="num" style="color:#0891b2;font-weight:600">294.5</td>
   <td class="num" style="color:#10b981;font-weight:600">18343</td>
-  </tr><tr>
+  </tr>
+<tr>
+  <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('课程4组')" title="点击查看退款原因分析">课程4组</b></td>
+  <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程4组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
+  <td class="num">65.0万</td>
+  <td class="num"><b>2.3万</b></td>
+  <td class="num col-collab" style="color:#7c3aed;font-weight:600">4.0万</td>
+  <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
+  <div style="flex:1;height:20px;background:#fef2f2;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
+    <div style="width:9.68234769230769%;height:100%;background:#dc2626;border-radius:10px;transition:width 0.3s"></div>
+    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b;text-shadow:0 0 4px rgba(255,255,255,0.8)">9.7%</div>
+  </div>
+  <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="必定完不成">🚫 高危</span>
+</div></td>
+  <td class="num col-donechg"><span style="color:#ef4444;font-weight:600">↓91.8%</span></td>
+  <td class="num">6.9万</td>
+  <td class="num"><span data-refund-key="group:课程4组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程4组')" title="点击查看退款原因">296.4%</span></td>
+  <td class="num"><span style="color:#ef4444;font-weight:600">↑260.3%</span></td>
+  <td class="num"><b>-4.6万</b></td>
+  <td class="num">26.5万</td>
+  <td class="num"><span style="color:#ef4444;font-weight:600">↓117.3%</span></td>
+  <td class="num" style="color:#6366f1;font-weight:600">38.0</td>
+  <td class="num" style="color:#0891b2;font-weight:600">1</td>
+  <td class="num col-s90" style="color:#0891b2;font-weight:600">0</td>
+  <td class="num" style="color:#0891b2;font-weight:600">0.2</td>
+  <td class="num" style="color:#10b981;font-weight:600">36073</td>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('课程2组')" title="点击查看退款原因分析">课程2组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程2组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">10.0万</td>
@@ -1981,7 +1983,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">0</td>
   <td class="num" style="color:#0891b2;font-weight:600">1.3</td>
   <td class="num" style="color:#10b981;font-weight:600">4043</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('课程5组')" title="点击查看退款原因分析">课程5组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程5组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">70.0万</td>
@@ -2006,7 +2009,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">8</td>
   <td class="num" style="color:#0891b2;font-weight:600">146.8</td>
   <td class="num" style="color:#10b981;font-weight:600">24782</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('班主任')" title="点击查看退款原因分析">班主任</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#fce7f3;color:#9d174d;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">班主任</span><canvas class="spark" data-group="班主任" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">170.0万</td>
@@ -2031,7 +2035,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">27</td>
   <td class="num" style="color:#0891b2;font-weight:600">911.2</td>
   <td class="num" style="color:#10b981;font-weight:600">719</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('课程6组')" title="点击查看退款原因分析">课程6组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程6组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">55.0万</td>
@@ -2056,32 +2061,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">8</td>
   <td class="num" style="color:#0891b2;font-weight:600">195.9</td>
   <td class="num" style="color:#10b981;font-weight:600">1222</td>
-  </tr><tr>
-  <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('课程7组')" title="点击查看退款原因分析">课程7组</b></td>
-  <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程7组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
-  <td class="num">65.0万</td>
-  <td class="num"><b>17.4万</b></td>
-  <td class="num col-collab" style="color:#7c3aed;font-weight:600">1.9万</td>
-  <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
-  <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
-    <div style="width:29.69617846153846%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
-    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b;text-shadow:0 0 4px rgba(255,255,255,0.8)">29.7%</div>
-  </div>
-  <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
-</div></td>
-  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑50.7%</span></td>
-  <td class="num">1.5万</td>
-  <td class="num"><span data-refund-key="group:课程7组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程7组')" title="点击查看退款原因">8.7%</span></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↓76.0%</span></td>
-  <td class="num"><b>15.9万</b></td>
-  <td class="num">5.2万</td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑203.3%</span></td>
-  <td class="num" style="color:#6366f1;font-weight:600">4,831.0</td>
-  <td class="num" style="color:#0891b2;font-weight:600">15</td>
-  <td class="num col-s90" style="color:#0891b2;font-weight:600">5</td>
-  <td class="num" style="color:#0891b2;font-weight:600">155.6</td>
-  <td class="num" style="color:#10b981;font-weight:600">7735</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('课程3组')" title="点击查看退款原因分析">课程3组</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程3组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">80.0万</td>
@@ -2106,7 +2087,35 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">15</td>
   <td class="num" style="color:#0891b2;font-weight:600">237.3</td>
   <td class="num" style="color:#10b981;font-weight:600">4329</td>
-  </tr><tr class="section-header"><td colspan="19" style="background:#d1fae5;color:#065f46;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #6ee7b7">🏥 线下门店</td></tr><tr>
+  </tr>
+<tr>
+  <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('课程7组')" title="点击查看退款原因分析">课程7组</b></td>
+  <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">销售</span><canvas class="spark" data-group="课程7组" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
+  <td class="num">65.0万</td>
+  <td class="num"><b>17.4万</b></td>
+  <td class="num col-collab" style="color:#7c3aed;font-weight:600">1.9万</td>
+  <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
+  <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
+    <div style="width:29.69617846153846%;height:100%;background:#f59e0b;border-radius:10px;transition:width 0.3s"></div>
+    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b;text-shadow:0 0 4px rgba(255,255,255,0.8)">29.7%</div>
+  </div>
+  <span style="font-size:10px;background:#fef3c7;color:#b45309;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="可能完不成">⚠️ 关注</span>
+</div></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑50.7%</span></td>
+  <td class="num">1.5万</td>
+  <td class="num"><span data-refund-key="group:课程7组" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:课程7组')" title="点击查看退款原因">8.7%</span></td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↓76.0%</span></td>
+  <td class="num"><b>15.9万</b></td>
+  <td class="num">5.2万</td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↑203.3%</span></td>
+  <td class="num" style="color:#6366f1;font-weight:600">4,831.0</td>
+  <td class="num" style="color:#0891b2;font-weight:600">15</td>
+  <td class="num col-s90" style="color:#0891b2;font-weight:600">5</td>
+  <td class="num" style="color:#0891b2;font-weight:600">155.6</td>
+  <td class="num" style="color:#10b981;font-weight:600">7735</td>
+  </tr>
+<tr class="section-header"><td colspan="19" style="background:#d1fae5;color:#065f46;font-weight:700;font-size:13px;padding:10px 12px;border-bottom:2px solid #6ee7b7">🏥 线下门店</td></tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('昆明')" title="点击查看退款原因分析">昆明</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="昆明" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">45.0万</td>
@@ -2131,7 +2140,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">27</td>
   <td class="num" style="color:#0891b2;font-weight:600">196.0</td>
   <td class="num" style="color:#10b981;font-weight:600">184</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('深圳')" title="点击查看退款原因分析">深圳</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="深圳" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">80.0万</td>
@@ -2156,7 +2166,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">17</td>
   <td class="num" style="color:#0891b2;font-weight:600">241.3</td>
   <td class="num" style="color:#10b981;font-weight:600">120</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('福州')" title="点击查看退款原因分析">福州</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="福州" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">40.0万</td>
@@ -2181,7 +2192,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">15</td>
   <td class="num" style="color:#0891b2;font-weight:600">154.4</td>
   <td class="num" style="color:#10b981;font-weight:600">135</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('武汉')" title="点击查看退款原因分析">武汉</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="武汉" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">85.0万</td>
@@ -2206,7 +2218,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">2</td>
   <td class="num" style="color:#0891b2;font-weight:600">17.1</td>
   <td class="num" style="color:#10b981;font-weight:600">17</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('广州')" title="点击查看退款原因分析">广州</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="广州" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">85.0万</td>
@@ -2231,7 +2244,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">7</td>
   <td class="num" style="color:#0891b2;font-weight:600">78.9</td>
   <td class="num" style="color:#10b981;font-weight:600">162</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('杭州')" title="点击查看退款原因分析">杭州</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="杭州" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">70.0万</td>
@@ -2256,7 +2270,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">24</td>
   <td class="num" style="color:#0891b2;font-weight:600">209.7</td>
   <td class="num" style="color:#10b981;font-weight:600">131</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('成都')" title="点击查看退款原因分析">成都</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="成都" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">45.0万</td>
@@ -2281,32 +2296,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">11</td>
   <td class="num" style="color:#0891b2;font-weight:600">64.1</td>
   <td class="num" style="color:#10b981;font-weight:600">105</td>
-  </tr><tr>
-  <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('普陀')" title="点击查看退款原因分析">普陀</b></td>
-  <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="普陀" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
-  <td class="num">200.0万</td>
-  <td class="num"><b>84.4万</b></td>
-  <td class="num col-collab">—</td>
-  <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
-  <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
-    <div style="width:42.2%;height:100%;background:#22c55e;border-radius:10px;transition:width 0.3s"></div>
-    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b;text-shadow:0 0 4px rgba(255,255,255,0.8)">42.2%</div>
-  </div>
-  <span style="font-size:10px;background:#d1fae5;color:#065f46;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="正常推进">⚠️ 关注</span>
-</div></td>
-  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑9.5%</span></td>
-  <td class="num">14.7万</td>
-  <td class="num"><span data-refund-key="group:普陀" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:普陀')" title="点击查看退款原因">17.4%</span></td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↓99.7%</span></td>
-  <td class="num"><b>69.7万</b></td>
-  <td class="num">3.5万</td>
-  <td class="num"><span style="color:#22c55e;font-weight:600">↑1625.1%</span></td>
-  <td class="num" style="color:#6366f1;font-weight:600">3.2万</td>
-  <td class="num" style="color:#0891b2;font-weight:600">62</td>
-  <td class="num col-s90" style="color:#0891b2;font-weight:600">19</td>
-  <td class="num" style="color:#0891b2;font-weight:600">177.6</td>
-  <td class="num" style="color:#10b981;font-weight:600">298</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('南京')" title="点击查看退款原因分析">南京</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="南京" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">80.0万</td>
@@ -2331,7 +2322,8 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">18</td>
   <td class="num" style="color:#0891b2;font-weight:600">137.6</td>
   <td class="num" style="color:#10b981;font-weight:600">229</td>
-  </tr><tr>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('徐汇')" title="点击查看退款原因分析">徐汇</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="徐汇" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">70.0万</td>
@@ -2356,7 +2348,34 @@ document.addEventListener('click', function(e) {
   <td class="num col-s90" style="color:#0891b2;font-weight:600">19</td>
   <td class="num" style="color:#0891b2;font-weight:600">454.8</td>
   <td class="num" style="color:#10b981;font-weight:600">444</td>
-  </tr><tr>
+  </tr>
+<tr>
+  <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('普陀')" title="点击查看退款原因分析">普陀</b></td>
+  <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="普陀" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
+  <td class="num">200.0万</td>
+  <td class="num"><b>84.4万</b></td>
+  <td class="num col-collab">—</td>
+  <td style="min-width:170px"><div style="display:flex;align-items:center;gap:6px;min-width:180px">
+  <div style="flex:1;height:20px;background:#fffbeb;border-radius:10px;overflow:hidden;position:relative;border:1px solid #e2e8f0">
+    <div style="width:42.2%;height:100%;background:#22c55e;border-radius:10px;transition:width 0.3s"></div>
+    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1e293b;text-shadow:0 0 4px rgba(255,255,255,0.8)">42.2%</div>
+  </div>
+  <span style="font-size:10px;background:#d1fae5;color:#065f46;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px" title="正常推进">⚠️ 关注</span>
+</div></td>
+  <td class="num col-donechg"><span style="color:#22c55e;font-weight:600">↑9.5%</span></td>
+  <td class="num">14.7万</td>
+  <td class="num"><span data-refund-key="group:普陀" style="cursor:pointer;border-bottom:1px dashed #cbd5e1" onclick="showRefundPopup(event,'group:普陀')" title="点击查看退款原因">17.4%</span></td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↓99.7%</span></td>
+  <td class="num"><b>69.7万</b></td>
+  <td class="num">3.5万</td>
+  <td class="num"><span style="color:#22c55e;font-weight:600">↑1625.1%</span></td>
+  <td class="num" style="color:#6366f1;font-weight:600">3.2万</td>
+  <td class="num" style="color:#0891b2;font-weight:600">62</td>
+  <td class="num col-s90" style="color:#0891b2;font-weight:600">19</td>
+  <td class="num" style="color:#0891b2;font-weight:600">177.6</td>
+  <td class="num" style="color:#10b981;font-weight:600">298</td>
+  </tr>
+<tr>
   <td><b style="cursor:pointer;color:#6366f1" onclick="navigateToRefund('珠海')" title="点击查看退款原因分析">珠海</b></td>
   <td><div style="display:flex;align-items:center;gap:8px"><span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">门店</span><canvas class="spark" data-group="珠海" width="80" height="26" style="cursor:pointer;border-radius:4px" title="悬停查看每日趋势"></canvas></div></td>
   <td class="num">26.0万</td>
@@ -6235,4 +6254,4 @@ function switchMonth(){
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260812192349";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260812192636";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
