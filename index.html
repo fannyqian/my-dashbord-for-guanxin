@@ -182,7 +182,7 @@ document.addEventListener('blur', function(e) {
 }, true);
 
 // ====== full refresh ======
-window._TP = 0.3548387096774194;
+window._TP = window._M.time_progress;
 function parseNum(td){ if(!td) return 0; var raw=String(td.getAttribute("data-val")||td.textContent).replace(/[,，\s↑↓%]/g,""); var mul=1; if(raw.indexOf("亿")>=0){ mul=100000000; raw=raw.replace("亿",""); } else if(raw.indexOf("万")>=0){ mul=10000; raw=raw.replace("万",""); } return (parseFloat(raw)||0)*mul; }
 function writeNum(td,v){ if(!td) return; td.setAttribute("data-val",v); td.textContent=fmtNum(v); }
 function rebuildBar(td,rate){
@@ -1661,7 +1661,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260814112822"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260814113251"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000"><h1 style="font-size:16px;font-weight:600;margin:0">南区8月目标进展看板</h1><div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div></div><style>.deploy-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -1734,17 +1734,17 @@ document.addEventListener('click', function(e) {
   <div style="display:flex;align-items:center;gap:6px">
     <span style="display:inline-block;width:20px;height:12px;background:#22c55e;border-radius:6px"></span>
     <span style="color:#166534;font-weight:600">🟢 正常</span>
-    <span style="color:#64748b">完成率 ≥ 时间进度(35.5%)，节奏正常可达成</span>
+    <span style="color:#64748b">完成率 ≥ 时间进度(41.9%)，节奏正常可达成</span>
   </div>
   <div style="display:flex;align-items:center;gap:6px">
     <span style="display:inline-block;width:20px;height:12px;background:#f59e0b;border-radius:6px"></span>
     <span style="color:#b45309;font-weight:600">⚠️ 关注</span>
-    <span style="color:#64748b">完成率 ≥ 17.7% 但落后时间进度，按此速度可能完不成</span>
+    <span style="color:#64748b">完成率 ≥ 21.0% 但落后时间进度，按此速度可能完不成</span>
   </div>
   <div style="display:flex;align-items:center;gap:6px">
     <span style="display:inline-block;width:20px;height:12px;background:#dc2626;border-radius:6px"></span>
     <span style="color:#b91c1c;font-weight:600">🚫 高危</span>
-    <span style="color:#64748b">完成率 &lt; 17.7%，严重落后，需特别特别关注</span>
+    <span style="color:#64748b">完成率 &lt; 21.0%，严重落后，需特别特别关注</span>
   </div>
   <span style="color:#94a3b8;margin-left:auto">|</span>
   <div style="display:flex;align-items:center;gap:6px">
@@ -2886,4 +2886,4 @@ function switchMonth(){
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260814112822";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260814113251";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
