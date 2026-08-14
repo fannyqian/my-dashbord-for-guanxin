@@ -1661,7 +1661,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260814103700"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260814104551"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000"><h1 style="font-size:16px;font-weight:600;margin:0">南区8月目标进展看板</h1><div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 每2小时自动刷新</div></div><style>.deploy-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -2843,6 +2843,41 @@ function switchMonth(){
   if(m === '7'){ window.location.href = '南区7月目标看板.html'; }
   else { window.location.href = '南区8月目标看板.html'; }
 }
+
+// 按分组 tab：各分区（线上组/线下门店）内按完成率升序，差的在前好的在后
+(function sortGroupByRate(){
+  var tbody = document.querySelector('#tab-group tbody');
+  if(!tbody) return;
+  function cellNum(td){
+    if(!td) return 0;
+    var raw = String(td.getAttribute('data-val') || td.textContent).replace(/[,，\s%]/g,'');
+    var mul = 1;
+    if(raw.indexOf('亿')>=0){ mul=1e8; raw=raw.replace('亿',''); }
+    else if(raw.indexOf('万')>=0){ mul=1e4; raw=raw.replace('万',''); }
+    return (parseFloat(raw)||0)*mul;
+  }
+  function rateOf(row){
+    var tds = row.querySelectorAll('td');
+    if(tds.length < 6) return 0;
+    var t = cellNum(tds[2]), d = cellNum(tds[3]); // 目标 / 完成
+    return t>0 ? d/t : 0;
+  }
+  var sections = [], cur = null;
+  Array.prototype.forEach.call(tbody.children, function(row){
+    if(row.classList && row.classList.contains('section-header')){
+      cur = {header: row, rows: []}; sections.push(cur);
+    } else if(row.classList && row.classList.contains('subtotal')){
+      // 小计行保持原位
+    } else if(cur){
+      cur.rows.push(row);
+    }
+  });
+  sections.forEach(function(sec){
+    sec.rows.sort(function(a,b){ return rateOf(a) - rateOf(b); });
+    var ref = sec.header;
+    sec.rows.forEach(function(r){ ref.parentNode.insertBefore(r, ref.nextSibling); ref = r; });
+  });
+})();
 </script>
 <div id="refund-popover" class="refund-popover">
   <div class="refund-popover-head">
@@ -2851,4 +2886,4 @@ function switchMonth(){
   </div>
   <div class="refund-popover-body" id="refund-popover-body"></div>
 </div>
-<script>var _v="20260814103700";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
+<script>var _v="20260814104551";if(localStorage.getItem("_dv")!==_v){localStorage.setItem("_dv",_v);location.reload(true)}setInterval(function(){location.reload(true)},7200000)</script></body></html>
