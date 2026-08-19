@@ -1662,7 +1662,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260819180449"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260819181054"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000"><h1 style="font-size:16px;font-weight:600;margin:0">南区8月目标进展看板</h1><div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 自动同步最新版本</div></div><style>.deploy-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -2974,21 +2974,19 @@ function renderProductLines(){
 function renderProductRefund(D){
   var el = document.getElementById('product_refund');
   if(!el) return;
-  var h = '<table><thead><tr><th>主线</th><th>成交额</th><th>退费总额</th><th>当月退</th><th>历年退</th></tr></thead><tbody>';
+  var h = '<table><thead><tr><th>主线</th><th>成交额</th><th>退费总额</th><th>当月退</th><th>历年退</th><th>退费品Top</th></tr></thead><tbody>';
   D.refund_by_line.forEach(function(r){
     var cur_rate = r.refund_rate*100;
     var hist_rate = r.refund_hist_rate*100;
     var cc = cur_rate>=5 ? '#ef4444' : (cur_rate>=2 ? '#f59e0b' : '#10b981');
     var hc = hist_rate>=40 ? '#ef4444' : (hist_rate>=20 ? '#f59e0b' : '#94a3b8');
+    var ps = (r.products||[]).map(function(p){ return p.name+' '+pw(p.amount)+'万'; }).join(' · ');
     h += '<tr><td style="color:'+PROD_COLORS[r.line]+';font-weight:700">'+r.line+'</td>'
       + '<td class="num">¥'+pw(r.revenue)+'万</td>'
       + '<td class="num" style="color:#ef4444;font-weight:600">¥'+pw(r.refund)+'万</td>'
       + '<td class="num">¥'+pw(r.refund_cur)+'万 <span style="color:'+cc+';font-weight:600">('+cur_rate.toFixed(1)+'%)</span></td>'
-      + '<td class="num">¥'+pw(r.refund_hist)+'万 <span style="color:'+hc+';font-weight:600">('+hist_rate.toFixed(1)+'%)</span></td></tr>';
-    if(r.products && r.products.length){
-      var ps = r.products.map(function(p){ return p.name+' '+pw(p.amount)+'万'; }).join(' · ');
-      h += '<tr><td colspan="5" style="font-size:11px;color:#64748b;padding-left:24px">退费品Top: '+ps+'</td></tr>';
-    }
+      + '<td class="num">¥'+pw(r.refund_hist)+'万 <span style="color:'+hc+';font-weight:600">('+hist_rate.toFixed(1)+'%)</span></td>'
+      + '<td style="font-size:11px;color:#64748b">'+ps+'</td></tr>';
   });
   h += '</tbody></table>';
   el.innerHTML = h;
