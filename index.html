@@ -503,6 +503,11 @@ function _genMonthly(wb){
   var co=M.collab_org||{}; var collabRows=[];
   for(var g in co) collabRows.push({'分组':g,'协同金额':co[g]});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(collabRows),'协同');
+  var rr=M.refund_reasons||{};
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rr.overall||[]),'退款原因');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rr.by_service||[]),'退款服务类型');
+  var phRows=['销售','班主任','门店'].map(function(r){return {'角色':r,'呼出':M.role_calls[r]||0,'90s以上':M.role_s90[r]||0,'时长(分)':M.role_duration[r]||0,'加微信':M.role_wxm[r]||0};});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(phRows),'电话');
 }
 function _genWeekly(wb){
   var M=_M; var wd=M.week_defs||[];
@@ -534,6 +539,34 @@ function _genWeekly(wb){
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(trRows),'门店客流');
   var spRows=_OFFLINE.map(function(g){return grow(g);});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(spRows),'门店业绩');
+  // 产品/退款/电话（周，与月报同维度）
+  var wkKey = cur[0].split(' ')[0];
+  var wp = (M.weekly_product||{})[wkKey] || {};
+  var wmain = [];
+  (wp.main_lines||[]).forEach(function(l){
+    wmain.push({'主线':l.name,'子结构':'（合计）','成交额':l.amount,'单数':l.count,'线上':l.online,'线下':l.offline});
+    (l.sub||[]).forEach(function(s){wmain.push({'主线':l.name,'子结构':s.name,'成交额':s.amount,'单数':s.count,'线上':s.online,'线下':s.offline});});
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(wmain),'产品主线');
+  var wref=(wp.refund_by_line||[]).map(function(r){return {'主线':r.line,'成交额':r.revenue,'退费总额':r.refund,'当月退':r.refund_cur,'当月退费率':_pct(r.refund_rate),'历年退':r.refund_hist,'历年退费率':_pct(r.refund_hist_rate)};});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(wref),'产品退费');
+  var wr=(M.weekly_refund||{})[wkKey]||{};
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(wr.overall||[]),'退款原因');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(wr.by_service||[]),'退款服务类型');
+  var wkPhone={'销售':{calls:0,s90:0,duration:0,wxm:0},'班主任':{calls:0,s90:0,duration:0,wxm:0},'门店':{calls:0,s90:0,duration:0,wxm:0}};
+  var ppd=M.person_phone_daily||{}, pm=M.person_metrics||{};
+  for(var n in ppd){
+    var grp = pm[n] ? pm[n].group : null;
+    if(!grp) continue;
+    var role=_grpRole(grp), s=0,s90=0,dur=0,wx=0;
+    for(var d=cur[1];d<=cur[2];d++){
+      var p=ppd[n][String(d)];
+      if(p){s+=Number(p.calls||0);s90+=Number(p.s90||0);dur+=Number(p.duration||0);wx+=Number(p.wxm||0);}
+    }
+    wkPhone[role].calls+=s;wkPhone[role].s90+=s90;wkPhone[role].duration+=dur;wkPhone[role].wxm+=wx;
+  }
+  var phoneRows=['销售','班主任','门店'].map(function(r){return {'角色':r,'呼出':wkPhone[r].calls,'90s以上':wkPhone[r].s90,'时长(分)':Math.round(wkPhone[r].duration*10)/10,'加微信':wkPhone[r].wxm};});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(phoneRows),'电话');
 }
 
 // ====== 普陀模板导出 ======
@@ -1764,7 +1797,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260821170345"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260821170607"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000"><h1 style="font-size:16px;font-weight:600;margin:0">南区8月目标进展看板</h1><div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 自动同步最新版本</div></div><style>.deploy-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
