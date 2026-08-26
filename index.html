@@ -232,7 +232,7 @@ recalcAll = refreshAll;
 document.addEventListener("blur", function(e){var td=e.target.closest('td.num[contenteditable="true"]');if(!td)return;var raw=td.textContent.trim().replace(/[,，万]/g,"");if(raw.indexOf("亿")>=0)raw=raw.replace("亿","")*1e8;var v=parseFloat(raw);if(!isNaN(v)){td.setAttribute("data-val",v);td.textContent=fmtNum(v)}td.contentEditable="false";setTimeout(refreshAll,100)},true);
 
 // ====== TOP10 弹窗排行榜 (含日期筛选) ======
-function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup, limit) {
+function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup, limit, role) {
   limit = limit || 10;
   var personDone = {};
   Object.keys(pd).forEach(function(name) {
@@ -242,6 +242,8 @@ function buildRanking(M, pd, fromDay, toDay, isOnline, skipLocked, trioGroup, li
     // 始终按角色过滤
     if(isOnline && M.store_to_group[org]) return;
     if(!isOnline && !M.store_to_group[org]) return;
+    if(role === '销售' && g === '班主任') return;
+    if(role === '班主任' && g !== '班主任') return;
     // 三组拆分过滤
     if(trioGroup) {
       var store = M.store_to_group[org] || '';
@@ -290,7 +292,7 @@ function showTop10(tabId, fromDay, toDay) {
   fromDay = fromDay || 1; toDay = toDay || Math.round((window._M.time_progress || 0) * 31) || 31;
   var tab = document.getElementById('tab-'+tabId);
   if(!tab) return;
-  var title = tabId === 'online_person' ? '线上销售 TOP10' : '线下个案 TOP50';
+  var title = tabId === 'online_person' ? '线上业绩排名' : '线下个案 TOP50';
   var isOnline = tabId === 'online_person';
   var M = window._M;
   var crowns = ['🥇','🥈','🥉'];
@@ -298,7 +300,7 @@ function showTop10(tabId, fromDay, toDay) {
 
   var top10 = buildRanking(M, M.person_daily || {}, fromDay, toDay, isOnline);
   var html = '<div id="top10-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)closeTop10()">'+
-    '<div style="background:#fff;border-radius:16px;padding:24px;width:'+(isOnline?'520px':'min(95vw,1400px)')+';max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'+
+    '<div style="background:#fff;border-radius:16px;padding:24px;width:'+(isOnline?'min(95vw,1100px)':'min(95vw,1400px)')+';max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'+
     '<h2 style="margin:0;font-size:20px">🏆 '+title+'</h2>'+
     '<button onclick="closeTop10()" style="border:none;background:none;font-size:22px;cursor:pointer;color:#94a3b8">&times;</button>'+
@@ -320,7 +322,12 @@ function showTop10(tabId, fromDay, toDay) {
       '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#64748b;margin:0 0 6px">🧬 菌群业绩排名</h3><div style="display:flex;flex-direction:column;gap:4px">'+renderRankList(top10Jq, crowns, colors)+'</div></div>'+
       '</div>';
   } else {
-    html += '<div style="display:flex;flex-direction:column;gap:8px">'+renderRankList(top10, crowns, colors)+'</div>';
+    var sellerTop = buildRanking(M, M.person_daily || {}, fromDay, toDay, true, false, null, 50, '销售');
+    var advisorTop = buildRanking(M, M.person_daily || {}, fromDay, toDay, true, false, null, 50, '班主任');
+    html += '<div style="display:flex;gap:10px">'+
+      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#6366f1;margin:0 0 6px">📈 销售 TOP50</h3><div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">'+renderRankList(sellerTop, crowns, colors)+'</div></div>'+
+      '<div style="flex:1;min-width:0"><h3 style="font-size:13px;color:#8b5cf6;margin:0 0 6px">📚 班主任 TOP50</h3><div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">'+renderRankList(advisorTop, crowns, colors)+'</div></div>'+
+      '</div>';
   }
 
   html += '</div></div>';
@@ -1809,7 +1816,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260826132354"></head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="version" content="20260826144633"></head>
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000"><h1 style="font-size:16px;font-weight:600;margin:0">南区8月目标进展看板</h1><div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 自动同步最新版本</div></div><style>.deploy-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
