@@ -1617,7 +1617,7 @@ document.addEventListener('click', function(e) {
 <body>
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
-<div><h1>📊 南区7月目标进展看板 <select id="monthSwitcher" onchange="switchMonth()" style="font-size:14px;padding:4px 12px;border:2px solid #6366f1;border-radius:8px;background:#fff;color:#1e293b;font-weight:700;cursor:pointer;margin-left:12px;vertical-align:middle"><option value="7" selected>7月</option><option value="8">8月</option></select></h1>
+<div><h1>📊 南区7月目标进展看板 <select id="monthSwitcher" onchange="switchMonth()" style="font-size:14px;padding:4px 12px;border:2px solid #6366f1;border-radius:8px;background:#fff;color:#1e293b;font-weight:700;cursor:pointer;margin-left:12px;vertical-align:middle"><option value="7" selected>7月</option><option value="8">8月</option><option value="9">9月</option></select></h1>
 <p class="subtitle">数据截止：2026年8月1日 | 环比基期：6月1-1日同口径 | 普陀业绩从明细自动汇总</p></div>
 <div class="top-btns" style="display:flex;gap:8px;align-items:center;margin-top:4px">
 <button onclick="exportBaseTable()" style="padding:8px 18px;background:#fff;color:#1e293b;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📥 导出底表</button>
@@ -5496,7 +5496,8 @@ function navigateToRefund(orgName) {
 function switchMonth(){
   var m = document.getElementById('monthSwitcher').value;
   if(m === '7'){ window.location.href = '南区7月目标看板.html'; }
-  else { window.location.href = '南区8月目标看板.html'; }
+  else if(m === '8'){ window.location.href = '南区8月目标看板.html'; }
+  else { window.location.href = 'index.html'; }
 }
 </script>
 <div id="refund-popover" class="refund-popover">
