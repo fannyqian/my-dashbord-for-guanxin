@@ -412,9 +412,8 @@ function exportBaseTable() {
 }
 
 // ====== 导出总表（fetch + blob 避免中文文件名编码问题）======
-function downloadTotalTable() {
-  var url = '导出_总表.xlsx';
-  var btn = event.target;
+function downloadTotalTable(btn) {
+  var url = '导出_总表_10月.xlsx';
   btn.textContent = '⏳ 下载中…';
   btn.style.opacity = '0.7';
   fetch(url)
@@ -1820,7 +1819,7 @@ document.addEventListener('click', function(e) {
 <body><div style="background:#1e293b;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000"><h1 style="font-size:16px;font-weight:600;margin:0">南区10月目标进展看板</h1><div style="font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span> 实时看板 · 自动同步最新版本<span id="busuanzi_container_page_pv" style="display:none">浏览 <span id="busuanzi_value_page_pv"></span> 次</span><span id="busuanzi_container_site_uv" style="display:none"> · 访客 <span id="busuanzi_value_site_uv"></span> 人</span></div></div><style>.deploy-dot{animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
-<div><h1>📊 南区10月目标进展看板 <select id="monthSwitcher" onchange="switchMonth()" style="font-size:14px;padding:4px 12px;border:2px solid #6366f1;border-radius:8px;background:#fff;color:#1e293b;font-weight:700;cursor:pointer;margin-left:12px;vertical-align:middle"><option value="10">10月</option><option value="10" selected>10月</option><option value="9">9月</option><option value="8">8月</option><option value="7">7月</option></select></h1>
+<div><h1>📊 南区10月目标进展看板 <select id="monthSwitcher" onchange="switchMonth()" style="font-size:14px;padding:4px 12px;border:2px solid #6366f1;border-radius:8px;background:#fff;color:#1e293b;font-weight:700;cursor:pointer;margin-left:12px;vertical-align:middle"><option value="10" selected>10月</option><option value="9">9月</option><option value="8">8月</option><option value="7">7月</option></select></h1>
 <p class="subtitle">数据截止：2026年10月9日 | 环比基期：9月1-9日同口径 | 普陀业绩从明细自动汇总</p></div>
 <div class="top-btns" style="display:flex;gap:8px;align-items:center;margin-top:4px">
 <select id="importSelect" onchange="handleImportSelect(this)" style="padding:8px 14px;background:#fff;color:#1e293b;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
@@ -1832,7 +1831,7 @@ document.addEventListener('click', function(e) {
 <input type="file" id="fileBase" onchange="importBaseTable(this)" accept=".xlsx,.xls,.csv" style="display:none">
 <input type="file" id="fileKbj" onchange="importKangbojia(this)" accept=".xlsx,.xls" style="display:none">
 <input type="file" id="fileRefund" onchange="importRefundTable(this)" accept=".xlsx,.xls" style="display:none">
-<button onclick="downloadTotalTable()" style="padding:8px 18px;background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📊 导出总表</button>
+<button onclick="downloadTotalTable(this)" style="padding:8px 18px;background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📊 导出总表</button>
 <button onclick="downloadRefundTable()" style="padding:8px 18px;background:#fef2f2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📥 导出退费表</button>
 <button onclick="snapshot()" style="padding:8px 18px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📸 快照</button>
 <select id="reportSelect" onchange="handleReportSelect(this)" style="padding:8px 14px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">

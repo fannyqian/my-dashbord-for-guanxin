@@ -412,9 +412,8 @@ function exportBaseTable() {
 }
 
 // ====== 导出总表（fetch + blob 避免中文文件名编码问题）======
-function downloadTotalTable() {
-  var url = '导出_总表.xlsx';
-  var btn = event.target;
+function downloadTotalTable(btn) {
+  var url = '导出_总表_9月.xlsx';
   btn.textContent = '⏳ 下载中…';
   btn.style.opacity = '0.7';
   fetch(url)
@@ -1832,7 +1831,7 @@ document.addEventListener('click', function(e) {
 <input type="file" id="fileBase" onchange="importBaseTable(this)" accept=".xlsx,.xls,.csv" style="display:none">
 <input type="file" id="fileKbj" onchange="importKangbojia(this)" accept=".xlsx,.xls" style="display:none">
 <input type="file" id="fileRefund" onchange="importRefundTable(this)" accept=".xlsx,.xls" style="display:none">
-<button onclick="downloadTotalTable()" style="padding:8px 18px;background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📊 导出总表</button>
+<button onclick="downloadTotalTable(this)" style="padding:8px 18px;background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📊 导出总表</button>
 <button onclick="downloadRefundTable()" style="padding:8px 18px;background:#fef2f2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📥 导出退费表</button>
 <button onclick="snapshot()" style="padding:8px 18px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">📸 快照</button>
 <select id="reportSelect" onchange="handleReportSelect(this)" style="padding:8px 14px;background:#1e293b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
