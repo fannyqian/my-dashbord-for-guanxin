@@ -237,7 +237,7 @@ function refreshAll(){
     });
     tab.querySelectorAll('tbody tr.subtotal').forEach(function(row){var c=row.querySelectorAll('td'),m=groups[c[0].textContent.trim()];if(!m||c.length!==18+off)return;writeNum(c[2],m.target);writeNum(c[3],m.done);if(off)writeNum(c[4],m.collab);writeNum(c[6+off],m.refund);writeNum(c[9+off],m.net);rebuildBar(c[4+off],m.target?(m.done+m.collab)/m.target:0);rebuildRefund(c[7+off],m.refund,m.done,off?'sales':'cm');});
   });
-  var cards=document.querySelectorAll('.kpi-card'),rem=Math.max(0,31-Math.round((window._TP||0)*31));
+  var cards=document.querySelectorAll('.kpi-grid > .kpi-card'),rem=Math.max(0,31-Math.round((window._TP||0)*31));
   [totals.target,totals.done,totals.net,rem?(totals.target-totals.done)/rem:0].forEach(function(v,i){if(!cards[i])return;var n=cards[i].querySelector('.value .gx-num');if(n)writeNum(n,v);else{var value=cards[i].querySelector('.value');if(value)writeNum(value,v)}});
   if(cards[1])rebuildBar(cards[1].querySelector('.value').nextElementSibling,totals.target?totals.done/totals.target:0);
   if(cards[2]){var netBar=cards[2].querySelector('.value').nextElementSibling;if(netBar&&!netBar.classList.contains('sub'))netBar.remove();}
