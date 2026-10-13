@@ -220,12 +220,12 @@ function refreshAll(){
     var data=M.group_metrics[name];if(data){data.target=m.target;data.net=m.net;data.kpi_done=m.done;data.done=m.done;data.refund=m.refund;data.rate=m.target?(m.done+m.collab)/m.target:0;}
   });
   document.querySelectorAll('#monthly-role-body tbody tr:not(.subtotal)').forEach(function(row){
-    var c=row.querySelectorAll('td');if(c.length!==22)return;var name=c[0].textContent.trim(), m=agg[name];if(!m)return;
-    writeNum(c[1],m.target);writeNum(c[3],m.collab);writeNum(c[7],m.refund);writeNum(c[11],m.done);update(c,m,{done:2,net:10});add(totals,m);
+    var c=row.querySelectorAll('td');if(c.length!==21)return;var name=c[0].textContent.trim(), m=agg[name];if(!m)return;
+    writeNum(c[1],m.target);writeNum(c[3],m.collab);writeNum(c[7],m.refund);update(c,m,{done:2,net:10});add(totals,m);
     var data=M.role_metrics[name];if(data){data.target=m.target;data.net=m.net;data.kpi_done=m.done;data.done=m.done;data.refund=m.refund;data.rate=m.target?(m.done+m.collab)/m.target:0;}
   });
   var unm=M.group_metrics['未映射'];if(unm&&!document.querySelector('#monthly-group-body [data-group="未映射"]')){totals.net+=unm.net||0;totals.done+=unm.done||0;totals.refund+=unm.refund||0;}
-  var st=document.querySelector('#monthly-role-body tr.subtotal');if(st){var c=st.querySelectorAll('td');writeNum(c[1],totals.target);writeNum(c[2],totals.done);writeNum(c[3],totals.collab);writeNum(c[7],totals.refund);writeNum(c[10],totals.net);writeNum(c[11],totals.done);rebuildBar(c[5],totals.target?(totals.done+totals.collab)/totals.target:0);rebuildRefund(c[8],totals.refund,totals.done,'group');}
+  var st=document.querySelector('#monthly-role-body tr.subtotal');if(st){var c=st.querySelectorAll('td');writeNum(c[1],totals.target);writeNum(c[2],totals.done);writeNum(c[3],totals.collab);writeNum(c[7],totals.refund);writeNum(c[10],totals.net);rebuildBar(c[5],totals.target?(totals.done+totals.collab)/totals.target:0);rebuildRefund(c[8],totals.refund,totals.done,'group');}
   ['online_person','cm_person'].forEach(function(id){
     var tab=document.getElementById('tab-'+id),off=id==='online_person'?1:0,groups={};if(!tab)return;
     tab.querySelectorAll('tbody tr:not(.subtotal)').forEach(function(row){
