@@ -35,27 +35,27 @@ class SecondStagePreviewTest(unittest.TestCase):
         conversion = payload["overall"]["conversion"]
         self.assertEqual(entry["count"], 1)
         self.assertEqual(entry["new_count"], 1)
-        self.assertEqual(entry["entry_3980_users"], 1)
-        self.assertEqual(entry["entry_4980_users"], 1)
-        self.assertEqual(conversion["count"], 1)
-        self.assertEqual(conversion["orders"], 1)
-        self.assertEqual(conversion["amount"], 4980.0)
-        self.assertEqual(conversion["refund"], 100.0)
-        self.assertEqual(conversion["rate"], 100.0)
-        self.assertEqual(payload["queue"][0]["customers"], 1)
+        self.assertEqual(payload["cohort_summary"]["waiting_users"], 2)
+        self.assertEqual(payload["overall"]["combined"]["cohort_users"], 2)
+        self.assertEqual(payload["overall"]["combined"]["converted_users"], 2)
+        self.assertEqual(payload["overall"]["combined"]["orders"], 2)
+        self.assertEqual(payload["overall"]["combined"]["amount"], 6960.0)
+        self.assertEqual(payload["organization"][0]["metrics"]["combined"]["cohort_users"], 1)
+        self.assertEqual(payload["organization"][0]["children"][0]["children"][0]["metrics"]["history"]["cohort_users"], 1)
+        self.assertEqual(payload["audit"]["cross_queue_duplicate_orders"], 1)
 
     def test_seller_and_product_dimensions(self):
         payload = build_payload(self.audit, self.sales, self.customers, self.orders)
-        sellers = {row["seller_id"]: row for row in payload["seller"]}
-        self.assertEqual(sellers["1"]["up"], 1)
-        self.assertEqual(sellers["2"]["up"], 0)
-        self.assertEqual(sellers["2"]["amount"], 0.0)
+        sellers = {row["seller_id"]: row for row in payload["seller_combined"]}
+        self.assertEqual(sellers["1"]["combined"]["converted_users"], 1)
+        self.assertEqual(sellers["2"]["combined"]["converted_users"], 1)
+        self.assertEqual(sellers["2"]["combined"]["amount"], 1980.0)
         products = {row["product"]: row for row in payload["product"]}
         self.assertEqual(products["产品A"]["orders"], 1)
         self.assertEqual(products["产品A"]["amount"], 4980.0)
-        self.assertNotIn("产品B", products)
-        stores = {row["store"]: row for row in payload["store"]}
-        self.assertNotIn("南京院区", stores)
+        self.assertEqual(products["产品B"]["users"], 1)
+        org = payload["organization"]
+        self.assertEqual(len(org), 2)
 
 
 if __name__ == "__main__":

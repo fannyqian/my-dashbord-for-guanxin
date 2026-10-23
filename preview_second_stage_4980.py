@@ -144,7 +144,141 @@ def _dimension_row(name: str, cohort_users: set[str], order_frame: pd.DataFrame,
     return row
 
 
+def _metric_block(users: set[str], orders: pd.DataFrame) -> dict[str, Any]:
+    users = {_id(x) for x in users if _id(x)}
+    unique = _unique_orders(orders[orders["user_id"].map(_id).isin(users)]) if not orders.empty else orders.copy()
+    converted = {_id(x) for x in unique["user_id"] if _id(x)}
+    amount = _money(unique["pay_amount"].sum()) if not unique.empty else 0.0
+    refund = _money(unique["refund_total"].sum()) if not unique.empty else 0.0
+    return {
+        "cohort_users": len(users),
+        "converted_users": len(converted),
+        "rate": _rate(len(converted), len(users)),
+        "orders": int(len(unique)),
+        "amount": amount,
+        "refund": refund,
+        "arpu": _money(amount / len(converted)) if converted else 0.0,
+    }
+
+
+def _metric_legacy(block: dict[str, Any]) -> dict[str, Any]:
+    return {"cohort": block["cohort_users"], "up": block["converted_users"], "rate": block["rate"], "orders": block["orders"], "amount": block["amount"], "refund": block["refund"], "arpu": block["arpu"]}
+
+
+def _build_organization(sales: pd.DataFrame, customer_map: dict[str, dict[str, Any]], orders: pd.DataFrame, history_users: set[str], new_users: set[str], union_users: set[str]) -> list[dict[str, Any]]:
+    seller_info = {_id(row.get("销售ID")): row for _, row in sales.iterrows() if _id(row.get("销售ID"))}
+    assigned = [record for record in customer_map.values() if record.get("primary_seller_id")]
+    def metric_for(sids: set[str], cohort: set[str]) -> dict[str, Any]:
+        users = {uid for uid in cohort if customer_map.get(uid, {}).get("primary_seller_id") in sids}
+        return {"history": _metric_block(users & history_users, orders), "new": _metric_block(users & new_users, orders), "combined": _metric_block(users & union_users, orders)}
+    by_belong: dict[str, list[dict[str, Any]]] = {}
+    for record in assigned:
+        belong = record["belong"] or "未映射"
+        by_belong.setdefault(belong, []).append(record)
+    result = []
+    for belong, records in sorted(by_belong.items()):
+        group_map: dict[str, list[dict[str, Any]]] = {}
+        for record in records:
+            group_map.setdefault(record["group"] or "未映射", []).append(record)
+        belong_node = {"level": "belong", "key": "belong:" + belong, "name": belong, "metrics": metric_for({_id(r["primary_seller_id"]) for r in records}, union_users), "children": []}
+        for group, group_records in sorted(group_map.items()):
+            group_sids = {_id(r["primary_seller_id"]) for r in group_records}
+            group_node = {"level": "group", "key": "group:" + belong + "/" + group, "name": group, "belong": belong, "metrics": metric_for(group_sids, union_users), "children": []}
+            for sid in sorted(group_sids, key=lambda value: (_text(seller_info.get(value, {}).get("销售")), value)):
+                person = seller_info.get(sid, {})
+                person_record = [r for r in group_records if _id(r["primary_seller_id"]) == sid]
+                person_users = {r["user_id"] for r in person_record}
+                group_node["children"].append({"level": "seller", "key": "seller:" + sid, "seller_id": sid, "name": _text(person.get("销售")) or "未命名销售", "belong": belong, "group": group, "status": _text(person.get("匹配状态")), "metrics": {"history": _metric_block(person_users & history_users, orders[orders["seller_id"] == sid]), "new": _metric_block(person_users & new_users, orders[orders["seller_id"] == sid]), "combined": _metric_block(person_users & union_users, orders[orders["seller_id"] == sid])}})
+            belong_node["children"].append(group_node)
+        result.append(belong_node)
+    return result
+
+
 def build_payload(audit: dict[str, Any], sales: pd.DataFrame, customers: pd.DataFrame, orders: pd.DataFrame) -> dict[str, Any]:
+    sales, customers, orders = _prepare_frames(sales, customers, orders)
+    orders = _unique_orders(orders)
+    raw_users = {_id(x) for x in customers["user_id"] if _id(x)}
+    window = audit.get("window") or ["", ""]
+    start_dt = pd.Timestamp(window[0]) if window and window[0] else pd.Timestamp.min
+    order_dates = pd.to_datetime(orders["pay_at"], errors="coerce")
+    entry_times = customers.groupby("user_id")["入口首单时间"].first().map(lambda x: pd.to_datetime(x, errors="coerce"))
+    historical_5000_users = set()
+    for uid in raw_users:
+        entry_dt = entry_times.get(uid)
+        if pd.isna(entry_dt):
+            continue
+        mask = (orders["user_id"].map(_id) == uid) & (order_dates > entry_dt) & (order_dates < start_dt) & (orders["pay_amount"] >= 5000)
+        if bool(mask.any()):
+            historical_5000_users.add(uid)
+    waiting_users = raw_users - historical_5000_users
+    excluded_from_query = int(audit.get("excluded_historical_1000_users") or 0)
+    customers = customers[customers["user_id"].map(_id).isin(waiting_users)].copy()
+    history_users = {_id(x) for x in customers.loc[customers["队列"] == QUEUE_HISTORY, "user_id"] if _id(x)}
+    new_users = {_id(x) for x in customers.loc[customers["队列"] == QUEUE_NEW, "user_id"] if _id(x)}
+    union_users = history_users | new_users
+    overlap_users = history_users & new_users
+    customer_map: dict[str, dict[str, Any]] = {}
+    primary_conflicts = []
+    for uid, group in customers.groupby("user_id", dropna=False):
+        uid = _id(uid)
+        if not uid:
+            continue
+        if "客户归属类型" in group.columns:
+            primary = group[group["客户归属类型"].astype(str).str.contains("归属")]
+        else:
+            primary = group
+        primary_ids = {_id(x) for x in primary["销售ID"] if _id(x)}
+        if len(primary_ids) > 1:
+            primary_conflicts.append({"user_id": uid, "seller_ids": sorted(primary_ids)})
+        sid = next(iter(primary_ids)) if len(primary_ids) == 1 else ""
+        row = primary.iloc[0] if len(primary) else group.iloc[0]
+        customer_map[uid] = {"user_id": uid, "primary_seller_id": sid, "belong": _text(row.get("归属")), "group": _text(row.get("组别")), "collaborator_ids": sorted({_id(x) for x in group.loc[~group.index.isin(primary.index), "销售ID"] if _id(x)})}
+    history_orders = orders[orders["user_id"].map(_id).isin(history_users)]
+    new_orders = orders[orders["user_id"].map(_id).isin(new_users)]
+    combined_orders = orders[orders["user_id"].map(_id).isin(union_users)]
+    history_block = _metric_block(history_users, history_orders)
+    new_block = _metric_block(new_users, new_orders)
+    combined_block = _metric_block(union_users, combined_orders)
+    overlap_order_ids = set(history_orders["order_id"]) & set(new_orders["order_id"])
+    entry_amounts = {"3980": 0, "4980": 0}
+    for uid, group in customers.groupby("user_id", dropna=False):
+        if _id(uid) not in new_users:
+            continue
+        amounts = set().union(*(_entry_amounts(x) for x in group.loc[group["队列"] == QUEUE_NEW, "入口金额"] if "入口金额" in group))
+        for amount in amounts:
+            entry_amounts[str(amount)] += 1
+    history_entry = customers[customers["队列"] == QUEUE_HISTORY][["user_id", "入口首单时间"]].copy()
+    history_entry["user_id"] = history_entry["user_id"].map(_id)
+    history_entry["entry_dt"] = pd.to_datetime(history_entry["入口首单时间"], errors="coerce")
+    history_entry = history_entry.dropna(subset=["entry_dt"]).groupby("user_id", as_index=False)["entry_dt"].min()
+    first_orders = history_orders.copy()
+    first_orders["pay_dt"] = pd.to_datetime(first_orders["pay_at"], errors="coerce")
+    first_orders = first_orders.dropna(subset=["pay_dt"]).sort_values(["user_id", "pay_dt", "order_id"]).drop_duplicates("user_id")
+    cycles = first_orders.merge(history_entry, on="user_id", how="inner")
+    cycle_days = ((cycles["pay_dt"] - cycles["entry_dt"]).dt.total_seconds() / 86400).tolist()
+    history_avg_cycle_days = round(sum(cycle_days) / len(cycle_days), 1) if cycle_days else 0.0
+    seller_combined = []
+    seller_info = {_id(row.get("销售ID")): row for _, row in sales.iterrows() if _id(row.get("销售ID"))}
+    for sid, person in seller_info.items():
+        person_users = {uid for uid, record in customer_map.items() if record.get("primary_seller_id") == sid}
+        person_orders = orders[orders["seller_id"] == sid]
+        seller_combined.append({"name": _text(person.get("销售")) or "未命名销售", "seller_id": sid, "belong": _text(person.get("归属")), "group": _text(person.get("组别")), "status": _text(person.get("匹配状态")), "history": _metric_block(person_users & history_users, person_orders), "new": _metric_block(person_users & new_users, person_orders), "combined": _metric_block(person_users & union_users, person_orders)})
+    seller_combined.sort(key=lambda row: (-row["combined"]["converted_users"], -row["combined"]["cohort_users"], row["name"]))
+    product_rows = []
+    if not combined_orders.empty:
+        for product, subset in combined_orders.assign(product=combined_orders.apply(lambda row: _text(row.get("product_name")) or (_id(row.get("product_id")) or "未标注"), axis=1)).groupby("product"):
+            unique = _unique_orders(subset)
+            product_rows.append({"product": product, "orders": int(len(unique)), "users": int(unique["user_id"].nunique()), "amount": _money(unique["pay_amount"].sum()), "refund": _money(unique["refund_total"].sum()), "share": round(unique["pay_amount"].sum() / combined_block["amount"] * 100, 1) if combined_block["amount"] else 0.0})
+    product_rows.sort(key=lambda row: (-row["amount"], row["product"]))
+    organization = _build_organization(sales, customer_map, orders, history_users, new_users, union_users)
+    window = audit.get("window") or ["", ""]
+    legacy_history = _metric_legacy(history_block)
+    legacy_new = _metric_legacy(new_block)
+    legacy_combined = _metric_legacy(combined_block)
+    return {"schema_version": "2.0", "title": "二阶升单漏斗", "cohort_month": str(window[0])[:7] if window else "2026-10", "window": {"start": window[0] if len(window) > 0 else "", "end": window[1] if len(window) > 1 else "", "snapshot": audit.get("snapshot", "")}, "cohort_summary": {"raw_entry_users": len(raw_users), "excluded_historical_1000_users": excluded_from_query or len(historical_5000_users), "waiting_users": len(waiting_users), "history": len(history_users), "new": len(new_users), "overlap": len(overlap_users), "union": len(union_users)}, "stages": [{"label": "3980/4980待升单客户（排除历史5000+）", "count": combined_block["cohort_users"], "amount": None}, {"label": "本月升单客户", "count": combined_block["converted_users"], "amount": combined_block["amount"], "rate_label": "升单率"}], "overall": {"entry": {"count": new_block["cohort_users"], "new_count": new_block["cohort_users"], "entry_3980_users": entry_amounts["3980"], "entry_4980_users": entry_amounts["4980"]}, "conversion": legacy_new, "history": {**history_block, "count": history_block["cohort_users"], "converted": history_block["converted_users"], "avg_cycle_days": history_avg_cycle_days}, "new": new_block, "combined": combined_block, "overlap": {"users": len(overlap_users), "orders": len(overlap_order_ids)}}, "queue": [{"name": "历史4980_10月前", **legacy_history}, {"name": "新增4980_窗口新分配", **legacy_new}, {"name": "历史+本月合计", **legacy_combined}], "organization": organization, "seller_combined": seller_combined, "store": [], "cm": [], "seller": [], "product": product_rows, "audit": {"staff_rows": audit.get("staff_rows"), "matched_staff": audit.get("unique_matched_staff"), "unmatched_or_ambiguous": audit.get("unmatched_or_ambiguous", []), "order_audit": audit.get("order_audit", {}), "customer_detail_rows": audit.get("customer_detail_rows"), "order_detail_rows": audit.get("order_detail_rows"), "history_unique_users": len(history_users), "new_unique_users": len(new_users), "overlap_users": len(overlap_users), "union_unique_users": len(union_users), "history_unique_orders": len(set(history_orders["order_id"])), "new_unique_orders": len(set(new_orders["order_id"])), "cross_queue_duplicate_orders": len(overlap_order_ids), "union_unique_orders": len(set(combined_orders["order_id"])), "primary_owner_conflicts": primary_conflicts}, "limitations": ["入口池=3980/4980客户中排除入口后历史1000+订单的待升单客户", "本月升单按pay_amount≥1000，统计待升单客户的首次升单", "纯协作关系不增加主客户数，订单金额按实际seller_id归属", "无电话、加微、入群、D1-D3等中间行为数据", "无渠道字段和入口产品明细", "入口金额合并3980与4980", "组织层级为归属→组别→销售ID，不将观鼎组当作门店或独立CM组织树", "成交产品表仅代表成交侧产品分析"]}
+
+
+def _build_payload_legacy(audit: dict[str, Any], sales: pd.DataFrame, customers: pd.DataFrame, orders: pd.DataFrame) -> dict[str, Any]:
     sales, customers, orders = _prepare_frames(sales, customers, orders)
     orders = orders[orders.apply(lambda row: _id(row.get("seller_id")) == _id(row.get("销售ID")), axis=1)].copy()
     customer_users_all = customers.groupby("user_id", dropna=False)
@@ -284,32 +418,49 @@ def html_escape(value: str) -> str:
 
 def _js_section() -> str:
     return r'''function renderFunnel4980(f){
+  if(typeof _funnelCollapsed==='undefined') window._funnelCollapsed={};
+  if(typeof _funnelCollapsed.funnel_4980==='undefined') _funnelCollapsed.funnel_4980=true;
   if(!f||!f.overall) return '';
-  var o=f.overall,e=o.entry,c=o.conversion,h='';
-  function esc(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-  function rate(x){return Number(x||0).toFixed(1)+'%';}
-  function color(x){return x>=30?'#10b981':(x>=15?'#f59e0b':'#ef4444');}
-  function money(x){return '¥'+(Number(x||0)/10000).toFixed(1)+'万';}
-  function metric(label,value,colorValue){return _fMetric(label,value,colorValue);}
-  h+='<div style="background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:2px solid #f59e0b;margin-bottom:16px">';
-  h+='<div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:6px">📈 '+esc(f.title)+'<span style="font-weight:400;color:#94a3b8;font-size:11px;margin-left:8px">本地预览 · 快照 '+esc(f.window.snapshot)+' · '+esc(f.window.start)+' 至 '+esc(f.window.end)+'（不含）</span></div>';
-  h+='<div style="font-size:12px;line-height:1.7;color:#64748b;margin-bottom:14px">口径：仅统计本月新分配且购买过3980/4980入口的客户，3980与4980合并并按user_id去重；升单统计本月窗口内实际seller_id命中且pay_amount≥1000的后续成交，订单按order_id去重，金额为pay_amount毛额，退款单列；平均客单=升单金额÷升单客户数。</div>';
+  var o=f.overall,e=o.entry||{},n=o.new||{},hi=o.history||{},z=o.combined||{},key='funnel_4980',collapsed=_funnelCollapsed[key] !== false,h='';
+  function esc2(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+  function pct(x){return Number(x||0).toFixed(1)+'%';}
+  function moneyWan(x){return '¥'+(Number(x||0)/10000).toFixed(1)+'万';}
+  function moneyYuan(x){return '¥'+fmtInt(Math.round(Number(x||0)));}
+  function metric(label,value,color){return _fMetric(label,value,color);}
+  h+='<div class="funnel-card" id="funnel-card-4980">';
+  h+='<div class="funnel-card-head"><div><div class="funnel-card-title">📈 二阶升单漏斗</div><div class="funnel-card-summary">待升单客户 '+fmtInt(z.cohort_users)+' 人 · 本月升单 '+fmtInt(z.converted_users)+' 人 · 升单率 '+pct(z.rate)+'</div></div><div class="funnel-card-actions"><button type="button" class="funnel-export-btn" onclick="exportFunnel4980()">导出</button>'+_fToggle('funnel_4980','二阶升单漏斗')+'</div></div>';
+  h+='<div class="funnel-card-body" style="display:'+(collapsed?'none':'block')+'">';
+  h+='<div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:14px">📈 二阶升单漏斗<span style="font-weight:400;color:#94a3b8;font-size:11px;margin-left:8px">合并历史与本月新增，按user_id/order_id全局去重</span></div>';
+  h+='<div style="font-size:12px;line-height:1.7;color:#64748b;margin-bottom:14px">统计窗口：'+esc2(f.window.start)+' 至 '+esc2(f.window.end)+'（不含） · 快照：'+esc2(f.window.snapshot)+'。历史与本月重叠客户 '+fmtInt((f.cohort_summary||{}).overlap||0)+' 人，跨队列重复订单 '+fmtInt((o.overlap||{}).orders||0)+' 单。</div>';
   h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px">';
-  h+=metric('🎯 二阶本月新增3980/4980客户',fmtInt(e.count)+' 人','#6366f1');
-  h+=metric('🚀 升单客户数',fmtInt(c.count)+' 人','#10b981');
-  h+=metric('📊 升单率',rate(c.rate),color(c.rate));
-  h+=metric('💰 升单金额',money(c.amount),'#ef4444');
-  h+=metric('🧮 平均客单',money(c.arpu),'#8b5cf6');
+  h+=metric('🎯 3980/4980待升单客户',fmtInt(z.cohort_users)+' 人','#6366f1');
+  h+=metric('🚀 合计本月升单',fmtInt(z.converted_users)+' 人','#10b981');
+  h+=metric('📊 合计升单率',pct(z.rate),_fRateColor(z.rate));
+  h+=metric('💰 合计升单金额',moneyWan(z.amount),'#ef4444');
+  h+=metric('🧮 合计升单ARPU',moneyYuan(z.arpu),'#8b5cf6');
+  h+=metric('🔄 历史队列本月升单',fmtInt(hi.converted_users||hi.converted||0)+'人 · '+moneyWan(hi.amount),'#06b6d4');
   h+='</div>';
-  h+='<div style="font-size:12px;color:#475569;margin:4px 0 10px">本月新增入口金额用户：3980 '+fmtInt(e.entry_3980_users)+' 人 · 4980 '+fmtInt(e.entry_4980_users)+' 人（两者可能重叠）</div>';
-  if(f.overall.history){var hi=f.overall.history;h+='<div style="font-size:13px;font-weight:700;color:#334155;margin:18px 0 8px">🔄 历史4980客户本月升单（独立统计，不并入本月新增漏斗）</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px">';h+=metric('历史4980客户',fmtInt(hi.count)+' 人','#64748b');h+=metric('本月升单客户',fmtInt(hi.converted)+' 人','#06b6d4');h+=metric('升单率',rate(hi.rate),color(hi.rate));h+=metric('升单金额',money(hi.amount),'#ef4444');h+=metric('平均升单周期',Number(hi.avg_cycle_days||0).toFixed(1)+'天','#0f766e');h+='</div>';}
-  if(f.stages&&f.stages.length){var max=Math.max(f.stages[0].count,1);f.stages.forEach(function(s,i){var w=Math.min(100,s.count/max*100);h+='<div style="display:flex;align-items:center;gap:10px;margin:6px 0"><div style="width:180px;font-size:12px;color:#475569;text-align:right;flex-shrink:0">'+esc(s.label)+'</div><div style="flex:1;height:34px;background:#f1f5f9;border-radius:8px;position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;height:100%;width:'+w+'%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:8px;opacity:.3"></div><div style="position:relative;height:100%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#1e293b">'+fmtInt(s.count)+' 人</div></div><div style="width:90px;font-size:12px;color:#64748b;text-align:right;flex-shrink:0">'+(s.amount==null?'—':money(s.amount))+'</div></div>';if(i<f.stages.length-1)h+='<div style="text-align:center;font-size:12px;color:#94a3b8;margin:3px 0 9px">↓ '+esc(s.rate_label||'转化率')+' <b style="color:'+color(c.rate)+'">'+rate(c.rate)+'</b></div>';});}
-  if(f.queue&&f.queue.length)h+=_f4980Table('🧭 队列拆分',['队列','客户','成交','成交率','订单','成交金额','退款'],f.queue.map(function(r){return [r.name,fmtInt(r.customers),fmtInt(r.converted),rate(r.rate),fmtInt(r.orders),money(r.amount),money(r.refund)];}));
-  if(f.store&&f.store.length)h+=_f4980Table('🏬 线下院区维度',['院区','入口','成交','成交率','订单','成交金额','退款'],f.store.map(function(r){return [r.name,fmtInt(r.cohort),fmtInt(r.up),rate(r.rate),fmtInt(r.orders),money(r.amount),money(r.refund)];}));
-  if(f.cm&&f.cm.length)h+=_f4980Table('👤 近似CM/组别维度（非独立CM组织树）',['归属/组别','入口','成交','成交率','订单','成交金额','退款'],f.cm.map(function(r){return [r.name,fmtInt(r.cohort),fmtInt(r.up),rate(r.rate),fmtInt(r.orders),money(r.amount),money(r.refund)];}));
-  if(f.seller&&f.seller.length)h+=_f4980Table('🧑 销售维度',['销售','归属/组别','入口','成交','成交率','订单','成交金额','退款'],f.seller.map(function(r){return [r.name,esc(r.belong+'/'+r.group),fmtInt(r.cohort),fmtInt(r.up),rate(r.rate),fmtInt(r.orders),money(r.amount),money(r.refund)];}));
-  if(f.product&&f.product.length)h+=_f4980Table('📦 成交产品分析（不是入口产品漏斗）',['成交产品','订单','用户','成交金额','退款','金额占比'],f.product.map(function(r){return [r.product,fmtInt(r.orders),fmtInt(r.users),money(r.amount),money(r.refund),rate(r.share)];}));
-  h+='<div style="font-size:12px;line-height:1.8;color:#64748b;margin-top:16px"><b>限制：</b>'+f.limitations.map(esc).join('；')+'</div></div>';return h;
+  h+='<div style="font-size:12px;color:#475569;margin:0 0 10px">历史入口 '+fmtInt(hi.cohort_users||hi.count||0)+' 人 / '+fmtInt(hi.converted_users||hi.converted||0)+' 人升单 / '+moneyWan(hi.amount)+'；本月新增 '+fmtInt(n.cohort_users||0)+' 人 / '+fmtInt(n.converted_users||0)+' 人升单 / '+moneyWan(n.amount)+'；历史平均升单周期 '+Number(hi.avg_cycle_days||0).toFixed(1)+' 天。</div>';
+  h+=_fBars(f.stages||[]);
+  h+='<div style="display:flex;gap:8px;align-items:center;margin:20px 0 8px;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;color:#334155">组织与人员维度</span><button class="f4980-view active" data-v="combined">合计</button><button class="f4980-view" data-v="history">历史</button><button class="f4980-view" data-v="new">本月新增</button></div>';
+  function rowsFor(nodes,view){return (nodes||[]).map(function(x){return {name:x.name,metrics:(x.metrics||{})[view]||{}};});}
+  function tableView(title,nodes,view){var rows=rowsFor(nodes,view);if(!rows.length)return '';var x='<div class="f4980-view-table" data-view="'+view+'"><div style="font-size:13px;font-weight:700;color:#334155;margin:14px 0 8px">'+title+'</div><table><thead><tr><th>组织/人员</th><th class="num">4980客户数</th><th class="num">升单</th><th class="num">升单率</th><th class="num">升单金额</th><th class="num">ARPU</th></tr></thead><tbody>';rows.forEach(function(r){var m=r.metrics||{};x+='<tr><td>'+esc2(r.name||'')+'</td><td class="num">'+fmtInt(m.cohort_users)+'</td><td class="num">'+fmtInt(m.converted_users)+'</td><td class="num" style="color:'+_fRateColor(m.rate)+';font-weight:700">'+pct(m.rate)+'</td><td class="num">'+moneyWan(m.amount)+'</td><td class="num">'+moneyYuan(m.arpu)+'</td></tr>';});return x+'</tbody></table></div>';}
+  var groups=[],people=[];(f.organization||[]).forEach(function(b){(b.children||[]).forEach(function(g){groups.push(g);(g.children||[]).forEach(function(p){people.push(p);});});});
+  ['combined','history','new'].forEach(function(v){h+=tableView('🏢 归属组织',f.organization,v);h+=tableView('🏬 组别/院区',groups,v);h+=tableView('🧑 销售人员',people,v);});
+  if(f.product&&f.product.length)h+=_f4980Table('📦 合并成交产品',['成交产品','订单数','成交金额','覆盖用户','金额占比'],f.product.map(function(r){return [r.product,fmtInt(r.orders),moneyWan(r.amount),fmtInt(r.users),pct(r.share)];}));
+  h+='<div style="font-size:12px;line-height:1.8;color:#64748b;margin-top:16px"><b>口径：</b>合计按user_id和canonical order全局去重；协作关系不增加主客户数；订单金额按实际seller_id归属；观鼎组为二阶组织组，线下组别作为院区，不等同于门店或CM。</div></div>';
+  setTimeout(function(){var root=document.getElementById('funnel_cards');if(!root)return;root.querySelectorAll('.f4980-view').forEach(function(btn){btn.onclick=function(){var card=btn.closest('div[style*="border:1px solid #eef2f7"]');card.querySelectorAll('.f4980-view').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');card.querySelectorAll('.f4980-view-table').forEach(function(t){t.style.display=t.getAttribute('data-view')===btn.getAttribute('data-v')?'block':'none';});};});root.querySelectorAll('.f4980-view-table').forEach(function(t){t.style.display=t.getAttribute('data-view')==='combined'?'block':'none';});},0);
+  return h;
+}
+function exportFunnel4980(){
+  if(typeof XLSX==='undefined'){alert('Excel 库未加载');return;}
+  var f=window._M&&window._M.funnel&&window._M.funnel.funnel_4980;if(!f){alert('当前漏斗暂无数据');return;}
+  var wb=XLSX.utils.book_new(),o=f.overall||{},z=o.combined||{};
+  function add(name,rows){XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows&&rows.length?rows:[{'说明':'暂无数据'}]),name);}
+  add('概览',[{'指标':'3980/4980待升单客户','人数':z.cohort_users,'本月升单客户':z.converted_users,'升单率':(z.rate||0)+'%','升单金额（元）':z.amount,'ARPU（元）':z.arpu},{'指标':'历史排除5000+升单客户','人数':(f.cohort_summary||{}).excluded_historical_1000_users||0}]);
+  add('漏斗阶段',(f.stages||[]).map(function(r){return {'阶段':r.label,'人数':r.count,'金额（元）':r.amount,'转化率':r.rate_label||''};}));
+  var people=[];(f.organization||[]).forEach(function(b){(b.children||[]).forEach(function(g){(g.children||[]).forEach(function(p){people.push({归属:b.name,组别:g.name,销售:p.name,销售ID:p.seller_id,历史客户:p.metrics.history.cohort_users,历史升单:p.metrics.history.converted_users,本月新增客户:p.metrics.new.cohort_users,本月新增升单:p.metrics.new.converted_users,合计客户:p.metrics.combined.cohort_users,合计升单:p.metrics.combined.converted_users,合计金额:p.metrics.combined.amount});});});});
+  add('销售人员',people);add('成交产品',f.product);var month=(f.cohort_month||'2026-10').replace(/-/g,'');XLSX.writeFile(wb,'升单漏斗_二阶_'+month+'.xlsx');
 }
 function _f4980Table(title,headers,rows){if(!rows||!rows.length)return '';var h='<div style="font-size:13px;font-weight:700;color:#334155;margin:18px 0 8px">'+title+'</div><table><thead><tr>';headers.forEach(function(x,i){h+='<th'+(i?' class="num"':'')+'>'+x+'</th>';});h+='</tr></thead><tbody>';rows.forEach(function(r){h+='<tr>';r.forEach(function(x,i){h+='<td'+(i?' class="num"':'')+'>'+x+'</td>';});h+='</tr>';});return h+'</tbody></table>';}
 '''
@@ -362,7 +513,7 @@ def build_preview(input_dir: Path = DEFAULT_INPUT, base: Path = DEFAULT_BASE, ou
         if sha(path) != digest:
             raise AssertionError(f"保护文件发生变化: {path}")
     print(output)
-    print(f"Verified: entry {payload['overall']['entry']['count']:,}; conversion {payload['overall']['conversion']['count']:,}/{payload['overall']['conversion']['orders']:,}; amount {payload['overall']['conversion']['amount']:,.2f}; local preview only")
+    print(f"Verified: union entry {payload['overall']['combined']['cohort_users']:,}; conversion {payload['overall']['combined']['converted_users']:,}/{payload['overall']['combined']['orders']:,}; amount {payload['overall']['combined']['amount']:,.2f}; local preview only")
     return output
 
 
