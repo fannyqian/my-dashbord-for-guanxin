@@ -2296,6 +2296,7 @@ function renderFunnel(){
   if(D.funnel_398 && D.funnel_398.overall){ h += renderFunnelCard(D.funnel_398); }
   if(D.funnel_19){ h += renderFunnel19(D.funnel_19); }
   if(D.funnel_4980){ h += renderFunnel4980(D.funnel_4980); }
+  if(D.funnel_4980){ h += renderFunnel4980(D.funnel_4980); }
   el.innerHTML = h;
 }
 function _fRateColor(r){ return r >= 30 ? '#10b981' : (r >= 15 ? '#f59e0b' : '#ef4444'); }
@@ -2454,6 +2455,38 @@ function _fBars4980(stages){
   function _moneyWan4980(x){return '¥'+(Number(x||0)/10000).toFixed(1)+'万';}
   stages.forEach(function(s,i){var w=Math.min(100,(s.count||0)/max*100);h+='<div style="display:flex;align-items:center;gap:10px;margin:6px 0"><div style="width:180px;font-size:12px;color:#475569;text-align:right;flex-shrink:0">'+s.label+'</div><div style="flex:1;height:34px;background:#f1f5f9;border-radius:8px;position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;height:100%;width:'+w+'%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:8px;opacity:.2"></div><div style="position:relative;height:100%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#1e293b">'+fmtInt(s.count)+' 人</div></div><div style="width:90px;font-size:12px;color:#64748b;text-align:right;flex-shrink:0">'+(s.amount==null?'—':_moneyWan4980(s.amount))+'</div></div>';if(i<stages.length-1){var cv=s.count?(stages[i+1].count/s.count*100):0;h+='<div style="text-align:center;font-size:12px;color:#94a3b8;margin:3px 0 9px">↓ 升单率 <b style="color:'+_fRateColor(cv)+'">'+cv.toFixed(1)+'%</b></div>';}});return h;
 }
+function renderFunnel4980(f){
+  if(typeof _funnelCollapsed==='undefined') window._funnelCollapsed={};
+  if(typeof _funnelCollapsed.funnel_4980==='undefined') _funnelCollapsed.funnel_4980=true;
+  if(!f||!f.overall) return '';
+  var o=f.overall,e=o.entry||{},n=o.new||{},hi=o.history||{},z=o.combined||{},key='funnel_4980',collapsed=_funnelCollapsed[key] !== false,h='';
+  function esc2(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+  function pct(x){return Number(x||0).toFixed(1)+'%';}
+  function moneyWan(x){return '¥'+(Number(x||0)/10000).toFixed(1)+'万';}
+  function moneyYuan(x){return '¥'+fmtInt(Math.round(Number(x||0)));}
+  function metric(label,value,color){return _fMetric(label,value,color);}
+  h+='<div class="funnel-card" id="funnel-card-4980">';
+  h+='<div class="funnel-card-head"><div><div class="funnel-card-title">📈 二阶升单漏斗</div><div class="funnel-card-summary">待升单客户 '+fmtInt(z.cohort_users)+' 人 · 本月升单 '+fmtInt(z.converted_users)+' 人 · 升单率 '+pct(z.rate)+'</div></div><div class="funnel-card-actions"><button type="button" class="funnel-export-btn" onclick="exportFunnel4980()">导出</button>'+_fToggle('funnel_4980','二阶升单漏斗')+'</div></div>';
+  h+='<div class="funnel-card-body" style="display:'+(collapsed?'none':'block')+'">';
+  h+='<div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:14px">📈 二阶升单漏斗<span style="font-weight:400;color:#94a3b8;font-size:11px;margin-left:8px">合并历史与本月新增，按user_id/order_id全局去重</span></div>';
+  h+='<div style="font-size:12px;line-height:1.7;color:#64748b;margin-bottom:14px">统计窗口：'+esc2(f.window.start)+' 至 '+esc2(f.window.end)+'（不含） · 快照：'+esc2(f.window.snapshot)+'。历史与本月重叠客户 '+fmtInt((f.cohort_summary||{}).overlap||0)+' 人，跨队列重复订单 '+fmtInt((o.overlap||{}).orders||0)+' 单。</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px">';
+  h+=metric('🎯 3980/4980待升单客户',fmtInt(z.cohort_users)+' 人','#6366f1');
+  h+=metric('🚀 合计本月升单',fmtInt(z.converted_users)+' 人','#10b981');
+  h+=metric('📊 合计升单率',pct(z.rate),_fRateColor(z.rate));
+  h+=metric('💰 合计升单金额',moneyWan(z.amount),'#ef4444');
+  h+=metric('🧮 合计升单ARPU',moneyYuan(z.arpu),'#8b5cf6');
+  h+=metric('🔄 历史队列本月升单',fmtInt(hi.converted_users||hi.converted||0)+'人 · '+moneyWan(hi.amount),'#06b6d4');
+  h+='</div>';
+  h+='<div style="font-size:12px;color:#475569;margin:0 0 10px">历史入口 '+fmtInt(hi.cohort_users||hi.count||0)+' 人 / '+fmtInt(hi.converted_users||hi.converted||0)+' 人升单 / '+moneyWan(hi.amount)+'；本月新增 '+fmtInt(n.cohort_users||0)+' 人 / '+fmtInt(n.converted_users||0)+' 人升单 / '+moneyWan(n.amount)+'；历史平均升单周期 '+Number(hi.avg_cycle_days||0).toFixed(1)+' 天。</div>';
+  h+=_fBars4980(f.stages||[]);
+  h+='<div style="display:flex;gap:8px;align-items:center;margin:20px 0 8px;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;color:#334155">组织与人员维度</span><button class="f4980-view active" data-v="combined">合计</button><button class="f4980-view" data-v="history">历史</button><button class="f4980-view" data-v="new">本月新增</button></div>';
+  function rowsFor(nodes,view){return (nodes||[]).map(function(x){return {name:x.name,metrics:(x.metrics||{})[view]||{}};});}
+  function tableView(title,nodes,view){var rows=rowsFor(nodes,view);if(!rows.length)return '';var x='<div class="f4980-view-table" data-view="'+view+'"><div style="font-size:13px;font-weight:700;color:#334155;margin:14px 0 8px">'+title+'</div><table><thead><tr><th>组织/人员</th><th class="num">4980客户数</th><th class="num">升单</th><th class="num">升单率</th><th class="num">升单金额</th><th class="num">ARPU</th></tr></thead><tbody>';rows.forEach(function(r){var m=r.metrics||{};x+='<tr><td>'+esc2(r.name||'')+'</td><td class="num">'+fmtInt(m.cohort_users)+'</td><td class="num">'+fmtInt(m.converted_users)+'</td><td class="num" style="color:'+_fRateColor(m.rate)+';font-weight:700">'+pct(m.rate)+'</td><td class="num">'+moneyWan(m.amount)+'</td><td class="num">'+moneyYuan(m.arpu)+'</td></tr>';});return x+'</tbody></table></div>';}
+  var groups=[],people=[];(f.organization||[]).forEach(function(b){(b.children||[]).forEach(function(g){groups.push(g);(g.children||[]).forEach(function(p){people.push(p);});});});
+  ['combined','history','new'].forEach(function(v){h+=tableView('🏢 归属组织',f.organization,v);h+=tableView('🏬 组别/院区',groups,v);h+=tableView('🧑 销售人员',people,v);});
+  function _f4980Table(title,headers,rows){var h='<div style="font-size:13px;font-weight:700;color:#334155;margin:18px 0 8px">'+title+'</div><table><thead><tr>';headers.forEach(function(x){h+='<th>'+x+'</th>';});h+='</tr></thead><tbody>';(rows||[]).forEach(function(r){h+='<tr>';r.forEach(function(x){h+='<td class="num">'+x+'</td>';});h+='</tr>';});return h+'</tbody></table>';}
+function _f4980Table(title,headers,rows){var h='<div style="font-size:13px;font-weight:700;color:#334155;margin:18px 0 8px">'+title+'</div><table><thead><tr>';headers.forEach(function(x){h+='<th>'+x+'</th>';});h+='</tr></thead><tbody>';(rows||[]).forEach(function(r){h+='<tr>';r.forEach(function(x){h+='<td class="num">'+x+'</td>';});h+='</tr>';});return h+'</tbody></table>';}
 function renderFunnel19(f){
   if(!f || !f.overall){ return '<div style="color:#94a3b8;padding:24px;text-align:center;font-size:13px">暂无一阶升单漏斗数据</div>'; }
   var o=f.overall, key='funnel_19', collapsed=_funnelCollapsed[key] !== false;
