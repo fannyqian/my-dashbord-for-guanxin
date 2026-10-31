@@ -1720,6 +1720,7 @@ function applyPersonFilter(tabId) {
     tds[12+off].innerHTML = '<b style="color:' + attColor + '">' + attText + '</b>';
     // 时段业绩 (index 13) + 电话 (index 14-17)
     tds[13+off].innerHTML = '<b style="color:#6366f1">' + pfFmtMoney(period_done) + '</b>';
+    tds[13+off].setAttribute('data-val', period_done);
     if (tds.length >= 19+off) {
       tds[14+off].innerHTML = '<b style="color:#0891b2">' + callsPerDay + '</b>';
       tds[15+off].innerHTML = '<b style="color:#0891b2">' + ge90Calls + '</b>';
@@ -1745,6 +1746,7 @@ function applyPersonFilter(tabId) {
     if (!agg || tds.length < 10) return;
     tds[12+off].innerHTML = '<b style="color:#94a3b8">—</b>';
     tds[13+off].innerHTML = '<b style="color:#6366f1;font-weight:700">' + pfFmtMoney(agg.period_done) + '</b>';
+    tds[13+off].setAttribute('data-val', agg.period_done);
     if (tds.length >= 19+off) {
       tds[14+off].innerHTML = '<b style="color:#0891b2;font-weight:700">' + agg.calls + '</b>';
       tds[15+off].innerHTML = '<b style="color:#0891b2;font-weight:700">' + agg.ge90 + '</b>';
@@ -1777,8 +1779,11 @@ function resetPersonFilter(tabId) {
     var tds = row.querySelectorAll('td');
     if (tds.length < 10) return;
     for (var i = 2; i < tds.length; i++) {
-      if (tds[i] && tds[i].hasAttribute('data-orig')) {
-        tds[i].textContent = tds[i].getAttribute('data-orig');
+      if (tds[i]) {
+        tds[i].removeAttribute('data-val');
+        if (tds[i].hasAttribute('data-orig')) {
+          tds[i].textContent = tds[i].getAttribute('data-orig');
+        }
       }
     }
     if (tds[4+off] && tds[4+off].hasAttribute('data-orig-html')) {
@@ -1816,15 +1821,20 @@ function exportPersonTab(tabId) {
     headers.push(th.textContent.replace(/[\n\r]/g, '').trim());
   });
 
+  function cellVal(td){
+    if (td.hasAttribute('data-val')) return Number(td.getAttribute('data-val'));
+    var numEl = td.querySelector('.gx-num');
+    if (numEl && numEl.getAttribute('data-v')) return Number(numEl.getAttribute('data-v'));
+    var txt = td.textContent.replace(/[\n\r]/g, '').trim();
+    return txt.replace('⚠锁定', '').replace('⚠', '').trim();
+  }
   var data = [];
   table.querySelectorAll('tbody tr').forEach(function(row) {
     var rowData = {};
     var cells = row.querySelectorAll('td');
     cells.forEach(function(td, i) {
       var hdr = headers[i] || ('col_' + i);
-      var txt = td.textContent.replace(/[\n\r]/g, '').trim();
-      txt = txt.replace('⚠锁定', '').trim();
-      rowData[hdr] = txt;
+      rowData[hdr] = cellVal(td);
     });
     if (Object.keys(rowData).length > 0) data.push(rowData);
   });
@@ -1837,7 +1847,7 @@ function exportPersonTab(tabId) {
   XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
 
   var label = tabId === 'online_person' ? '线上销售' : '线下个案';
-  var filename = label + '_8月' + fromDay + '-' + toDay + '日.xlsx';
+  var filename = label + '_10月' + fromDay + '-' + toDay + '日.xlsx';
   XLSX.writeFile(wb, filename);
 }
 
