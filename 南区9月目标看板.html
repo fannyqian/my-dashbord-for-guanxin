@@ -2228,7 +2228,7 @@ document.addEventListener('click', function(e) {
   </div>
 </div>
 <div id="tab-product" class="tab-content">
-<div class="section-title">📦 产品分层结构</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="section-title" style="margin-bottom:0">📦 产品分层结构</div><button type="button" onclick="exportAllProductData()" style="padding:7px 14px;background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📥 导出全部数据</button></div>
 <div id="product_metrics"></div>
 <div id="product_overview"></div>
 <div class="section-title">🏬 门店画像（单一 vs 多元）</div>
@@ -3101,6 +3101,55 @@ function switchMonth(){
 </div>
 
 <script>
+function exportAllProductData(){
+  if(typeof XLSX==='undefined'){alert('Excel库未加载');return;}
+  var D=window._M&&window._M.product_analysis;
+  if(!D){alert('暂无产品分析数据');return;}
+  var wb=XLSX.utils.book_new();
+  function add(name,rows,fallback){
+    var ws=XLSX.utils.json_to_sheet(rows&&rows.length?rows:[fallback||{'说明':'暂无数据'}]);
+    ws['!cols']=[{wch:18},{wch:18},{wch:18},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16}];
+    XLSX.utils.book_append_sheet(wb,ws,name);
+  }
+  var main=D.main_lines||[], stores=D.store_portrait||[], people=D.person_portrait||[], refunds=D.refund_by_line||[];
+  add('产品总览',[
+    {'期间':'9月','指标':'总成交额(元)','数值':D.total||0},
+    {'期间':'9月','指标':'线上成交额(元)','数值':D.online_total||0},
+    {'期间':'9月','指标':'线下成交额(元)','数值':D.offline_total||0},
+    {'期间':'9月','指标':'主线数量','数值':main.length},
+    {'期间':'9月','指标':'门店画像数量','数值':stores.length},
+    {'期间':'9月','指标':'个人画像主线数量','数值':people.length},
+    {'期间':'9月','指标':'退费主线数量','数值':refunds.length},
+    {'期间':'9月','指标':'导出时间','数值':new Date().toLocaleString()}
+  ]);
+  var mainRows=[];
+  main.forEach(function(l){
+    mainRows.push({'主线':l.name,'子结构':'（合计）','成交额(元)':l.amount||0,'单数':l.count||0,'线上(元)':l.online||0,'线下(元)':l.offline||0,'层级':'主线'});
+    (l.sub||[]).forEach(function(s){mainRows.push({'主线':l.name,'子结构':s.name,'成交额(元)':s.amount||0,'单数':s.count||0,'线上(元)':s.online||0,'线下(元)':s.offline||0,'层级':'子结构'});});
+  });
+  add('产品主线',mainRows);
+  var storeRows=[], storeDetailRows=[];
+  stores.forEach(function(s){
+    var share=Number(s.top_share||0);
+    storeRows.push({'门店':s.store,'成交额(元)':s.total||0,'第一主线':s.top_line,'集中度(%)':share*100,'画像类型':share<0.5?'多元':(share<0.8?'均衡':'单一'),'主线数量':(s.lines||[]).length});
+    (s.lines||[]).forEach(function(x){storeDetailRows.push({'门店':s.store,'主线':x.line,'金额(元)':x.amount||0,'占门店收入(%)':s.total?((x.amount||0)/s.total*100):0});});
+  });
+  add('门店画像',storeRows); add('门店产品明细',storeDetailRows);
+  var personRows=[];
+  people.forEach(function(p){(p.top||[]).forEach(function(t,i){personRows.push({'主线':p.line,'主线成交额(元)':p.total||0,'排名':i+1,'个人':t.name,'金额(元)':t.amount||0});});});
+  add('个人画像',personRows);
+  var refundRows=[], refundDetailRows=[];
+  refunds.forEach(function(r){
+    var row={'主线':r.line,'成交额(元)':r.revenue||0,'退费总额(元)':r.refund||0,'当月退(元)':r.refund_cur||0,'当月退费率':r.refund_rate||0,'历年退(元)':r.refund_hist||0,'历年退费率':r.refund_hist_rate||0};
+    ['online','offline'].forEach(function(p){row[p+'成交额(元)']=r[p+'_revenue']||0;row[p+'退费(元)']=r[p+'_refund']||0;row[p+'当月退(元)']=r[p+'_refund_cur']||0;row[p+'当月退费率']=r[p+'_refund_rate']||0;row[p+'历年退(元)']=r[p+'_refund_hist']||0;row[p+'历年退费率']=r[p+'_refund_hist_rate']||0;});
+    refundRows.push(row);
+    [['全部','products'],['线上','online_products'],['线下','offline_products']].forEach(function(pair){(r[pair[1]]||[]).forEach(function(p,i){refundDetailRows.push({'主线':r.line,'渠道':pair[0],'排名':i+1,'产品':p.name,'金额(元)':p.amount||0});});});
+  });
+  add('产品退费',refundRows); add('退费产品明细',refundDetailRows);
+  add('产品原始数据',Object.keys(D).map(function(k){return {'数据块':k,'JSON':JSON.stringify(D[k])};}));
+  XLSX.writeFile(wb,'南区9月产品分析_全量.xlsx');
+}
+
 var PROD_COLORS = {'课程线':'#6366f1','咨询线':'#10b981','医疗线':'#f59e0b','菌群线':'#8b5cf6','考证':'#ec4899','营地':'#06b6d4','工作坊':'#94a3b8'};
 var _prodChannel = '全部';
 function pw(v){ return (v/10000).toFixed(1); }
