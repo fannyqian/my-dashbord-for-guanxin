@@ -2623,6 +2623,7 @@ function switchTab(name){
   document.getElementById("tab-"+name).classList.add("active");
   if(name === 'role') setTimeout(drawTrendChart, 100);
   if(name === 'refund_reason') { populateRefundDropdowns(); setTimeout(renderRefundReason, 100); }
+  if(name === 'funnel') { setTimeout(renderFunnel, 0); }
 }
 
 // ====== 月/周 视图切换（仅影响 按角色 / 按分组） ======
