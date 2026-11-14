@@ -2520,18 +2520,23 @@ function _fBars4980(stages){
 }
 function renderFunnel19(f){
   if(!f || !f.overall){ return '<div style="color:#94a3b8;padding:24px;text-align:center;font-size:13px">暂无一阶升单漏斗数据</div>'; }
-  var o=f.overall, key='funnel_19', collapsed=_funnelCollapsed[key] !== false;
-  var summary='体验入口 '+fmtInt(o.cohort)+' 人 · 正价再次购买 '+fmtInt(o.positive.count)+' 人 · 购买率 '+o.positive.rate+'%';
+  var o=f.overall, p=o.positive||{}, key='funnel_19', collapsed=_funnelCollapsed[key] !== false;
+  var summary='总线索 '+fmtInt(o.total_leads)+' · 有效 '+fmtInt(o.valid_leads)+' · 再次购买 '+fmtInt(p.count)+' 人 · '+p.rate+'%';
   var h='<div class="funnel-card" id="funnel-card-19">';
   h+='<div class="funnel-card-head"><div><div class="funnel-card-title">📈 一阶升单漏斗</div><div class="funnel-card-summary">'+summary+'</div></div><div class="funnel-card-actions">'+_fExportButton(key,'一阶升单漏斗')+_fToggle(key,'一阶升单漏斗')+'</div></div>';
   h+='<div class="funnel-card-body" style="display:'+(collapsed?'none':'block')+'">';
-  h+='<div style="font-size:11px;color:#94a3b8;margin-bottom:12px">口径：体验入口→正价再次购买；人数按客户去重，购买率=正价人数/入口人数，GMV为含退款的支付金额毛额</div>';
+  h+='<div style="font-size:11px;color:#94a3b8;margin-bottom:12px">口径：总线索=有效线索+无效线索+待分配；有效队列进入转化率分母；再次购买为入口支付后窗口内其他正支付订单，金额按支付毛额，退款单独展示。</div>';
   h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px">';
-  h+=_fMetric('🎯 11月体验入口（并集）',fmtInt(o.cohort)+' 人','#6366f1');
-  h+=_fMetric('💎 正价再次购买',fmtInt(o.positive.count)+' 人','#8b5cf6');
-  h+=_fMetric('📈 正价购买率',o.positive.rate+'%',_fRateColor(o.positive.rate));
-  h+=_fMetric('💰 正价转化GMV','¥'+pw(o.positive.amount)+'万','#ef4444');
+  h+=_fMetric('📥 总线索',fmtInt(o.total_leads)+' 人','#475569');
+  h+=_fMetric('✅ 有效线索',fmtInt(o.valid_leads)+' 人','#2563eb');
+  h+=_fMetric('⚠️ 无效线索',fmtInt(o.invalid_leads)+' 人','#f59e0b');
+  h+=_fMetric('⏳ 待分配',fmtInt(o.pending_allocation_leads)+' 人','#94a3b8');
+  h+=_fMetric('💎 再次购买',fmtInt(p.count)+' 人','#8b5cf6');
+  h+=_fMetric('🧾 再次购买订单',fmtInt(p.orders)+' 单','#0891b2');
+  h+=_fMetric('📈 有效队列转化率',p.rate+'%',_fRateColor(p.rate));
+  h+=_fMetric('💰 再次购买金额','¥'+pw(p.amount)+'万','#ef4444');
   h+='</div>';
+  h+=_fBars19(f.stages||[]);
   h+=_fTbl19('🔀 渠道维度（从渠道看线索转化）',['渠道','入口','正价再次购买','购买率','转化GMV'],(f.channel||[]).map(function(r){return [r.channel,fmtInt(r.cohort),fmtInt(r.positive),r.positive_rate+'%','¥'+pw(r.positive_amount)+'万'];}),3);
   h+=_fTbl19('🏢 组别维度',['组别','入口','正价再次购买','购买率','转化GMV'],(f.group||[]).map(function(r){return [r.group,fmtInt(r.cohort),fmtInt(r.positive),r.positive_rate+'%','¥'+pw(r.positive_amount)+'万'];}),3);
   h+=_fTbl19('👤 销售维度',['销售','组别','入口','正价再次购买','购买率','转化GMV'],(f.seller||[]).map(function(r){return [r.name,r.group,fmtInt(r.cohort),fmtInt(r.positive),r.positive_rate+'%','¥'+pw(r.positive_amount)+'万'];}),4);
@@ -2576,9 +2581,14 @@ function _fOverviewRows(f){
       {'指标':'历史队列跨月升单','人数':(o.cross||{}).count||0,'金额（元）':(o.cross||{}).amount||0,'转化率':'','ARPU（元）':''}
     ];
   } else {
+    var p=o.positive||{};
     rows=[
-      {'指标':'体验入口','人数':o.cohort||0,'金额（元）':(f.stages&&f.stages[0]||{}).amount||0,'转化率':'','ARPU（元）':''},
-      {'指标':'正价再次购买','人数':(o.positive||{}).count||0,'金额（元）':(o.positive||{}).amount||0,'转化率':((o.positive||{}).rate||0)+'%','ARPU（元）':''}
+      {'指标':'总线索','人数':o.total_leads||0,'金额（元）':0,'转化率':'','订单数':''},
+      {'指标':'有效线索','人数':o.valid_leads||0,'金额（元）':0,'转化率':'','订单数':''},
+      {'指标':'无效线索','人数':o.invalid_leads||0,'金额（元）':0,'转化率':'','订单数':''},
+      {'指标':'待分配线索','人数':o.pending_allocation_leads||0,'金额（元）':0,'转化率':'','订单数':''},
+      {'指标':'再次购买','人数':p.count||0,'金额（元）':p.amount||0,'转化率':((p.rate||0)+'%'),'订单数':p.orders||0},
+      {'指标':'有效队列转化率','人数':o.cohort||0,'金额（元）':p.amount||0,'转化率':((p.rate||0)+'%'),'订单数':p.orders||0}
     ];
   }
   return rows;
