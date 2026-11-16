@@ -2544,9 +2544,9 @@ function renderFunnel19(f){
   h+=_fMetric('📈 转化率',p.rate+'%',_fRateColor(p.rate));
   h+='</div>';
   h+=_fBars19(f.stages||[]);
-  h+=_fTbl19('🔀 渠道维度（线索→加V→观看→转化）',['渠道','线索','加V','加V率','观看','观看率','互动率','转化','转化率','转化金额'],(f.channel||[]).map(function(r){return [r.channel,fmtInt(r.leads),fmtInt(r.add_v),r.add_v_rate+'%',fmtInt(r.watch),r.watch_rate+'%',r.interaction_rate+'%',fmtInt(r.conv),r.conv_rate+'%','¥'+pw(r.conv_amount)+'万'];}),8);
-  h+=_fTbl19('🏢 组别维度',['组别','线索','加V','加V率','观看','观看率','互动率','转化','转化率','转化金额'],(f.group||[]).map(function(r){return [r.group,fmtInt(r.leads),fmtInt(r.add_v),r.add_v_rate+'%',fmtInt(r.watch),r.watch_rate+'%',r.interaction_rate+'%',fmtInt(r.conv),r.conv_rate+'%','¥'+pw(r.conv_amount)+'万'];}),8);
-  h+=_fTbl19('👤 销售维度',['销售','组别','线索','加V','加V率','观看','观看率','互动率','转化','转化率','转化金额'],(f.seller||[]).map(function(r){return [r.seller,r.group,fmtInt(r.leads),fmtInt(r.add_v),r.add_v_rate+'%',fmtInt(r.watch),r.watch_rate+'%',r.interaction_rate+'%',fmtInt(r.conv),r.conv_rate+'%','¥'+pw(r.conv_amount)+'万'];}),9);
+  h+=_fTbl19('🔀 渠道维度（线索→加V→观看→转化）',['渠道','线索','加V','加V率','观看','观看率','直播互动率','转化','转化率','转化金额'],(f.channel||[]).map(function(r){return [r.channel,fmtInt(r.leads),fmtInt(r.add_v),r.add_v_rate+'%',fmtInt(r.watch),r.watch_rate+'%',r.interaction_rate+'%',fmtInt(r.conv),r.conv_rate+'%','¥'+pw(r.conv_amount)+'万'];}),8);
+  h+=_fTbl19('🏢 组别维度',['组别','线索','加V','加V率','观看','观看率','直播互动率','转化','转化率','转化金额'],(f.group||[]).map(function(r){return [r.group,fmtInt(r.leads),fmtInt(r.add_v),r.add_v_rate+'%',fmtInt(r.watch),r.watch_rate+'%',r.interaction_rate+'%',fmtInt(r.conv),r.conv_rate+'%','¥'+pw(r.conv_amount)+'万'];}),8);
+  h+=_fTbl19('👤 销售维度',['销售','组别','线索','加V','加V率','观看','观看率','直播互动率','转化','转化率','转化金额'],(f.seller||[]).map(function(r){return [r.seller,r.group,fmtInt(r.leads),fmtInt(r.add_v),r.add_v_rate+'%',fmtInt(r.watch),r.watch_rate+'%',r.interaction_rate+'%',fmtInt(r.conv),r.conv_rate+'%','¥'+pw(r.conv_amount)+'万'];}),9);
   h+='</div></div>'; return h;
 }
 function _fBars19(stages){
