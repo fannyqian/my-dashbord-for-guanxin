@@ -2320,6 +2320,42 @@ document.addEventListener('click', function(e) {
 <div id="tab-funnel" class="tab-content">
 <div class="section-title">📈 升单漏斗</div>
 <div id="funnel_cards"></div>
+<!-- zero-ai:start --><section id="funnel-zero-ai" class="funnel-card">
+<div class="funnel-card-head" style="flex-wrap:wrap">
+  <div><div class="funnel-card-title">📈 0 元 AI 销转漏斗</div>
+    <div class="funnel-card-summary">接收 2,410 人 · 同人转化 11 人 · 0.46%</div></div>
+  <div class="funnel-card-actions">
+    <a class="funnel-export-btn" style="display:inline-flex;align-items:center;text-decoration:none" download="0元AI销转漏斗_汇总_20261120.csv" href="data:text/csv;charset=utf-8;base64,77u/57uf6K6h6IyD5Zu0LOe6v+e0oizliqBWLOWKoFbnjocsMjRo6Kem6L6+546HLOaXoOinpui+vueOhyznm7Tmkq3op4LnnIss55u05pKt6KeC55yL546HLOebtOaSreS6kuWKqOeOhyzovazljJYs6L2s5YyW546HLOi9rOWMlumHkeminQ0K5oC76KeI77yI5ZCr6IKW5Lyf77yJLCIyLDQxMCIsIjEsNDYwIiw2MC41OCUsMjAuODclLDc0LjA3JSw5MTcsMzguMDUlLDI4LjgxJSwxMSwwLjQ2JSwiwqU1NiwzMDAiDQrkvZXlqpvlqpssODc1LDUyOSw2MC40NiUsMTAuNzQlLDg0LjQ2JSwzMjksMzcuNiUsMjkuNjElLDQsMC40NiUsIsKlMTgsNjQwIg0K6IKW5LyfLDc4Nyw0ODMsNjEuMzclLDQwLjI4JSw1NC41MSUsMzA5LDM5LjI2JSwyOC45JSwyLDAuMjUlLCLCpTcsNzgwIg0K6auY5puMLDczNCw0MzgsNTkuNjclLDExLjE3JSw4My41MSUsMjgxLDM4LjI4JSwyOC45MSUsNSwwLjY4JSwiwqUyOSw4ODAiDQrkuo7puY/po54sMjAsMTQsNzAuMCUsNTAuMCUsNTAuMCUsMywxNS4wJSzigJQsMCwwLjAlLMKlMA0K" aria-label="导出 0 元 AI 漏斗汇总">导出</a>
+    <button type="button" class="funnel-icon-btn" aria-controls="zero-ai-details" aria-expanded="false" aria-label="展开 0 元 AI 销转漏斗" title="展开" onclick="const body=document.getElementById('zero-ai-details'); body.hidden=!body.hidden; const label=body.hidden?'展开':'收起'; this.textContent=body.hidden?'⌄':'⌃'; this.title=label; this.setAttribute('aria-label',label+' 0 元 AI 销转漏斗'); this.setAttribute('aria-expanded',String(!body.hidden));">⌄</button>
+  </div>
+</div>
+<style>
+#funnel-zero-ai .metric-card {position:relative;background:linear-gradient(135deg,#fff 0%,#fafbff 100%);border-radius:16px;padding:18px 20px;border:1px solid #e1e8f1;box-shadow:none;overflow:hidden;transition:transform .2s,box-shadow .2s}
+#funnel-zero-ai .metric-card:hover {transform:translateY(-2px);box-shadow:0 8px 24px rgba(15,23,42,.1)}
+#funnel-zero-ai .metric-card::before {content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--accent,#6366f1)}
+#funnel-zero-ai .metric-label {font-size:12px;color:#64748b;margin-bottom:6px;font-weight:500}
+#funnel-zero-ai .metric-value {font-size:26px;font-weight:800;line-height:1.1;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+#funnel-zero-ai .zero-ai-help {display:inline-grid;place-items:center;width:17px;height:17px;padding:0;border:1px solid #a5b5ca;border-radius:50%;background:#fff;color:#425b7c;font-size:11px;cursor:help;vertical-align:middle}
+#funnel-zero-ai .zero-ai-help:focus-visible {outline:2px solid #2563eb;outline-offset:2px}
+#zero-ai-no-touch-definition {box-sizing:border-box;max-width:min(360px,calc(100vw - 32px));padding:14px 16px;border:1px solid #e1e8f1;border-radius:12px;background:#fff;color:#334155;line-height:1.6;box-shadow:0 8px 24px rgba(15,23,42,.12)}
+</style>
+<div id="zero-ai-details" class="funnel-card-body" hidden>
+  <div id="zero-ai-no-touch-definition" popover>无触达率＝从分配到统计截止，未查到任何系统消息、电话或语音触达记录的客户数 ÷ 接收客户数。未满 24 小时的客户仍计入接收分母，未触达不等于超时，也不代表没有线下跟进。</div>
+  <p class="funnel-overview-note">北京时间 11 月 1 日至 20 日。总览包含肖伟，按客户去重，不能直接相加销售人数。互动仅按匹配到的 198 场直播计算；未满 24 小时且尚未触达 68 人，不判超时。销售表中的转化指同人转化；转化金额为实付毛额。</p>
+  <h3>总览</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px"><div class="metric-card" style="--accent:#2563eb"><div class="metric-label">接收客户</div><div class="metric-value" style="color:#2563eb">2,410 人</div></div><div class="metric-card" style="--accent:#2563eb"><div class="metric-label">加V</div><div class="metric-value" style="color:#2563eb">1,460 人</div></div><div class="metric-card" style="--accent:#2563eb"><div class="metric-label">加V率</div><div class="metric-value" style="color:#2563eb">60.58%</div></div><div class="metric-card" style="--accent:#2563eb"><div class="metric-label">直播观看</div><div class="metric-value" style="color:#2563eb">917 人</div></div><div class="metric-card" style="--accent:#2563eb"><div class="metric-label">直播观看率</div><div class="metric-value" style="color:#2563eb">38.05%</div></div><div class="metric-card" style="--accent:#2563eb"><div class="metric-label">直播互动率</div><div class="metric-value" style="color:#2563eb">28.81%</div></div><div class="metric-card" style="--accent:#2563eb"><div class="metric-label">24h触达率</div><div class="metric-value" style="color:#2563eb">20.87%</div></div><div class="metric-card" style="--accent:#b45309"><div class="metric-label">无触达率 <button type="button" class="zero-ai-help" popovertarget="zero-ai-no-touch-definition" aria-label="无触达率定义" title="无触达率＝从分配到统计截止，未查到任何系统消息、电话或语音触达记录的客户数 ÷ 接收客户数。未满 24 小时的客户仍计入接收分母，未触达不等于超时，也不代表没有线下跟进。">?</button></div><div class="metric-value" style="color:#b45309">74.07%</div></div><div class="metric-card" style="--accent:#047857"><div class="metric-label">转化</div><div class="metric-value" style="color:#047857">11 人</div></div><div class="metric-card" style="--accent:#047857"><div class="metric-label">转化率</div><div class="metric-value" style="color:#047857">0.46%</div></div><div class="metric-card" style="--accent:#2563eb"><div class="metric-label">转化订单</div><div class="metric-value" style="color:#2563eb">12 单</div></div><div class="metric-card" style="--accent:#2563eb"><div class="metric-label">转化金额</div><div class="metric-value" style="color:#2563eb">¥56,300</div></div><div class="metric-card" style="--accent:#2563eb"><div class="metric-label">退款</div><div class="metric-value" style="color:#2563eb">¥0</div></div></div>
+  <div style="margin:0 0 16px;padding:14px 16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
+    <b>📞 触达分层</b>
+    <div>接收客户 2,410 人</div>
+    <div>├─ 已触达 625 人（25.93%）</div>
+    <div>│　└─ 24h内触达 503 人（20.87%） · 未满24h观察 68 人</div>
+    <div>└─ 无触达 1,785 人（74.07%）</div>
+  </div>
+  <h3>销售</h3>
+  <div style="overflow-x:auto" tabindex="0" role="region" aria-label="销售汇总表"><table style="white-space:nowrap">
+    <thead><tr><th>销售</th><th>线索</th><th>加V</th><th>加V率</th><th>24h触达率</th><th>无触达率 <button type="button" class="zero-ai-help" popovertarget="zero-ai-no-touch-definition" aria-label="无触达率定义" title="无触达率＝从分配到统计截止，未查到任何系统消息、电话或语音触达记录的客户数 ÷ 接收客户数。未满 24 小时的客户仍计入接收分母，未触达不等于超时，也不代表没有线下跟进。">?</button></th><th>直播观看</th><th>直播观看率</th><th>直播互动率</th><th>转化</th><th>转化率</th><th>转化金额</th></tr></thead><tbody><tr><td>何媛媛</td><td>875</td><td>529</td><td>60.46%</td><td>10.74%</td><td>84.46%</td><td>329</td><td>37.6%</td><td>29.61%</td><td>4</td><td>0.46%</td><td>¥18,640</td></tr><tr><td>肖伟</td><td>787</td><td>483</td><td>61.37%</td><td>40.28%</td><td>54.51%</td><td>309</td><td>39.26%</td><td>28.9%</td><td>2</td><td>0.25%</td><td>¥7,780</td></tr><tr><td>高曌</td><td>734</td><td>438</td><td>59.67%</td><td>11.17%</td><td>83.51%</td><td>281</td><td>38.28%</td><td>28.91%</td><td>5</td><td>0.68%</td><td>¥29,880</td></tr><tr><td>于鹏飞</td><td>20</td><td>14</td><td>70.0%</td><td>50.0%</td><td>50.0%</td><td>3</td><td>15.0%</td><td>—</td><td>0</td><td>0.0%</td><td>¥0</td></tr></tbody>
+  </table></div>
+</div></section><!-- zero-ai:end -->
 </div>
 <script>
 var _funnelCollapsed = {funnel_398:true, funnel_19:true, funnel_4980:true, funnel_evolution:true};
