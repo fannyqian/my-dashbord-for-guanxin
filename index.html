@@ -1789,7 +1789,10 @@ document.addEventListener('click', function(e) {
 #funnel-card-19 .f19-table{overflow-x:auto;max-width:100%;border:1px solid #e0e7f0;border-radius:8px;margin-bottom:12px}
 #funnel-card-19 .f19-table table{white-space:nowrap;margin-bottom:0}#funnel-card-19 .f19-table :is(th,td):first-child{text-align:left}
 #f19-tooltip{position:fixed;z-index:10000;box-sizing:border-box;width:max-content;max-width:min(280px,calc(100vw - 16px));padding:9px 12px;border-radius:8px;background:#1e3655;color:#fff;font:13px/1.6 system-ui,sans-serif;box-shadow:0 4px 14px #0f172a35;pointer-events:none;white-space:normal}
-</style></head>
+</style><style id="evolution-v7-layout">
+.evolution-v7-card{font:14px/1.55 system-ui,"Microsoft YaHei",sans-serif;background:#f3f6fa;color:#172438;margin:0;padding:22px 16px;max-width:1500px;border:1px solid #dce5f0;border-radius:10px}.evolution-v7-card .evo-title{font-size:24px;font-weight:700}.evolution-v7-card .evo-summary{color:#52657b;margin-top:4px}.evolution-v7-card .evo-note{font-size:12px;color:#64748b;line-height:1.7;margin:14px 0}.evolution-v7-card .evo-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}.evolution-v7-card .evo-metric,.evolution-v7-card .evo-table{background:#fff;border:1px solid #dce5f0;border-radius:9px;padding:10px}.evolution-v7-card .evo-metric{border-top:3px solid var(--accent,#2563eb)}.evolution-v7-card .evo-label{color:#52657b;font-size:12px}.evolution-v7-card .evo-value{font-size:20px;font-weight:700;margin-top:3px}.evolution-v7-card .evo-table{overflow:auto;margin-top:14px}.evolution-v7-card table{border-collapse:collapse;width:100%;white-space:nowrap}.evolution-v7-card td,.evolution-v7-card th{padding:7px;text-align:right;border-bottom:1px solid #dce5f0}.evolution-v7-card td:first-child,.evolution-v7-card th:first-child{text-align:left}.evolution-v7-card th{background:#eef4fa;color:#52657b}.evolution-v7-card .evo-section-title{font-size:13px;font-weight:700;color:#334155;margin:18px 0 8px}.evolution-v7-card .evo-foot{margin-top:14px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#64748b;line-height:1.7}@media(max-width:720px){.evolution-v7-card{padding:16px 10px}.evolution-v7-card .evo-title{font-size:20px}}
+</style>
+</head>
 <body>
 <div class="container">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -3626,6 +3629,60 @@ function renderFunnel(){
  el.innerHTML='<div id="funnel-overview-grid">'+overview+'</div><div id="funnel-sections">'+sections+'</div>';
 }
 
+function exportFunnelEvolution(){
+ if(typeof XLSX==='undefined'){alert('Excel 库未加载');return;}
+ var f=window._M&&window._M.funnel&&window._M.funnel.funnel_evolution;
+ if(!f){alert('当前漏斗暂无数据');return;}
+ var wb=XLSX.utils.book_new();
+ function add(name,rows,fallback){XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows&&rows.length?rows:[fallback||{'说明':'暂无数据'}]),name);}
+ var o=f.overall||{};
+ add('概览',[
+  {'指标':'进化论总进线','数量':o.lead_count||0,'金额（元）':''},
+  {'指标':'有效线索','数量':o.valid_lead_count||0,'金额（元）':''},
+  {'指标':'无效线索','数量':o.invalid_lead_count||0,'金额（元）':''},
+  {'指标':'待分配线索','数量':o.pending_allocation_lead_count||0,'金额（元）':''},
+  {'指标':'转化线索','数量':o.converted_lead_count||0,'金额（元）':''},
+  {'指标':'转化率','数量':(o.conversion_rate||0)+'%','金额（元）':''},
+  {'指标':'转化订单','数量':o.converted_order_count||0,'金额（元）':''},
+  {'指标':'普通转化毛额','数量':'','金额（元）':o.gross_amount||0},
+  {'指标':'普通转化退款（快照累计）','数量':'','金额（元）':o.refund_amount||0},
+  {'指标':'综合转化人数（指定1980产品）','数量':(o.comprehensive||{}).customer_count||0,'金额（元）':''},
+  {'指标':'综合转化订单','数量':(o.comprehensive||{}).order_count||0,'金额（元）':''},
+  {'指标':'综合转化毛额','数量':'','金额（元）':(o.comprehensive||{}).gross_amount||0},
+  {'指标':'综合转化退款（快照累计）','数量':'','金额（元）':(o.comprehensive||{}).refund_amount||0},
+  {'指标':'综合转化率（综合人数/接收客户）','数量':((o.comprehensive||{}).rate==null?'—':(o.comprehensive||{}).rate+'%'),'金额（元）':''},
+  {'指标':'接线人数','数量':o.people_count||0,'金额（元）':''},
+  {'指标':'人均接线量','数量':o.avg_leads_per_person||0,'金额（元）':''}
+ ],{'说明':'暂无数据'});
+ add('漏斗阶段',(f.stages||[]).map(function(r){return {'阶段':r.label,'数量':r.count||'', '金额（元）':r.amount||''};}),{'说明':'暂无阶段数据'});
+ add('销售组',(f.groups||[]).map(function(r){return {'销售组':r.name,'进线':r.lead_count,'普通转化':r.converted_lead_count,'转化率':r.conversion_rate==null?'—':r.conversion_rate+'%','订单':r.converted_order_count,'实付毛额':r.gross_amount,'退款':r.refund_amount};}),{'说明':'暂无销售组数据'});
+ add('销售明细',(f.sellers||[]).map(function(r){return {'销售':r.name,'组别':r.group_name||'','进线':r.lead_count,'普通转化':r.converted_lead_count,'转化率':r.conversion_rate==null?'—':r.conversion_rate+'%','订单':r.converted_order_count,'实付毛额':r.gross_amount,'退款':r.refund_amount};}),{'说明':'暂无销售数据'});
+ add('入口服务类型',(f.service_types||[]).map(function(r){return {'服务类型':r.name,'进线':r.lead_count,'普通转化':r.converted_lead_count,'转化率':r.conversion_rate==null?'—':r.conversion_rate+'%','订单':r.converted_order_count,'实付毛额':r.gross_amount,'退款':r.refund_amount};}),{'说明':'暂无服务类型数据'});
+ var q=f.quality||{},c=f.criteria||{},w=f.window||{};
+ add('质量与口径',[
+  {'项目':'统计开始','值':w.start||''},{'项目':'统计结束（不含）','值':w.end_exclusive||''},
+  {'项目':'入口规则','值':(c.entry||{}).receipt_rule||''},{'项目':'普通转化规则','值':(c.ordinary_conversion||{}).payment_rule||''},{'项目':'综合转化产品','值':((c.comprehensive_conversion||{}).product_names||[]).join('、')},{'项目':'退款说明','值':(c.comprehensive_conversion||{}).refund_note||''},
+  {'项目':'未匹配线索','值':q.unmatched_lead_count||0},{'项目':'缺失 start_at','值':q.missing_start_at_rows||0},
+  {'项目':'重复转化订单记录','值':q.duplicate_conversion_order_rows||0}
+ ],{'说明':'暂无质量数据'});
+ var month=(f.cohort_month||'').replace(/-/g,'');
+ XLSX.writeFile(wb,'升单漏斗_进化论转化情况_'+month+'.xlsx');
+}
+renderFunnel();
+</script><script>function renderFunnelEvolution(f){
+ if(!f||!f.overall)return '';var o=f.overall||{},c=o.comprehensive||{},criteria=f.criteria||{},collapsed=false,h='';
+ function n(x){return x==null?'—':Number(x).toLocaleString('zh-CN');}function money(x){return x==null?'—':'¥'+Number(x).toLocaleString('zh-CN',{minimumFractionDigits:0,maximumFractionDigits:2});}function pct(x){return x==null?'—':Number(x).toFixed(2)+'%';}function esc(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+ function metric(label,value,color){return '<div class="evo-metric" style="--accent:'+color+'"><div class="evo-label">'+label+'</div><div class="evo-value" style="color:'+color+'">'+value+'</div></div>';}
+ function table(title,heads,rows){var x='<div class="evo-section-title">'+title+'</div><div class="evo-table"><table><thead><tr>';heads.forEach(function(v){x+='<th>'+v+'</th>';});x+='</tr></thead><tbody>';rows.forEach(function(r){x+='<tr>'+r.map(function(v){return '<td>'+v+'</td>';}).join('')+'</tr>';});return x+'</tbody></table></div>';}
+ var ordinaryRule=(criteria.ordinary_conversion||{}).payment_rule||'pay_amount > 0';var products=((criteria.comprehensive_conversion||{}).product_names||[]).join('、');
+ h+='<div class="evolution-v7-card" id="funnel-card-evolution"><div class="evo-title">🧬 进化论转化情况</div><div class="evo-summary">接收 '+n(o.lead_count)+' 人 · 普通转化 '+n(o.converted_lead_count)+' 人 · 综合转化 '+n(c.customer_count)+' 人</div>';
+ h+='<div class="evo-note">窗口：'+esc((f.window||{}).start)+' 至 '+esc((f.window||{}).end_exclusive)+'（不含） · 固定12类入口，接收按事件分配与关系落地核验，待核实不进分母。普通转化：接收队列内、同一销售本人、支付晚于最早接收且 '+esc(ordinaryRule)+'。综合转化：'+esc(products)+' 全量订单，实付 &gt; 0，不限接收队列或销售名册。金额按实付毛额，退款另列；综合转化率=综合人数/接收客户，可超过100%。</div>';
+ h+='<div class="evo-metrics">'+metric('接收客户',n(o.lead_count)+' 人','#2563eb')+metric('待核实',n(o.pending_allocation_lead_count)+' 条','#b45309')+metric('普通转化人数',n(o.converted_lead_count)+' 人','#047857')+metric('普通转化率',pct(o.conversion_rate),'#047857')+metric('普通转化订单',n(o.converted_order_count)+' 单','#2563eb')+metric('普通转化毛额',money(o.gross_amount),'#2563eb')+metric('普通转化退款',money(o.refund_amount),'#2563eb')+metric('综合转化人数',n(c.customer_count)+' 人','#7c3aed')+metric('综合转化订单',n(c.order_count)+' 单','#7c3aed')+metric('综合转化毛额',money(c.gross_amount),'#7c3aed')+metric('综合转化退款',money(c.refund_amount),'#7c3aed')+metric('综合转化率',pct(c.rate),'#7c3aed')+'</div>';
+ h+=table('🏢 销售组汇总',['销售组','进线','普通转化','转化率','订单','实付毛额','退款'],(f.groups||[]).map(function(r){return [esc(r.name),n(r.lead_count),n(r.converted_lead_count),pct(r.conversion_rate),n(r.converted_order_count),money(r.gross_amount),money(r.refund_amount)];}));
+ h+=table('👤 销售明细',['销售','组别','进线','普通转化','转化率','订单','实付毛额','退款'],(f.sellers||[]).map(function(r){return [esc(r.name),esc(r.group_name||''),n(r.lead_count),n(r.converted_lead_count),pct(r.conversion_rate),n(r.converted_order_count),money(r.gross_amount),money(r.refund_amount)];}));
+ h+=table('🧾 入口服务类型',['服务类型','进线','普通转化','转化率','订单','实付毛额','退款'],(f.service_types||[]).map(function(r){return [esc(r.name),n(r.lead_count),n(r.converted_lead_count),pct(r.conversion_rate),n(r.converted_order_count),money(r.gross_amount),money(r.refund_amount)];}));
+ var q=f.quality||{};h+='<div class="evo-foot">质量：待核实接收 '+n(q.unmatched_receipt_rows)+' 条 · 普通转化客户 '+n(q.ordinary_customer_count)+' · 综合转化客户 '+n(q.comprehensive_customer_count)+'。退款为所选订单快照累计值，另列不冲减毛额。</div></div>';return h;
+}
 function exportFunnelEvolution(){
  if(typeof XLSX==='undefined'){alert('Excel 库未加载');return;}
  var f=window._M&&window._M.funnel&&window._M.funnel.funnel_evolution;
