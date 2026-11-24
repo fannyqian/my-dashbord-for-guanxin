@@ -2230,6 +2230,38 @@ document.addEventListener('click', function(e) {
 </div>
 <div id="tab-funnel" class="tab-content">
 <div class="section-title">📈 升单漏斗</div>
+<style>
+#funnel-nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+#funnel-nav a{padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#1e40af;font-size:13px;font-weight:600;text-decoration:none}
+#funnel-nav a:hover,#funnel-nav a:focus-visible{background:#eff6ff;border-color:#3b82f6}
+#tab-funnel .funnel-section,#funnel-zero-ai{scroll-margin-top:16px}
+</style>
+<nav id="funnel-nav" aria-label="漏斗快速导航">
+  <a href="#funnel-section-funnel_398">首咨体验漏斗</a>
+  <a href="#funnel-section-funnel_19">一阶升单漏斗</a>
+  <a href="#funnel-section-funnel_4980">二阶4980漏斗</a>
+  <a href="#funnel-section-funnel_evolution">进化论漏斗</a>
+  <a href="#funnel-zero-ai">0元AI销转漏斗</a>
+</nav>
+<script>
+document.getElementById('funnel-nav').addEventListener('click',function(event){
+  var link=event.target.closest('a');
+  if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  var id=link.hash.slice(1),section=document.getElementById(id);
+  if(!section)return;
+  event.preventDefault();
+  if(id==='funnel-zero-ai'){
+    var toggle=section.querySelector('[aria-controls="zero-ai-details"]');
+    if(toggle&&toggle.getAttribute('aria-expanded')==='false')toggle.click();
+    section.scrollIntoView({behavior:'smooth',block:'start'});
+  }else{
+    focusFunnelSection(id);
+    section=document.getElementById(id);
+  }
+  section.tabIndex=-1;
+  section.focus({preventScroll:true});
+});
+</script>
 <div id="funnel_cards"></div>
 <!-- zero-ai:start --><section id="funnel-zero-ai" class="funnel-card">
 <div class="funnel-card-head" style="flex-wrap:wrap">
